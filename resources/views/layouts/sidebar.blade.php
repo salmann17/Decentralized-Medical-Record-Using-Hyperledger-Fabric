@@ -1,5 +1,5 @@
-<nav class="flex flex-1 flex-col">
-    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+<nav class="flex flex-col h-full">
+    <ul role="list" class="flex flex-1 flex-col gap-y-7 py-2">
         <li>
             <ul role="list" class="-mx-2 space-y-1">
                 <!-- Public Navigation -->
