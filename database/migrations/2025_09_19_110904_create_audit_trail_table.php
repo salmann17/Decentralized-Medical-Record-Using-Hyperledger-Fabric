@@ -12,8 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('audit_trail', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->id('audit_id');
+            $table->unsignedBigInteger('users_id');
+            $table->unsignedBigInteger('patient_id');
+            $table->unsignedBigInteger('medicalrecord_id');
+            $table->enum('action', ['view', 'create']);
+            $table->timestamp('timestamp')->useCurrent();
+            $table->longText('blockchain_hash');
+
+            $table->foreign('users_id')->references('idusers')->on('users');
+            $table->foreign('patient_id')->references('patient_id')->on('patients');
+            $table->foreign('medicalrecord_id')->references('medicalrecord_id')->on('medical_records');
         });
     }
 
