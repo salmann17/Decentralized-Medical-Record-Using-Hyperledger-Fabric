@@ -6,5 +6,34 @@ use Illuminate\Database\Eloquent\Model;
 
 class MedicalRecord extends Model
 {
-    //
+    protected $table = 'medical_records';
+    protected $primaryKey = 'medicalrecord_id';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'patient_id','hospital_id','doctor_id','visit_date',
+        'diagnosis_code','diagnosis_desc','treatment','notes',
+        'status','prescription_id'
+    ];
+
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'doctor_id');
+    }
+
+    public function hospital()
+    {
+        return $this->belongsTo(Hospital::class, 'hospital_id', 'hospital_id');
+    }
+
+    public function prescription()
+    {
+        return $this->belongsTo(Prescription::class, 'prescription_id', 'prescription_id');
+    }
 }
+
