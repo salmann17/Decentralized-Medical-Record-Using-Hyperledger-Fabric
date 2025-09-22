@@ -17,16 +17,14 @@ class DoctorController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $doctor = Doctor::where('doctor_id', $user->idusers)->with('hospital')->first();
+        $doctor = Doctor::where('doctor_id', $user->idusers)->with('hospitals')->first();
         
-        // Get access requests for this doctor
         $accessRequests = AccessRequest::where('doctor_id', $doctor->doctor_id)
             ->with(['patient.user'])
             ->orderBy('requested_at', 'desc')
             ->take(5)
             ->get();
         
-        // Get patients this doctor has access to
         $myPatients = Patient::whereHas('accessRequests', function($query) use ($doctor) {
             $query->where('doctor_id', $doctor->doctor_id)
                   ->where('status', 'approved');
@@ -37,5 +35,16 @@ class DoctorController extends Controller
             'accessRequests',
             'myPatients'
         ));
+    }
+
+    /**
+     * Show list of hospitals where doctor works
+     */
+    public function hospitals()
+    {
+        $user = Auth::user();
+        $doctor = Doctor::where('doctor_id', $user->idusers)->with('hospitals')->first();
+        
+        return view('doctor.hospitals', compact('doctor'));
     }
 }

@@ -14,12 +14,21 @@ class Hospital extends Model
 
     public function doctors()
     {
-        return $this->hasMany(Doctor::class, 'hospital_id', 'hospital_id');
+        return $this->belongsToMany(
+            Doctor::class,
+            'doctor_hospital',
+            'hospital_id',
+            'doctor_id'
+        )->withTimestamps();
     }
 
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class, 'hospital_id', 'hospital_id');
     }
-}
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'hospital_id', 'idusers');
+    }
+}

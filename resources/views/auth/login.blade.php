@@ -85,7 +85,7 @@
                 <div class="mt-6 grid grid-cols-3 gap-3">
                     <div class="text-center">
                         <p class="text-xs text-gray-500">Admin</p>
-                        <p class="text-xs font-medium">hospital1@mail.com</p>
+                        <p class="text-xs font-medium">admin1@hospital.com</p>
                     </div>
                     <div class="text-center">
                         <p class="text-xs text-gray-500">Dokter</p>

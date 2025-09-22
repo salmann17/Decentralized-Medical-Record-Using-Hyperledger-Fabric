@@ -14,61 +14,78 @@ class UserSeeder extends Seeder
     public function run()
     {
         $hospitals = [
-            ['name' => 'RS Harapan Sehat', 'address' => 'Jl. Merdeka No.1', 'type' => 'Rumah Sakit'],
-            ['name' => 'Klinik Pratama', 'address' => 'Jl. Melati No.2', 'type' => 'Klinik'],
-            ['name' => 'Puskesmas Kota', 'address' => 'Jl. Kenanga No.3', 'type' => 'Puskesmas'],
+            ['name' => 'RS Jakarta Medical Center', 'address' => 'Jl. Sudirman No. 1, Jakarta', 'type' => 'Rumah Sakit'],
+            ['name' => 'RS Siloam Hospitals', 'address' => 'Jl. Gatot Subroto No. 2, Jakarta', 'type' => 'Rumah Sakit'],
+            ['name' => 'RSUP Dr. Sardjito', 'address' => 'Jl. Kesehatan No. 1, Yogyakarta', 'type' => 'Rumah Sakit'],
         ];
 
+        $hospitalModels = [];
         foreach ($hospitals as $i => $h) {
             $user = User::create([
                 'name' => $h['name'],
-                'email' => 'hospital' . ($i+1) . '@mail.com',
+                'email' => 'admin' . ($i + 1) . '@hospital.com',
                 'password' => Hash::make('password123'),
-                'role' => 'admin',
+                'role' => 'admin'
             ]);
 
-            Hospital::create([
+            $hospital = Hospital::create([
                 'hospital_id' => $user->idusers,
                 'name' => $h['name'],
                 'address' => $h['address'],
-                'type' => $h['type'],
+                'type' => $h['type']
             ]);
+
+            $hospitalModels[] = $hospital;
         }
 
         $doctors = [
-            ['name' => 'Dr. Andi', 'license_number' => 12345, 'specialization' => 'Umum', 'hospital_id' => 1],
-            ['name' => 'Dr. Budi', 'license_number' => 67890, 'specialization' => 'Anak', 'hospital_id' => 2],
-            ['name' => 'Dr. Clara', 'license_number' => 54321, 'specialization' => 'Bedah', 'hospital_id' => 3],
+            ['name' => 'Dr. Ahmad Sutanto', 'email' => 'doctor1@mail.com', 'license_number' => '12345', 'specialization' => 'Kardiologi'],
+            ['name' => 'Dr. Sari Indah', 'email' => 'doctor2@mail.com', 'license_number' => '12346', 'specialization' => 'Neurologi'],
+            ['name' => 'Dr. Budi Prasetyo', 'email' => 'doctor3@mail.com', 'license_number' => '12347', 'specialization' => 'Orthopedi'],
+            ['name' => 'Dr. Maya Sari', 'email' => 'doctor4@mail.com', 'license_number' => '12348', 'specialization' => 'Pediatri'],
         ];
 
         foreach ($doctors as $i => $d) {
             $user = User::create([
                 'name' => $d['name'],
-                'email' => 'doctor' . ($i+1) . '@mail.com',
+                'email' => $d['email'],
                 'password' => Hash::make('password123'),
-                'role' => 'dokter',
+                'role' => 'dokter'
             ]);
 
-            Doctor::create([
+            $doctor = Doctor::create([
                 'doctor_id' => $user->idusers,
                 'license_number' => $d['license_number'],
-                'specialization' => $d['specialization'],
-                'hospital_id' => $d['hospital_id'],
+                'specialization' => $d['specialization']
             ]);
+
+            if ($i == 0) {
+                $doctor->hospitals()->attach([$hospitalModels[0]->hospital_id, $hospitalModels[1]->hospital_id]);
+            } elseif ($i == 1) {
+                $doctor->hospitals()->attach([$hospitalModels[0]->hospital_id, $hospitalModels[2]->hospital_id]);
+            } elseif ($i == 2) {
+                $doctor->hospitals()->attach([
+                    $hospitalModels[0]->hospital_id, 
+                    $hospitalModels[1]->hospital_id, 
+                    $hospitalModels[2]->hospital_id
+                ]);
+            } else {
+                $doctor->hospitals()->attach([$hospitalModels[1]->hospital_id]);
+            }
         }
 
         $patients = [
-            ['name' => 'Ahmad', 'nik' => 111111, 'birthdate' => '1990-01-01', 'gender' => 'male', 'blood' => 'A+', 'address' => 'Jl. Mawar No.1'],
-            ['name' => 'Siti', 'nik' => 222222, 'birthdate' => '1992-02-02', 'gender' => 'female', 'blood' => 'B+', 'address' => 'Jl. Anggrek No.2'],
-            ['name' => 'Joko', 'nik' => 333333, 'birthdate' => '1995-03-03', 'gender' => 'male', 'blood' => 'O-', 'address' => 'Jl. Melati No.3'],
+            ['name' => 'John Doe', 'email' => 'patient1@mail.com', 'nik' => '1234567890123456', 'birthdate' => '1990-01-01', 'gender' => 'male', 'blood' => 'A+', 'address' => 'Jl. Merdeka No. 1'],
+            ['name' => 'Jane Smith', 'email' => 'patient2@mail.com', 'nik' => '1234567890123457', 'birthdate' => '1985-05-15', 'gender' => 'female', 'blood' => 'B+', 'address' => 'Jl. Sudirman No. 2'],
+            ['name' => 'Bob Johnson', 'email' => 'patient3@mail.com', 'nik' => '1234567890123458', 'birthdate' => '1992-08-20', 'gender' => 'male', 'blood' => 'O+', 'address' => 'Jl. Thamrin No. 3'],
         ];
 
         foreach ($patients as $i => $p) {
             $user = User::create([
                 'name' => $p['name'],
-                'email' => 'patient' . ($i+1) . '@mail.com',
+                'email' => $p['email'],
                 'password' => Hash::make('password123'),
-                'role' => 'pasien',
+                'role' => 'pasien'
             ]);
 
             Patient::create([
@@ -77,7 +94,7 @@ class UserSeeder extends Seeder
                 'birthdate' => $p['birthdate'],
                 'gender' => $p['gender'],
                 'blood' => $p['blood'],
-                'address' => $p['address'],
+                'address' => $p['address']
             ]);
         }
     }

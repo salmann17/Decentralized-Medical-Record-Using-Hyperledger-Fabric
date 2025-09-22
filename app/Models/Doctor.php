@@ -10,21 +10,30 @@ class Doctor extends Model
     protected $primaryKey = 'doctor_id';
     public $timestamps = false;
 
-    protected $fillable = ['license_number', 'specialization', 'hospital_id'];
+    protected $fillable = ['license_number', 'specialization'];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'doctor_id', 'idusers');
     }
 
-    public function hospital()
+    public function hospitals()
     {
-        return $this->belongsTo(Hospital::class, 'hospital_id', 'hospital_id');
+        return $this->belongsToMany(
+            Hospital::class,
+            'doctor_hospital',
+            'doctor_id',
+            'hospital_id'
+        )->withTimestamps();
     }
 
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class, 'doctor_id', 'doctor_id');
     }
-}
 
+    public function accessRequests()
+    {
+        return $this->hasMany(AccessRequest::class, 'doctor_id', 'doctor_id');
+    }
+}

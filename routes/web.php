@@ -7,6 +7,9 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Doctor\DoctorController;
 use App\Http\Controllers\Patient\PatientController;
+use App\Http\Middleware\IsAdmin;
+use App\Http\Middleware\IsDoctor;
+use App\Http\Middleware\IsPatient;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -21,28 +24,26 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 // Protected routes
 Route::middleware(['auth'])->group(function () {
 
-    // Admin routes (Hospital)
-    Route::middleware(['admin'])
+    Route::middleware([IsAdmin::class])
         ->prefix('admin')->name('admin.')
         ->group(function () {
             Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-            // Add more admin routes here as needed
+            Route::get('/doctors', [AdminController::class, 'doctors'])->name('doctors');
+            Route::post('/doctors/assign', [AdminController::class, 'assignDoctor'])->name('doctors.assign');
+            Route::delete('/doctors/{doctorId}', [AdminController::class, 'removeDoctor'])->name('doctors.remove');
         });
 
-    // Doctor routes
-    Route::middleware(['doctor'])
+    Route::middleware([IsDoctor::class])
         ->prefix('doctor')->name('doctor.')
         ->group(function () {
             Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
-            // Add more doctor routes here as needed
+            Route::get('/hospitals', [DoctorController::class, 'hospitals'])->name('hospitals');
         });
 
-    // Patient routes
-    Route::middleware(['patient'])
+    Route::middleware([IsPatient::class])
         ->prefix('patient')->name('patient.')
         ->group(function () {
             Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
-            // Add more patient routes here as needed
         });
 
 });
