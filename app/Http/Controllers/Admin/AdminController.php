@@ -90,4 +90,92 @@ class AdminController extends Controller
         
         return redirect()->back()->with('success', 'Dokter berhasil dihapus dari rumah sakit.');
     }
+
+    /**
+     * Show patients management page
+     */
+    public function patients()
+    {
+        $user = Auth::user();
+        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        
+        // Get patients who have medical records in this hospital
+        $patients = Patient::with('user')
+            ->whereHas('medicalRecords', function($query) use ($hospital) {
+                $query->where('hospital_id', $hospital->hospital_id);
+            })
+            ->paginate(10);
+
+        return view('admin.patients.index', compact('patients', 'hospital'));
+    }
+
+    /**
+     * Show medical records management page
+     */
+    public function records()
+    {
+        $user = Auth::user();
+        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        
+        // Get medical records created in this hospital (metadata only)
+        $records = MedicalRecord::with(['patient.user', 'doctor.user'])
+            ->where('hospital_id', $hospital->hospital_id)
+            ->orderBy('visit_date', 'desc')
+            ->paginate(15);
+
+        return view('admin.records.index', compact('records', 'hospital'));
+    }
+
+    /**
+     * Show audit trail page
+     */
+    public function audit()
+    {
+        $user = Auth::user();
+        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        
+        // Get audit trail for this hospital
+        $auditLogs = \App\Models\AuditTrail::with(['user', 'medicalRecord.patient.user'])
+            ->whereHas('medicalRecord', function($query) use ($hospital) {
+                $query->where('hospital_id', $hospital->hospital_id);
+            })
+            ->orderBy('access_time', 'desc')
+            ->paginate(20);
+
+        return view('admin.audit.index', compact('auditLogs', 'hospital'));
+    }
+
+    /**
+     * Show hospital settings page
+     */
+    public function settings()
+    {
+        $user = Auth::user();
+        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+
+        return view('admin.settings.index', compact('hospital'));
+    }
+
+    /**
+     * Update hospital settings
+     */
+    public function updateSettings(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string|max:100',
+            'address' => 'required|string|max:500',
+        ]);
+
+        $user = Auth::user();
+        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+
+        $hospital->update([
+            'name' => $request->name,
+            'type' => $request->type,
+            'address' => $request->address,
+        ]);
+
+        return redirect()->back()->with('success', 'Pengaturan rumah sakit berhasil diperbarui.');
+    }
 }

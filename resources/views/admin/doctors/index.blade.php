@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Kelola Dokter - Decentralized Medical Record')
+@section('title', 'Kelola Dokter - Admin')
 
 @section('content')
 <div class="space-y-6">

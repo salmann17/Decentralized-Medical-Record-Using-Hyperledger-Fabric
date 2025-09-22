@@ -31,6 +31,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/doctors', [AdminController::class, 'doctors'])->name('doctors');
             Route::post('/doctors/assign', [AdminController::class, 'assignDoctor'])->name('doctors.assign');
             Route::delete('/doctors/{doctorId}', [AdminController::class, 'removeDoctor'])->name('doctors.remove');
+            Route::get('/patients', [AdminController::class, 'patients'])->name('patients');
+            Route::get('/records', [AdminController::class, 'records'])->name('records');
+            Route::get('/audit', [AdminController::class, 'audit'])->name('audit');
+            Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+            Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
         });
 
     Route::middleware([IsDoctor::class])
