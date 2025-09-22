@@ -49,11 +49,11 @@ class AdminController extends Controller
         
         $availableDoctors = Doctor::with('user')
             ->whereDoesntHave('hospitals', function($query) use ($hospital) {
-                $query->where('hospital_id', $hospital->hospital_id);
+                $query->where('hospitals.hospital_id', $hospital->hospital_id);
             })
             ->get();
 
-        return view('admin.doctors', compact('hospital', 'hospitalDoctors', 'availableDoctors'));
+        return view('admin.doctors.index', compact('hospital', 'hospitalDoctors', 'availableDoctors'));
     }
 
     /**
@@ -70,7 +70,7 @@ class AdminController extends Controller
         $doctor = Doctor::find($request->doctor_id);
 
         // Check if already assigned
-        if (!$hospital->doctors()->where('doctor_id', $doctor->doctor_id)->exists()) {
+        if (!$hospital->doctors()->where('doctors.doctor_id', $doctor->doctor_id)->exists()) {
             $hospital->doctors()->attach($doctor->doctor_id);
             return redirect()->back()->with('success', 'Dokter berhasil ditambahkan ke rumah sakit.');
         }
