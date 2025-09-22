@@ -22,17 +22,17 @@ class AdminController extends Controller
         
         $hospital = Hospital::where('hospital_id', $user->idusers)->first();
         
-        $doctorCount = $hospital ? $hospital->doctors()->count() : 0;
-        $patientCount = Patient::count(); 
-        $recordCount = $hospital ? $hospital->medicalRecords()->count() : 0;
+        $doctorsCount = $hospital ? $hospital->doctors()->count() : 0;
+        $patientsCount = Patient::count(); 
+        $medicalRecordsCount = $hospital ? $hospital->medicalRecords()->count() : 0;
         
         $recentDoctors = $hospital ? $hospital->doctors()->with('user')->latest('doctor_hospital.created_at')->take(5)->get() : collect();
 
         return view('admin.dashboard', compact(
             'hospital',
-            'doctorCount',
-            'patientCount', 
-            'recordCount',
+            'doctorsCount',
+            'patientsCount', 
+            'medicalRecordsCount',
             'recentDoctors'
         ));
     }
