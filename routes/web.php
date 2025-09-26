@@ -49,6 +49,16 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('patient')->name('patient.')
         ->group(function () {
             Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
+            Route::get('/records', [PatientController::class, 'records'])->name('records');
+            Route::get('/records/{id}', [PatientController::class, 'recordDetail'])->name('records.detail');
+            Route::get('/access-requests', [PatientController::class, 'accessRequests'])->name('access-requests');
+            Route::post('/access-requests/{id}/approve', [PatientController::class, 'approveAccess'])->name('access-requests.approve');
+            Route::post('/access-requests/{id}/reject', [PatientController::class, 'rejectAccess'])->name('access-requests.reject');
+            Route::get('/active-doctors', [PatientController::class, 'activeDoctors'])->name('active-doctors');
+            Route::delete('/active-doctors/{id}/revoke', [PatientController::class, 'revokeAccess'])->name('active-doctors.revoke');
+            Route::get('/audit-trail', [PatientController::class, 'auditTrail'])->name('audit-trail');
+            Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
+            Route::post('/settings', [PatientController::class, 'updateSettings'])->name('settings.update');
         });
 
 });
