@@ -13,6 +13,11 @@
     </div>
 
     <!-- Statistics Cards -->
+    @php
+        $pendingCount = $requests->where('status', 'pending')->count();
+        $approvedCount = $requests->where('status', 'approved')->count();
+        $rejectedCount = $requests->where('status', 'rejected')->count();
+    @endphp
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Permintaan Menunggu</dt>
@@ -40,7 +45,7 @@
                    class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Disetujui ({{ $approvedCount }})
                 </a>
-                <a href="{{ route('patient.access-requests', ['status' => 'rejected']) }}" 
+                <a href="{{ route('patient.access-requests', ['status' => 'rejected') }}" 
                    class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'rejected' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Ditolak ({{ $rejectedCount }})
                 </a>
@@ -54,9 +59,9 @@
 
     <!-- Access Requests List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        @if($accessRequests->count() > 0)
+        @if($requests->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
-            @foreach($accessRequests as $request)
+            @foreach($requests as $request)
             <li class="px-4 py-6 sm:px-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center min-w-0 flex-1">
@@ -77,8 +82,8 @@
                                         @if($request->doctor->specialization)
                                         <span class="font-medium">{{ $request->doctor->specialization }}</span> •
                                         @endif
-                                        @if($request->doctor->hospital)
-                                        {{ $request->doctor->hospital->name }}
+                                        @if($request->doctor->hospitals && $request->doctor->hospitals->count() > 0)
+                                        {{ $request->doctor->hospitals->first()->name }}
                                         @endif
                                     </div>
                                     @if($request->doctor->license_number)
@@ -100,8 +105,8 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Diminta {{ \Carbon\Carbon::parse($request->requested_at)->diffForHumans() }}
-                                    @if($request->responded_at)
-                                    • Ditanggapi {{ \Carbon\Carbon::parse($request->responded_at)->diffForHumans() }}
+                                    @if($request->response_date)
+                                    • Ditanggapi {{ \Carbon\Carbon::parse($request->response_date)->diffForHumans() }}
                                     @endif
                                 </div>
                             </div>
@@ -130,12 +135,6 @@
                                     Ditolak
                                 @endif
                             </span>
-                            
-                            @if($request->access_until && $request->status === 'approved')
-                            <div class="text-xs text-gray-400 mt-1">
-                                Berlaku hingga: {{ \Carbon\Carbon::parse($request->access_until)->format('d M Y') }}
-                            </div>
-                            @endif
                         </div>
                         
                         @if($request->status === 'pending')
@@ -171,9 +170,9 @@
         </ul>
 
         <!-- Pagination -->
-        @if($accessRequests->hasPages())
+        @if($requests->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-            {{ $accessRequests->appends(request()->query())->links() }}
+            {{ $requests->appends(request()->query())->links() }}
         </div>
         @endif
 

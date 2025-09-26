@@ -69,23 +69,23 @@
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Total Rekam Medis</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $medicalRecords->total() }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $records->total() }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Kunjungan Bulan Ini</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ $monthlyVisits }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ $records->where('visit_date', '>=', now()->startOfMonth())->count() }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Rumah Sakit Terkait</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">{{ $hospitalCount }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">{{ $records->unique('hospital_id')->count() }}</dd>
         </div>
     </div>
 
     <!-- Medical Records List -->
     <div class="overflow-hidden bg-white shadow sm:rounded-lg">
-        @if($medicalRecords->count() > 0)
+        @if($records->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
-            @foreach($medicalRecords as $record)
+            @foreach($records as $record)
             <li class="px-4 py-6 sm:px-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center min-w-0 flex-1">
@@ -148,9 +148,9 @@
         </ul>
 
         <!-- Pagination -->
-        @if($medicalRecords->hasPages())
+        @if($records->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-            {{ $medicalRecords->links() }}
+            {{ $records->links() }}
         </div>
         @endif
 
@@ -184,7 +184,7 @@
         <div class="flex">
             <div class="flex-shrink-0">
                 <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                 </svg>
             </div>
             <div class="ml-3">
