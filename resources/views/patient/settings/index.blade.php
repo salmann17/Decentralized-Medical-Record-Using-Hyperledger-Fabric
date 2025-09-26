@@ -58,7 +58,7 @@
                         <input type="text" 
                                name="name" 
                                id="name"
-                               value="{{ old('name', $patient->user->name ?? '') }}"
+                               value="{{ old('name', isset($patient) && isset($patient->user) ? $patient->user->name : '') }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('name') border-red-300 @enderror">
                         @error('name')
@@ -72,7 +72,7 @@
                         <input type="email" 
                                name="email" 
                                id="email"
-                               value="{{ old('email', $patient->user->email ?? '') }}"
+                               value="{{ old('email', isset($patient) && isset($patient->user) ? $patient->user->email : '') }}"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('email') border-red-300 @enderror">
                         @error('email')
@@ -86,7 +86,7 @@
                         <input type="date" 
                                name="date_of_birth" 
                                id="date_of_birth"
-                               value="{{ old('date_of_birth', $patient->date_of_birth ?? '') }}"
+                               value="{{ old('date_of_birth', isset($patient) ? $patient->date_of_birth : '') }}"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('date_of_birth') border-red-300 @enderror">
                         @error('date_of_birth')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -100,8 +100,8 @@
                                 id="gender"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('gender') border-red-300 @enderror">
                             <option value="">Pilih Jenis Kelamin</option>
-                            <option value="male" {{ old('gender', $patient->gender ?? '') === 'male' ? 'selected' : '' }}>Laki-laki</option>
-                            <option value="female" {{ old('gender', $patient->gender ?? '') === 'female' ? 'selected' : '' }}>Perempuan</option>
+                            <option value="male" {{ old('gender', isset($patient) ? $patient->gender : '') === 'male' ? 'selected' : '' }}>Laki-laki</option>
+                            <option value="female" {{ old('gender', isset($patient) ? $patient->gender : '') === 'female' ? 'selected' : '' }}>Perempuan</option>
                         </select>
                         @error('gender')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -114,7 +114,7 @@
                         <input type="tel" 
                                name="phone" 
                                id="phone"
-                               value="{{ old('phone', $patient->phone ?? '') }}"
+                               value="{{ old('phone', isset($patient) ? $patient->phone : '') }}"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('phone') border-red-300 @enderror">
                         @error('phone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -127,7 +127,7 @@
                         <input type="tel" 
                                name="emergency_contact" 
                                id="emergency_contact"
-                               value="{{ old('emergency_contact', $patient->emergency_contact ?? '') }}"
+                               value="{{ old('emergency_contact', isset($patient) ? $patient->emergency_contact : '') }}"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('emergency_contact') border-red-300 @enderror">
                         @error('emergency_contact')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -141,7 +141,7 @@
                     <textarea name="address" 
                               id="address"
                               rows="3"
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('address') border-red-300 @enderror">{{ old('address', $patient->address ?? '') }}</textarea>
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('address') border-red-300 @enderror">{{ old('address', isset($patient) ? $patient->address : '') }}</textarea>
                     @error('address')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -159,14 +159,14 @@
                                     id="blood_type"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('blood_type') border-red-300 @enderror">
                                 <option value="">Pilih Golongan Darah</option>
-                                <option value="A+" {{ old('blood_type', $patient->blood_type ?? '') === 'A+' ? 'selected' : '' }}>A+</option>
-                                <option value="A-" {{ old('blood_type', $patient->blood_type ?? '') === 'A-' ? 'selected' : '' }}>A-</option>
-                                <option value="B+" {{ old('blood_type', $patient->blood_type ?? '') === 'B+' ? 'selected' : '' }}>B+</option>
-                                <option value="B-" {{ old('blood_type', $patient->blood_type ?? '') === 'B-' ? 'selected' : '' }}>B-</option>
-                                <option value="AB+" {{ old('blood_type', $patient->blood_type ?? '') === 'AB+' ? 'selected' : '' }}>AB+</option>
-                                <option value="AB-" {{ old('blood_type', $patient->blood_type ?? '') === 'AB-' ? 'selected' : '' }}>AB-</option>
-                                <option value="O+" {{ old('blood_type', $patient->blood_type ?? '') === 'O+' ? 'selected' : '' }}>O+</option>
-                                <option value="O-" {{ old('blood_type', $patient->blood_type ?? '') === 'O-' ? 'selected' : '' }}>O-</option>
+                                <option value="A+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'A+' ? 'selected' : '' }}>A+</option>
+                                <option value="A-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'A-' ? 'selected' : '' }}>A-</option>
+                                <option value="B+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'B+' ? 'selected' : '' }}>B+</option>
+                                <option value="B-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'B-' ? 'selected' : '' }}>B-</option>
+                                <option value="AB+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'AB+' ? 'selected' : '' }}>AB+</option>
+                                <option value="AB-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'AB-' ? 'selected' : '' }}>AB-</option>
+                                <option value="O+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'O+' ? 'selected' : '' }}>O+</option>
+                                <option value="O-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'O-' ? 'selected' : '' }}>O-</option>
                             </select>
                             @error('blood_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -179,7 +179,7 @@
                             <input type="text" 
                                    name="insurance_number" 
                                    id="insurance_number"
-                                   value="{{ old('insurance_number', $patient->insurance_number ?? '') }}"
+                                   value="{{ old('insurance_number', isset($patient) ? $patient->insurance_number : '') }}"
                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('insurance_number') border-red-300 @enderror">
                             @error('insurance_number')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -194,7 +194,7 @@
                                   id="allergies"
                                   rows="2"
                                   placeholder="Sebutkan alergi yang Anda miliki..."
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('allergies') border-red-300 @enderror">{{ old('allergies', $patient->allergies ?? '') }}</textarea>
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('allergies') border-red-300 @enderror">{{ old('allergies', isset($patient) ? $patient->allergies : '') }}</textarea>
                         @error('allergies')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -207,7 +207,7 @@
                                   id="chronic_conditions"
                                   rows="2"
                                   placeholder="Sebutkan penyakit kronis yang Anda miliki..."
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('chronic_conditions') border-red-300 @enderror">{{ old('chronic_conditions', $patient->chronic_conditions ?? '') }}</textarea>
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('chronic_conditions') border-red-300 @enderror">{{ old('chronic_conditions', isset($patient) ? $patient->chronic_conditions : '') }}</textarea>
                         @error('chronic_conditions')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -308,7 +308,7 @@
                                    name="auto_approve_access" 
                                    id="auto_approve_access"
                                    value="1"
-                                   {{ old('auto_approve_access', $patient->auto_approve_access ?? false) ? 'checked' : '' }}
+                                   {{ old('auto_approve_access', isset($patient) ? $patient->auto_approve_access : false) ? 'checked' : '' }}
                                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </div>
                     </div>
@@ -328,7 +328,7 @@
                                    name="email_notifications" 
                                    id="email_notifications"
                                    value="1"
-                                   {{ old('email_notifications', $patient->email_notifications ?? true) ? 'checked' : '' }}
+                                   {{ old('email_notifications', isset($patient) ? $patient->email_notifications : true) ? 'checked' : '' }}
                                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </div>
                     </div>
@@ -348,7 +348,7 @@
                                    name="allow_research_data" 
                                    id="allow_research_data"
                                    value="1"
-                                   {{ old('allow_research_data', $patient->allow_research_data ?? false) ? 'checked' : '' }}
+                                   {{ old('allow_research_data', isset($patient) ? $patient->allow_research_data : false) ? 'checked' : '' }}
                                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                         </div>
                     </div>
@@ -374,18 +374,18 @@
             <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Patient ID</dt>
-                    <dd class="mt-1 text-sm text-gray-900 font-mono">{{ $patient->patient_id ?? 'N/A' }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 font-mono">{{ isset($patient) ? ($patient->patient_id ?? 'N/A') : 'N/A' }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Tanggal Registrasi</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                        {{ $patient->user->created_at ? \Carbon\Carbon::parse($patient->user->created_at)->format('d M Y, H:i') : 'N/A' }}
+                        {{ isset($patient) && isset($patient->user) && $patient->user->created_at ? \Carbon\Carbon::parse($patient->user->created_at)->format('d M Y, H:i') : 'N/A' }}
                     </dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Terakhir Login</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                        {{ $patient->user->last_login_at ? \Carbon\Carbon::parse($patient->user->last_login_at)->diffForHumans() : 'Belum pernah login' }}
+                        {{ isset($patient) && isset($patient->user) && $patient->user->last_login_at ? \Carbon\Carbon::parse($patient->user->last_login_at)->diffForHumans() : 'Belum pernah login' }}
                     </dd>
                 </div>
                 <div>

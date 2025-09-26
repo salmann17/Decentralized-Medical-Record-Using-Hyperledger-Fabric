@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Total Dokter dengan Akses</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ $doctors->count() }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ isset($doctors) ? $doctors->count() : 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Rekam Medis Aktif</dt>
@@ -58,9 +58,9 @@
 
     <!-- Active Doctors List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        @if($doctors->count() > 0)
+        @if(isset($doctors) && $doctors->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
-            @foreach($doctors as $doctor)
+            @foreach($doctors ?? [] as $doctor)
             <li class="px-4 py-6 sm:px-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center min-w-0 flex-1">
@@ -175,7 +175,7 @@
         </ul>
 
         <!-- Pagination -->
-        @if($doctors->hasPages())
+        @if(isset($doctors) && $doctors->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
             {{ $doctors->appends(request()->query())->links() }}
         </div>

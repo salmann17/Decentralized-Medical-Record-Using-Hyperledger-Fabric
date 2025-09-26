@@ -14,9 +14,9 @@
 
     <!-- Statistics Cards -->
     @php
-        $pendingCount = $requests->where('status', 'pending')->count();
-        $approvedCount = $requests->where('status', 'approved')->count();
-        $rejectedCount = $requests->where('status', 'rejected')->count();
+        $pendingCount = isset($requests) ? $requests->where('status', 'pending')->count() : 0;
+        $approvedCount = isset($requests) ? $requests->where('status', 'approved')->count() : 0;
+        $rejectedCount = isset($requests) ? $requests->where('status', 'rejected')->count() : 0;
     @endphp
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
@@ -45,7 +45,7 @@
                    class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Disetujui ({{ $approvedCount }})
                 </a>
-                <a href="{{ route('patient.access-requests', ['status' => 'rejected') }}" 
+                <a href="{{ route('patient.access-requests', ['status' => 'rejected']) }}" 
                    class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'rejected' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Ditolak ({{ $rejectedCount }})
                 </a>
@@ -59,9 +59,9 @@
 
     <!-- Access Requests List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        @if($requests->count() > 0)
+        @if(isset($requests) && $requests->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
-            @foreach($requests as $request)
+            @foreach($requests ?? [] as $request)
             <li class="px-4 py-6 sm:px-6">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center min-w-0 flex-1">
@@ -170,7 +170,7 @@
         </ul>
 
         <!-- Pagination -->
-        @if($requests->hasPages())
+        @if(isset($requests) && $requests->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
             {{ $requests->appends(request()->query())->links() }}
         </div>

@@ -14,9 +14,9 @@
 
     <!-- Statistics Cards -->
     @php
-        $totalAudits = $auditTrails->count();
-        $todayAudits = $auditTrails->whereDate('action_timestamp', now()->toDateString())->count();
-        $weekAudits = $auditTrails->where('action_timestamp', '>=', now()->subWeek())->count();
+        $totalAudits = isset($auditTrails) ? $auditTrails->count() : 0;
+        $todayAudits = isset($auditTrails) ? $auditTrails->whereDate('action_timestamp', now()->toDateString())->count() : 0;
+        $weekAudits = isset($auditTrails) ? $auditTrails->where('action_timestamp', '>=', now()->subWeek())->count() : 0;
     @endphp
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
@@ -112,9 +112,9 @@
 
     <!-- Audit Trail List -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        @if($auditTrails->count() > 0)
+        @if(isset($auditTrails) && $auditTrails->count() > 0)
         <ul role="list" class="divide-y divide-gray-200">
-            @foreach($auditTrails as $audit)
+            @foreach($auditTrails ?? [] as $audit)
             <li class="px-4 py-6 sm:px-6">
                 <div class="flex items-start justify-between">
                     <div class="flex items-start space-x-4 min-w-0 flex-1">
@@ -258,7 +258,7 @@
         </ul>
 
         <!-- Pagination -->
-        @if($auditTrails->hasPages())
+        @if(isset($auditTrails) && $auditTrails->hasPages())
         <div class="border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
             {{ $auditTrails->appends(request()->query())->links() }}
         </div>
