@@ -40,7 +40,7 @@ class PatientController extends Controller
         
         // Get recent medical records
         $recentRecords = MedicalRecord::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital'])
+            ->with(['doctor.user', 'hospital', 'prescription'])
             ->orderBy('visit_date', 'desc')
             ->take(5)
             ->get();
@@ -64,7 +64,7 @@ class PatientController extends Controller
         $patient = Patient::where('patient_id', $user->idusers)->first();
         
         $records = MedicalRecord::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital'])
+            ->with(['doctor.user', 'hospital', 'prescription'])
             ->orderBy('visit_date', 'desc')
             ->paginate(10);
 
@@ -81,7 +81,7 @@ class PatientController extends Controller
         
         $record = MedicalRecord::where('medicalrecord_id', $id)
             ->where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital'])
+            ->with(['doctor.user', 'hospital', 'prescription'])
             ->firstOrFail();
 
         // Log access for audit trail
