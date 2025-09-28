@@ -50,6 +50,7 @@
             <form method="POST" action="{{ route('patient.settings.update') }}" class="space-y-6">
                 @csrf
                 @method('PATCH')
+                <input type="hidden" name="action" value="profile">
                 
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <!-- Full Name -->
@@ -60,7 +61,7 @@
                                id="name"
                                value="{{ old('name', isset($patient) && isset($patient->user) ? $patient->user->name : '') }}"
                                required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('name') border-red-300 @enderror">
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -74,21 +75,34 @@
                                id="email"
                                value="{{ old('email', isset($patient) && isset($patient->user) ? $patient->user->email : '') }}"
                                required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('email') border-red-300 @enderror">
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- NIK -->
+                    <div>
+                        <label for="nik" class="block text-sm font-medium text-gray-700">NIK (Nomor Induk Kependudukan)</label>
+                        <input type="number" 
+                               name="nik" 
+                               id="nik"
+                               value="{{ old('nik', isset($patient) ? $patient->nik : '') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        @error('nik')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Date of Birth -->
                     <div>
-                        <label for="date_of_birth" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
+                        <label for="birthdate" class="block text-sm font-medium text-gray-700">Tanggal Lahir</label>
                         <input type="date" 
-                               name="date_of_birth" 
-                               id="date_of_birth"
-                               value="{{ old('date_of_birth', isset($patient) ? $patient->date_of_birth : '') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('date_of_birth') border-red-300 @enderror">
-                        @error('date_of_birth')
+                               name="birthdate" 
+                               id="birthdate"
+                               value="{{ old('birthdate', isset($patient) ? $patient->birthdate : '') }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        @error('birthdate')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -98,7 +112,7 @@
                         <label for="gender" class="block text-sm font-medium text-gray-700">Jenis Kelamin</label>
                         <select name="gender" 
                                 id="gender"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('gender') border-red-300 @enderror">
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             <option value="">Pilih Jenis Kelamin</option>
                             <option value="male" {{ old('gender', isset($patient) ? $patient->gender : '') === 'male' ? 'selected' : '' }}>Laki-laki</option>
                             <option value="female" {{ old('gender', isset($patient) ? $patient->gender : '') === 'female' ? 'selected' : '' }}>Perempuan</option>
@@ -108,28 +122,23 @@
                         @enderror
                     </div>
 
-                    <!-- Phone -->
+                    <!-- Blood Type -->
                     <div>
-                        <label for="phone" class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
-                        <input type="tel" 
-                               name="phone" 
-                               id="phone"
-                               value="{{ old('phone', isset($patient) ? $patient->phone : '') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('phone') border-red-300 @enderror">
-                        @error('phone')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Emergency Contact -->
-                    <div>
-                        <label for="emergency_contact" class="block text-sm font-medium text-gray-700">Kontak Darurat</label>
-                        <input type="tel" 
-                               name="emergency_contact" 
-                               id="emergency_contact"
-                               value="{{ old('emergency_contact', isset($patient) ? $patient->emergency_contact : '') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('emergency_contact') border-red-300 @enderror">
-                        @error('emergency_contact')
+                        <label for="blood" class="block text-sm font-medium text-gray-700">Golongan Darah</label>
+                        <select name="blood" 
+                                id="blood"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">Pilih Golongan Darah</option>
+                            <option value="A+" {{ old('blood', isset($patient) ? $patient->blood : '') === 'A+' ? 'selected' : '' }}>A+</option>
+                            <option value="A-" {{ old('blood', isset($patient) ? $patient->blood : '') === 'A-' ? 'selected' : '' }}>A-</option>
+                            <option value="B+" {{ old('blood', isset($patient) ? $patient->blood : '') === 'B+' ? 'selected' : '' }}>B+</option>
+                            <option value="B-" {{ old('blood', isset($patient) ? $patient->blood : '') === 'B-' ? 'selected' : '' }}>B-</option>
+                            <option value="AB+" {{ old('blood', isset($patient) ? $patient->blood : '') === 'AB+' ? 'selected' : '' }}>AB+</option>
+                            <option value="AB-" {{ old('blood', isset($patient) ? $patient->blood : '') === 'AB-' ? 'selected' : '' }}>AB-</option>
+                            <option value="O+" {{ old('blood', isset($patient) ? $patient->blood : '') === 'O+' ? 'selected' : '' }}>O+</option>
+                            <option value="O-" {{ old('blood', isset($patient) ? $patient->blood : '') === 'O-' ? 'selected' : '' }}>O-</option>
+                        </select>
+                        @error('blood')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -141,77 +150,10 @@
                     <textarea name="address" 
                               id="address"
                               rows="3"
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('address') border-red-300 @enderror">{{ old('address', isset($patient) ? $patient->address : '') }}</textarea>
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ old('address', isset($patient) ? $patient->address : '') }}</textarea>
                     @error('address')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
-                </div>
-
-                <!-- Medical Information -->
-                <div class="space-y-4">
-                    <h4 class="text-md font-medium text-gray-900">Informasi Medis</h4>
-                    
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <!-- Blood Type -->
-                        <div>
-                            <label for="blood_type" class="block text-sm font-medium text-gray-700">Golongan Darah</label>
-                            <select name="blood_type" 
-                                    id="blood_type"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('blood_type') border-red-300 @enderror">
-                                <option value="">Pilih Golongan Darah</option>
-                                <option value="A+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'A+' ? 'selected' : '' }}>A+</option>
-                                <option value="A-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'A-' ? 'selected' : '' }}>A-</option>
-                                <option value="B+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'B+' ? 'selected' : '' }}>B+</option>
-                                <option value="B-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'B-' ? 'selected' : '' }}>B-</option>
-                                <option value="AB+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'AB+' ? 'selected' : '' }}>AB+</option>
-                                <option value="AB-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'AB-' ? 'selected' : '' }}>AB-</option>
-                                <option value="O+" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'O+' ? 'selected' : '' }}>O+</option>
-                                <option value="O-" {{ old('blood_type', isset($patient) ? $patient->blood_type : '') === 'O-' ? 'selected' : '' }}>O-</option>
-                            </select>
-                            @error('blood_type')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Insurance Number -->
-                        <div>
-                            <label for="insurance_number" class="block text-sm font-medium text-gray-700">Nomor Asuransi/BPJS</label>
-                            <input type="text" 
-                                   name="insurance_number" 
-                                   id="insurance_number"
-                                   value="{{ old('insurance_number', isset($patient) ? $patient->insurance_number : '') }}"
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('insurance_number') border-red-300 @enderror">
-                            @error('insurance_number')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <!-- Allergies -->
-                    <div>
-                        <label for="allergies" class="block text-sm font-medium text-gray-700">Alergi (jika ada)</label>
-                        <textarea name="allergies" 
-                                  id="allergies"
-                                  rows="2"
-                                  placeholder="Sebutkan alergi yang Anda miliki..."
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('allergies') border-red-300 @enderror">{{ old('allergies', isset($patient) ? $patient->allergies : '') }}</textarea>
-                        @error('allergies')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Chronic Conditions -->
-                    <div>
-                        <label for="chronic_conditions" class="block text-sm font-medium text-gray-700">Penyakit Kronis (jika ada)</label>
-                        <textarea name="chronic_conditions" 
-                                  id="chronic_conditions"
-                                  rows="2"
-                                  placeholder="Sebutkan penyakit kronis yang Anda miliki..."
-                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('chronic_conditions') border-red-300 @enderror">{{ old('chronic_conditions', isset($patient) ? $patient->chronic_conditions : '') }}</textarea>
-                        @error('chronic_conditions')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
                 </div>
 
                 <!-- Save Button -->
@@ -231,8 +173,9 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Ubah Kata Sandi</h3>
-            <form method="POST" action="{{ route('patient.settings.change-password') }}" class="space-y-6">
+            <form method="POST" action="{{ route('patient.settings.update') }}" class="space-y-6">
                 @csrf
+                <input type="hidden" name="action" value="change_password">
                 
                 <div class="space-y-4">
                     <!-- Current Password -->
@@ -242,7 +185,7 @@
                                name="current_password" 
                                id="current_password"
                                required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('current_password') border-red-300 @enderror">
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @error('current_password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -255,7 +198,7 @@
                                name="new_password" 
                                id="new_password"
                                required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm @error('new_password') border-red-300 @enderror">
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         @error('new_password')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -289,8 +232,9 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Pengaturan Privasi</h3>
-            <form method="POST" action="{{ route('patient.settings.privacy') }}" class="space-y-6">
+            <form method="POST" action="{{ route('patient.settings.update') }}" class="space-y-6">
                 @csrf
+                <input type="hidden" name="action" value="privacy">
                 
                 <div class="space-y-4">
                     <!-- Auto-approve access -->

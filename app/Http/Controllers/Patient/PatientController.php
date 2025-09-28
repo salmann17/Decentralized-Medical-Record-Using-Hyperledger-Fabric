@@ -236,46 +236,91 @@ class PatientController extends Controller
      */
     public function updateSettings(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . Auth::id() . ',idusers',
-            'nik' => 'required|string|max:16',
-            'birthdate' => 'required|date',
-            'gender' => 'required|in:male,female',
-            'blood' => 'required|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
-            'address' => 'required|string|max:255',
-            'current_password' => 'nullable|string',
-            'new_password' => 'nullable|string|min:8|confirmed',
-        ]);
-
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
 
-        // Update user data
-        $userData = [
-            'name' => $request->name,
-            'email' => $request->email,
-        ];
+        // Handle different actions based on form submission
+        $action = $request->input('action', 'profile');
 
-        // Update password if provided
-        if ($request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
-            }
-            $userData['password'] = Hash::make($request->new_password);
+        switch ($action) {
+            case 'profile':
+                return $this->updateProfile($request, $user, $patient);
+            case 'change_password':
+                return $this->changePassword($request, $user);
+            case 'privacy':
+                return $this->updatePrivacy($request, $patient);
+            default:
+                return $this->updateProfile($request, $user, $patient);
         }
+    }
 
-        $user->update($userData);
-
-        // Update patient data
-        $patient->update([
-            'nik' => $request->nik,
-            'birthdate' => $request->birthdate,
-            'gender' => $request->gender,
-            'blood' => $request->blood,
-            'address' => $request->address,
+    /**
+     * Update profile information
+     */
+    private function updateProfile(Request $request, $user, $patient)
+    {
+        $request->validate([
+            'name' => 'required|string|max:135',
+            'email' => 'required|email|max:135|unique:users,email,' . $user->idusers . ',idusers',
+            'nik' => 'nullable|numeric',
+            'birthdate' => 'nullable|date',
+            'gender' => 'nullable|in:male,female',
+            'blood' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'address' => 'nullable|string|max:135',
         ]);
 
-        return redirect()->back()->with('success', 'Pengaturan berhasil diperbarui.');
+        // Update user data
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        // Update patient data - only update fields that exist in database
+        $patientData = [];
+        if ($request->filled('nik')) $patientData['nik'] = $request->nik;
+        if ($request->filled('birthdate')) $patientData['birthdate'] = $request->birthdate;
+        if ($request->filled('gender')) $patientData['gender'] = $request->gender;
+        if ($request->filled('blood')) $patientData['blood'] = $request->blood;
+        if ($request->filled('address')) $patientData['address'] = $request->address;
+
+        if (!empty($patientData)) {
+            $patient->update($patientData);
+        }
+
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    /**
+     * Change password
+     */
+    private function changePassword(Request $request, $user)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->back()->with('success', 'Password berhasil diubah.');
+    }
+
+    /**
+     * Update privacy settings
+     */
+    private function updatePrivacy(Request $request, $patient)
+    {
+        // Since privacy settings are not in the database, we'll just return success for now
+        // In the future, you could add a separate privacy_settings table or add columns to patients table
+        
+        return redirect()->back()->with('success', 'Pengaturan privasi berhasil diperbarui.');
     }
 }

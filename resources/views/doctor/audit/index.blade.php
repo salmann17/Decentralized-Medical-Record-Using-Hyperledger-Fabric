@@ -96,12 +96,12 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Total Aktivitas</dt>
-                            <dd class="text-lg font-semibold text-gray-900">{{ isset($totalActivities) ? $totalActivities : '142' }}</dd>
+                            <dd class="text-lg font-semibold text-gray-900">{{ $auditTrails->count() }}</dd>
                         </dl>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <div class="text-sm text-gray-500">30 hari terakhir</div>
+                    <div class="text-sm text-gray-500">Semua aktivitas Anda</div>
                 </div>
             </div>
         </div>
@@ -118,7 +118,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Akses Pasien</dt>
-                            <dd class="text-lg font-semibold text-blue-900">{{ isset($patientAccess) ? $patientAccess : '23' }}</dd>
+                            <dd class="text-lg font-semibold text-blue-900">{{ $auditTrails->whereNotNull('patient_id')->groupBy('patient_id')->count() }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -140,12 +140,12 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Rekam Medis</dt>
-                            <dd class="text-lg font-semibold text-green-900">{{ isset($recordsCreated) ? $recordsCreated : '35' }}</dd>
+                            <dd class="text-lg font-semibold text-green-900">{{ $auditTrails->where('action', 'create')->count() }}</dd>
                         </dl>
                     </div>
                 </div>
                 <div class="mt-3">
-                    <div class="text-sm text-gray-500">Dibuat bulan ini</div>
+                    <div class="text-sm text-gray-500">Rekam medis dibuat</div>
                 </div>
             </div>
         </div>
@@ -162,7 +162,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Blockchain</dt>
-                            <dd class="text-lg font-semibold text-purple-900">{{ isset($blockchainVerified) ? $blockchainVerified : '0' }}</dd>
+                            <dd class="text-lg font-semibold text-purple-900">{{ $auditTrails->whereNotNull('blockchain_hash')->where('blockchain_hash', '!=', '')->where('blockchain_hash', 'not like', 'dummy_%')->count() }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -181,18 +181,7 @@
             <!-- Activity Timeline -->
             <div class="flow-root">
                 <ul role="list" class="-mb-8">
-                    <!-- Sample Activities (will be replaced with dynamic data) -->
-                    @php
-                    $sampleActivities = [
-                        ['time' => '2 menit yang lalu', 'action' => 'Melihat rekam medis', 'patient' => 'Sarah Johnson', 'type' => 'view', 'details' => 'Melihat rekam medis pasien #12345', 'ip' => '192.168.1.100'],
-                        ['time' => '15 menit yang lalu', 'action' => 'Membuat rekam medis', 'patient' => 'John Doe', 'type' => 'create', 'details' => 'Membuat rekam medis baru untuk kunjungan #67890', 'ip' => '192.168.1.100'],
-                        ['time' => '1 jam yang lalu', 'action' => 'Permintaan akses', 'patient' => 'Lisa Wang', 'type' => 'access_request', 'details' => 'Mengajukan permintaan akses data pasien', 'ip' => '192.168.1.100'],
-                        ['time' => '2 jam yang lalu', 'action' => 'Update profil', 'patient' => null, 'type' => 'update', 'details' => 'Mengubah informasi profil dokter', 'ip' => '192.168.1.100'],
-                        ['time' => '3 jam yang lalu', 'action' => 'Login sistem', 'patient' => null, 'type' => 'login', 'details' => 'Berhasil login ke sistem', 'ip' => '192.168.1.100'],
-                    ];
-                    @endphp
-
-                    @foreach($sampleActivities as $index => $activity)
+                    @forelse($auditTrails as $audit)
                     <li>
                         <div class="relative pb-8">
                             @if(!$loop->last)
@@ -202,35 +191,17 @@
                             <div class="relative flex space-x-3">
                                 <!-- Activity Icon -->
                                 <div>
-                                    @if($activity['type'] === 'view')
+                                    @if($audit->action === 'view')
                                         <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
                                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                         </span>
-                                    @elseif($activity['type'] === 'create')
+                                    @elseif($audit->action === 'create')
                                         <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
                                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                            </svg>
-                                        </span>
-                                    @elseif($activity['type'] === 'update')
-                                        <span class="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center ring-8 ring-white">
-                                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                            </svg>
-                                        </span>
-                                    @elseif($activity['type'] === 'access_request')
-                                        <span class="h-8 w-8 rounded-full bg-purple-500 flex items-center justify-center ring-8 ring-white">
-                                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                                            </svg>
-                                        </span>
-                                    @elseif($activity['type'] === 'login')
-                                        <span class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center ring-8 ring-white">
-                                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                                             </svg>
                                         </span>
                                     @else
@@ -247,17 +218,37 @@
                                     <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                                         <div class="flex items-center justify-between">
                                             <div>
-                                                <p class="text-sm font-medium text-gray-900">{{ $activity['action'] }}</p>
-                                                <p class="text-sm text-gray-500 mt-1">{{ $activity['details'] }}</p>
-                                                @if($activity['patient'])
+                                                <p class="text-sm font-medium text-gray-900">
+                                                    @if($audit->action === 'view')
+                                                        Melihat Rekam Medis
+                                                    @elseif($audit->action === 'create')
+                                                        Membuat Rekam Medis
+                                                    @else
+                                                        {{ ucfirst($audit->action) }}
+                                                    @endif
+                                                </p>
+                                                <p class="text-sm text-gray-500 mt-1">
+                                                    @if($audit->action === 'view' && $audit->medicalRecord)
+                                                        Melihat rekam medis ID #{{ $audit->medicalrecord_id }}
+                                                    @elseif($audit->action === 'create' && $audit->medicalRecord)
+                                                        Membuat rekam medis baru untuk kunjungan #{{ $audit->medicalrecord_id }}
+                                                    @else
+                                                        Aktivitas {{ $audit->action }} pada sistem
+                                                    @endif
+                                                </p>
+                                                @if($audit->patient && $audit->patient->user)
                                                     <p class="text-sm text-blue-600 mt-1">
-                                                        <span class="font-medium">Pasien:</span> {{ $activity['patient'] }}
+                                                        <span class="font-medium">Pasien:</span> {{ $audit->patient->user->name }}
                                                     </p>
                                                 @endif
                                             </div>
                                             <div class="text-right">
-                                                <p class="text-sm text-gray-500">{{ $activity['time'] }}</p>
-                                                <p class="text-xs text-gray-400 mt-1">IP: {{ $activity['ip'] }}</p>
+                                                <p class="text-sm text-gray-500">
+                                                    {{ \Carbon\Carbon::parse($audit->timestamp)->diffForHumans() }}
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    {{ \Carbon\Carbon::parse($audit->timestamp)->format('H:i:s') }}
+                                                </p>
                                             </div>
                                         </div>
                                         
@@ -274,7 +265,7 @@
                                                     <svg class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                     </svg>
-                                                    {{ now()->subMinutes(rand(1, 180))->format('H:i:s') }}
+                                                    {{ \Carbon\Carbon::parse($audit->timestamp)->format('d M Y') }}
                                                 </span>
                                             </div>
                                             
@@ -283,7 +274,13 @@
                                                 <svg class="h-3 w-3 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                                 </svg>
-                                                <span class="text-blue-600">Blockchain: Pending Integration</span>
+                                                <span class="text-blue-600">
+                                                    @if($audit->blockchain_hash && $audit->blockchain_hash !== 'dummy_hash_' && !str_contains($audit->blockchain_hash, 'dummy'))
+                                                        Hash: {{ substr($audit->blockchain_hash, 0, 8) }}...
+                                                    @else
+                                                        Pending Integration
+                                                    @endif
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
@@ -291,7 +288,17 @@
                             </div>
                         </div>
                     </li>
-                    @endforeach
+                    @empty
+                    <li>
+                        <div class="text-center py-8">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">Belum Ada Aktivitas</h3>
+                            <p class="mt-1 text-sm text-gray-500">Audit trail akan muncul ketika Anda melakukan aktivitas dalam sistem.</p>
+                        </div>
+                    </li>
+                    @endforelse
                 </ul>
             </div>
 
@@ -350,8 +357,7 @@ document.getElementById('exportBtn').addEventListener('click', function() {
     // In real implementation, this would call backend export endpoint
     alert('Export PDF akan tersedia setelah backend dikonfigurasi');
     
-    // Placeholder for export functionality
-    // window.location.href = "{{ route('doctor.audit-trail.export') }}";
+    // Placeholder for future export functionality
 });
 
 // Auto-refresh every 30 seconds
