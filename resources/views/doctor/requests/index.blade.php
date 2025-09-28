@@ -34,7 +34,7 @@
                        class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Semua
                         <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($accessRequests) ? $accessRequests->total() : 0 }}
+                            {{ isset($requests) ? $requests->count() : 0 }}
                         </span>
                     </a>
                     
@@ -42,7 +42,7 @@
                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'pending' ? 'border-yellow-500 text-yellow-600' : '' }}">
                         Pending
                         <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($accessRequests) ? $accessRequests->where('status', 'pending')->count() : 0 }}
+                            {{ isset($requests) ? $requests->where('status', 'pending')->count() : 0 }}
                         </span>
                     </a>
                     
@@ -50,7 +50,7 @@
                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'approved' ? 'border-green-500 text-green-600' : '' }}">
                         Disetujui
                         <span class="ml-2 bg-green-100 text-green-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($accessRequests) ? $accessRequests->where('status', 'approved')->count() : 0 }}
+                            {{ isset($requests) ? $requests->where('status', 'approved')->count() : 0 }}
                         </span>
                     </a>
                     
@@ -58,7 +58,7 @@
                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'rejected' ? 'border-red-500 text-red-600' : '' }}">
                         Ditolak
                         <span class="ml-2 bg-red-100 text-red-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($accessRequests) ? $accessRequests->where('status', 'rejected')->count() : 0 }}
+                            {{ isset($requests) ? $requests->where('status', 'rejected')->count() : 0 }}
                         </span>
                     </a>
                 </nav>
@@ -69,7 +69,7 @@
     <!-- Access Requests Table -->
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            @if(isset($accessRequests) && $accessRequests->count() > 0)
+            @if(isset($requests) && $requests->count() > 0)
                 <div class="flow-root">
                     <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -97,7 +97,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    @foreach($accessRequests as $request)
+                                    @foreach($requests as $request)
                                     <tr class="hover:bg-gray-50">
                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                                             <div class="flex items-center">
@@ -170,7 +170,7 @@
 
                 <!-- Pagination -->
                 <div class="mt-6">
-                    {{ $accessRequests->links() }}
+                    <!-- Pagination will be implemented when we convert to paginated results -->
                 </div>
             @else
                 <div class="text-center py-12">

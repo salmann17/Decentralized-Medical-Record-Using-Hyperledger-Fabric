@@ -161,13 +161,59 @@ class DoctorController extends Controller
     }
 
     /**
+     * API untuk search pasien (untuk AJAX)
+     */
+    public function searchPatients(Request $request)
+    {
+        try {
+            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            
+            if (!$doctor) {
+                return response()->json(['error' => 'Data dokter tidak ditemukan'], 404);
+            }
+
+            $query = $request->get('q', '');
+            
+            if (strlen($query) < 2) {
+                return response()->json([]);
+            }
+
+            // Ambil daftar pasien yang belum pernah diminta akses
+            $existingRequests = AccessRequest::where('doctor_id', $doctor->doctor_id)
+                ->pluck('patient_id')
+                ->toArray();
+
+            $patients = Patient::with('user')
+                ->whereNotIn('patient_id', $existingRequests)
+                ->whereHas('user', function($userQuery) use ($query) {
+                    $userQuery->where('name', 'like', '%' . $query . '%')
+                             ->orWhere('email', 'like', '%' . $query . '%');
+                })
+                ->get()
+                ->map(function($patient) {
+                    return [
+                        'patient_id' => $patient->patient_id,
+                        'name' => $patient->user->name,
+                        'email' => $patient->user->email,
+                        'gender' => $patient->gender ?? 'unknown',
+                        'blood' => $patient->blood_type ?? 'Unknown'
+                    ];
+                });
+
+            return response()->json($patients);
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Simpan permintaan akses baru
      */
     public function storeAccessRequest(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'patient_id' => 'required|exists:patients,patient_id',
-            'reason' => 'required|string|max:500'
+            'patient_id' => 'required|exists:patients,patient_id'
         ]);
 
         if ($validator->fails()) {
@@ -192,23 +238,24 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Permintaan akses untuk pasien ini sudah ada');
             }
 
-            // Simpan permintaan akses
-            AccessRequest::create([
+            // Simpan permintaan akses - TIDAK perlu audit trail
+            $accessRequest = AccessRequest::create([
                 'doctor_id' => $doctor->doctor_id,
                 'patient_id' => $request->patient_id,
                 'status' => 'pending',
                 'requested_at' => now()
             ]);
 
-            // Log audit trail
-            $this->logAuditTrail(Auth::id(), $request->patient_id, null, 'REQUEST_ACCESS');
-
-            // TODO: Blockchain integration - record access request on blockchain
+            // TIDAK ada log audit trail disini karena:
+            // - Access request hanya permintaan, bukan aktivitas medis
+            // - Audit trail untuk aktivitas VIEW/CREATE medical records
+            // - Pasien belum approve, jadi belum ada akses yang terjadi
 
             return redirect()->route('doctor.access-requests')
                 ->with('success', 'Permintaan akses berhasil dikirim');
                 
         } catch (\Exception $e) {
+            Log::error('Error creating access request: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -354,8 +401,20 @@ class DoctorController extends Controller
                 ->orderBy('visit_date', 'desc')
                 ->get();
 
-            // Log audit trail untuk akses rekam medis
-            $this->logAuditTrail(Auth::id(), $patientId, null, 'VIEW_PATIENT_RECORDS');
+            // Log audit trail untuk VIEW patient records (hanya jika ada records)
+            if ($records->isNotEmpty()) {
+                // Log untuk setiap record yang dilihat
+                foreach ($records as $record) {
+                    AuditTrail::create([
+                        'users_id' => Auth::id(),
+                        'patient_id' => $patientId,
+                        'medicalrecord_id' => $record->medicalrecord_id,
+                        'action' => 'view',
+                        'timestamp' => now(),
+                        'blockchain_hash' => 'pending_integration'
+                    ]);
+                }
+            }
 
             return view('doctor.records.patient', compact('records', 'patient', 'doctor'));
             
@@ -446,8 +505,15 @@ class DoctorController extends Controller
                 'status' => 'active'
             ]);
 
-            // Log audit trail
-            $this->logAuditTrail(Auth::id(), $patientId, $medicalRecord->medicalrecord_id, 'CREATE_RECORD');
+            // Log audit trail untuk CREATE medical record
+            AuditTrail::create([
+                'users_id' => Auth::id(),
+                'patient_id' => $patientId,
+                'medicalrecord_id' => $medicalRecord->medicalrecord_id,
+                'action' => 'create',
+                'timestamp' => now(),
+                'blockchain_hash' => 'pending_integration'
+            ]);
 
             // TODO: Blockchain integration - record medical record on blockchain
 
@@ -488,8 +554,15 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses ke rekam medis ini');
             }
 
-            // Log audit trail
-            $this->logAuditTrail(Auth::id(), $record->patient_id, $recordId, 'VIEW_RECORD');
+            // Log audit trail saat VIEW specific record
+            AuditTrail::create([
+                'users_id' => Auth::id(),
+                'patient_id' => $record->patient_id,
+                'medicalrecord_id' => $recordId,
+                'action' => 'view',
+                'timestamp' => now(),
+                'blockchain_hash' => 'pending_integration'
+            ]);
 
             return view('doctor.records.show', compact('record', 'doctor'));
             

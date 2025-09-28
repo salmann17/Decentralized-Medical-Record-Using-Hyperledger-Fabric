@@ -84,59 +84,6 @@
                     </div>
                 </div>
 
-                <!-- Purpose -->
-                <div>
-                    <label for="purpose" class="block text-sm font-medium text-gray-700">Tujuan Akses</label>
-                    <div class="mt-1">
-                        <textarea id="purpose" 
-                                  name="purpose" 
-                                  rows="3" 
-                                  class="shadow-sm focus:ring-blue-500 focus:border-blue-500 mt-1 block w-full sm:text-sm border-gray-300 rounded-md" 
-                                  placeholder="Jelaskan tujuan Anda membutuhkan akses ke data pasien ini..."
-                                  required></textarea>
-                    </div>
-                    <p class="mt-2 text-sm text-gray-500">Berikan penjelasan yang jelas tentang mengapa Anda membutuhkan akses ke data pasien.</p>
-                </div>
-
-                <!-- Duration -->
-                <div>
-                    <label for="duration_days" class="block text-sm font-medium text-gray-700">Durasi Akses (Hari)</label>
-                    <div class="mt-1">
-                        <select id="duration_days" 
-                                name="duration_days" 
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                                required>
-                            <option value="">Pilih durasi akses</option>
-                            <option value="7">7 hari</option>
-                            <option value="14">14 hari</option>
-                            <option value="30" selected>30 hari</option>
-                            <option value="60">60 hari</option>
-                            <option value="90">90 hari</option>
-                            <option value="180">180 hari</option>
-                            <option value="365">1 tahun</option>
-                        </select>
-                    </div>
-                    <p class="mt-2 text-sm text-gray-500">Tentukan berapa lama Anda membutuhkan akses ke data pasien.</p>
-                </div>
-
-                <!-- Priority -->
-                <div>
-                    <label for="priority" class="block text-sm font-medium text-gray-700">Prioritas</label>
-                    <div class="mt-1">
-                        <select id="priority" 
-                                name="priority" 
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                                required>
-                            <option value="">Pilih tingkat prioritas</option>
-                            <option value="low">Rendah - Pemeriksaan rutin</option>
-                            <option value="medium" selected>Normal - Konsultasi umum</option>
-                            <option value="high">Tinggi - Kondisi serius</option>
-                            <option value="urgent">Darurat - Memerlukan tindakan segera</option>
-                        </select>
-                    </div>
-                    <p class="mt-2 text-sm text-gray-500">Tingkat prioritas akan membantu pasien memahami urgensi permintaan Anda.</p>
-                </div>
-
                 <!-- Blockchain Preparation (Placeholder) -->
                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <div class="flex items-start">
@@ -197,31 +144,6 @@
 </div>
 
 <script>
-// Sample patient data (in real implementation, this would come from API)
-const samplePatients = [
-    {
-        patient_id: 1,
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        gender: 'male',
-        blood: 'O+'
-    },
-    {
-        patient_id: 2,
-        name: 'Jane Smith',
-        email: 'jane.smith@email.com',
-        gender: 'female',
-        blood: 'A+'
-    },
-    {
-        patient_id: 3,
-        name: 'Bob Johnson',
-        email: 'bob.johnson@email.com',
-        gender: 'male',
-        blood: 'B+'
-    }
-];
-
 function searchPatient() {
     const query = document.getElementById('patient-search').value.toLowerCase().trim();
     
@@ -230,12 +152,16 @@ function searchPatient() {
         return;
     }
     
-    const results = samplePatients.filter(patient => 
-        patient.name.toLowerCase().includes(query) || 
-        patient.email.toLowerCase().includes(query)
-    );
-    
-    displaySearchResults(results);
+    // Fetch real data from API
+    fetch(`{{ route('doctor.search-patients') }}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(patients => {
+            displaySearchResults(patients);
+        })
+        .catch(error => {
+            console.error('Error searching patients:', error);
+            displaySearchResults([]);
+        });
 }
 
 function displaySearchResults(patients) {
@@ -253,7 +179,7 @@ function displaySearchResults(patients) {
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-900">${patient.name}</p>
-                        <p class="text-sm text-gray-500">${patient.email} • ${patient.gender === 'male' ? 'Laki-laki' : 'Perempuan'} • ${patient.blood}</p>
+                        <p class="text-sm text-gray-500">${patient.email} • ${patient.gender === 'male' ? 'Laki-laki' : patient.gender === 'female' ? 'Perempuan' : 'Unknown'} • ${patient.blood}</p>
                     </div>
                 </div>
                 <button type="button" 
@@ -297,9 +223,11 @@ function resetForm() {
     document.querySelector('form').reset();
 }
 
-// Real-time search
+// Real-time search with debounce
+let searchTimeout;
 document.getElementById('patient-search').addEventListener('input', function() {
-    setTimeout(searchPatient, 300);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(searchPatient, 300);
 });
 
 // Enter key search

@@ -48,6 +48,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/access-requests', [DoctorController::class, 'accessRequests'])->name('access-requests');
             Route::get('/access-requests/create', [DoctorController::class, 'createAccessRequest'])->name('access-requests.create');
             Route::post('/access-requests', [DoctorController::class, 'storeAccessRequest'])->name('access-requests.store');
+            Route::get('/search-patients', [DoctorController::class, 'searchPatients'])->name('search-patients');
             Route::post('/access-requests/{patientId}', [DoctorController::class, 'requestAccess'])->name('request-access');
             
             // Daftar Pasien Saya
