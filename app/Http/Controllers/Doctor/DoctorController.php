@@ -111,7 +111,7 @@ class DoctorController extends Controller
     /**
      * Tampilkan daftar permintaan akses pasien
      */
-    public function accessRequests()
+    public function accessRequests(Request $request)
     {
         try {
             $doctor = Doctor::where('doctor_id', Auth::id())->first();
@@ -120,10 +120,15 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $requests = AccessRequest::where('doctor_id', $doctor->doctor_id)
-                ->with(['patient.user'])
-                ->orderBy('requested_at', 'desc')
-                ->get();
+            $query = AccessRequest::where('doctor_id', $doctor->doctor_id)
+                ->with(['patient.user']);
+
+            // Filter berdasarkan status jika ada
+            if ($request->has('status') && $request->status !== 'all') {
+                $query->where('status', $request->status);
+            }
+
+            $requests = $query->orderBy('requested_at', 'desc')->get();
 
             return view('doctor.requests.index', compact('requests', 'doctor'));
             
@@ -401,20 +406,8 @@ class DoctorController extends Controller
                 ->orderBy('visit_date', 'desc')
                 ->get();
 
-            // Log audit trail untuk VIEW patient records (hanya jika ada records)
-            if ($records->isNotEmpty()) {
-                // Log untuk setiap record yang dilihat
-                foreach ($records as $record) {
-                    AuditTrail::create([
-                        'users_id' => Auth::id(),
-                        'patient_id' => $patientId,
-                        'medicalrecord_id' => $record->medicalrecord_id,
-                        'action' => 'view',
-                        'timestamp' => now(),
-                        'blockchain_hash' => 'pending_integration'
-                    ]);
-                }
-            }
+            // TIDAK perlu insert audit trail disini karena sudah di-insert
+            // saat pasien approve access request dengan medicalrecord_id = NULL
 
             return view('doctor.records.patient', compact('records', 'patient', 'doctor'));
             
@@ -505,14 +498,14 @@ class DoctorController extends Controller
                 'status' => 'active'
             ]);
 
-            // Log audit trail untuk CREATE medical record
+            // Log audit trail untuk CREATE medical record (buat entry baru)
             AuditTrail::create([
                 'users_id' => Auth::id(),
                 'patient_id' => $patientId,
                 'medicalrecord_id' => $medicalRecord->medicalrecord_id,
                 'action' => 'create',
                 'timestamp' => now(),
-                'blockchain_hash' => 'pending_integration'
+                'blockchain_hash' => 'record_created_' . uniqid()
             ]);
 
             // TODO: Blockchain integration - record medical record on blockchain
@@ -554,15 +547,32 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses ke rekam medis ini');
             }
 
-            // Log audit trail saat VIEW specific record
-            AuditTrail::create([
-                'users_id' => Auth::id(),
-                'patient_id' => $record->patient_id,
-                'medicalrecord_id' => $recordId,
-                'action' => 'view',
-                'timestamp' => now(),
-                'blockchain_hash' => 'pending_integration'
-            ]);
+            // Update audit trail yang existing dengan medicalrecord_id
+            // Cari audit trail yang sudah ada (saat pasien approve) dan update dengan record ID
+            $existingAudit = AuditTrail::where('users_id', Auth::id())
+                ->where('patient_id', $record->patient_id)
+                ->whereNull('medicalrecord_id') // Audit trail saat approve (medicalrecord_id = NULL)
+                ->where('action', 'view')
+                ->first();
+
+            if ($existingAudit) {
+                // Update audit trail existing dengan medicalrecord_id
+                $existingAudit->update([
+                    'medicalrecord_id' => $recordId,
+                    'timestamp' => now(), // Update timestamp ke waktu view
+                    'blockchain_hash' => 'record_viewed_' . uniqid()
+                ]);
+            } else {
+                // Jika tidak ada audit trail existing, buat baru
+                AuditTrail::create([
+                    'users_id' => Auth::id(),
+                    'patient_id' => $record->patient_id,
+                    'medicalrecord_id' => $recordId,
+                    'action' => 'view',
+                    'timestamp' => now(),
+                    'blockchain_hash' => 'record_viewed_' . uniqid()
+                ]);
+            }
 
             return view('doctor.records.show', compact('record', 'doctor'));
             

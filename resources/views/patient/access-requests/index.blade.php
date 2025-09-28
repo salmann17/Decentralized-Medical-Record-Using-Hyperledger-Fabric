@@ -14,9 +14,12 @@
 
     <!-- Statistics Cards -->
     @php
-        $pendingCount = isset($requests) ? $requests->where('status', 'pending')->count() : 0;
-        $approvedCount = isset($requests) ? $requests->where('status', 'approved')->count() : 0;
-        $rejectedCount = isset($requests) ? $requests->where('status', 'rejected')->count() : 0;
+        // Get all requests for counting (tidak difilter)
+        $allRequests = App\Models\AccessRequest::where('patient_id', $patient->patient_id)->get();
+        $pendingCount = $allRequests->where('status', 'pending')->count();
+        $approvedCount = $allRequests->where('status', 'approved')->count();
+        $rejectedCount = $allRequests->where('status', 'rejected')->count();
+        $currentStatus = request('status');
     @endphp
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
@@ -38,19 +41,19 @@
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex" aria-label="Tabs">
                 <a href="{{ route('patient.access-requests', ['status' => 'pending']) }}" 
-                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status', 'pending') === 'pending' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
+                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ $currentStatus === 'pending' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Menunggu ({{ $pendingCount }})
                 </a>
                 <a href="{{ route('patient.access-requests', ['status' => 'approved']) }}" 
-                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
+                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ $currentStatus === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Disetujui ({{ $approvedCount }})
                 </a>
                 <a href="{{ route('patient.access-requests', ['status' => 'rejected']) }}" 
-                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ request('status') === 'rejected' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
+                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ $currentStatus === 'rejected' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Ditolak ({{ $rejectedCount }})
                 </a>
                 <a href="{{ route('patient.access-requests') }}" 
-                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ !request('status') ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
+                   class="whitespace-nowrap border-b-2 py-4 px-6 text-sm font-medium {{ !$currentStatus ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }}">
                     Semua ({{ $pendingCount + $approvedCount + $rejectedCount }})
                 </a>
             </nav>

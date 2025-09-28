@@ -100,17 +100,36 @@ class PatientController extends Controller
     /**
      * Show access requests from doctors
      */
-    public function accessRequests()
+    public function accessRequests(Request $request)
     {
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
+        $currentStatus = $request->status;
         
-        $requests = AccessRequest::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'doctor.hospitals'])
-            ->orderBy('requested_at', 'desc')
-            ->paginate(15);
+        $query = AccessRequest::where('patient_id', $patient->patient_id)
+            ->with(['doctor.user', 'doctor.hospitals']);
 
-        return view('patient.access-requests.index', compact('patient', 'requests'));
+        // Filter berdasarkan status jika ada
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $requests = $query->orderBy('requested_at', 'desc')->paginate(15);
+        
+        // Get all requests for count calculations (unfiltered)
+        $allRequests = AccessRequest::where('patient_id', $patient->patient_id)->get();
+        $pendingCount = $allRequests->where('status', 'pending')->count();
+        $approvedCount = $allRequests->where('status', 'approved')->count();
+        $rejectedCount = $allRequests->where('status', 'rejected')->count();
+
+        return view('patient.access-requests.index', compact(
+            'patient', 
+            'requests', 
+            'pendingCount', 
+            'approvedCount', 
+            'rejectedCount',
+            'currentStatus'
+        ));
     }
 
     /**
@@ -128,7 +147,18 @@ class PatientController extends Controller
 
         $request->update([
             'status' => 'approved',
-            'response_date' => now()
+            'responded_at' => now()
+        ]);
+
+        // Insert audit trail saat pasien approve access request
+        // medicalrecord_id = NULL karena dokter belum melakukan aktivitas apapun
+        AuditTrail::create([
+            'users_id' => $request->doctor_id, // ID dokter yang mendapat akses
+            'patient_id' => $patient->patient_id,
+            'medicalrecord_id' => null, // NULL karena belum ada record yang diakses
+            'action' => 'view', // Action view untuk menandakan dokter sudah bisa "view"
+            'timestamp' => now(),
+            'blockchain_hash' => 'access_granted_' . uniqid()
         ]);
 
         // TODO: Add blockchain transaction here
@@ -152,7 +182,7 @@ class PatientController extends Controller
 
         $request->update([
             'status' => 'rejected',
-            'response_date' => now()
+            'responded_at' => now()
         ]);
 
         // TODO: Add blockchain transaction here

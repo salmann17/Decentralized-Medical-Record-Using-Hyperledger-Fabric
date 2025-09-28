@@ -29,36 +29,42 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <div class="border-b border-gray-200">
+                @php
+                    // Get all requests for counting (tidak difilter)
+                    $allRequests = App\Models\AccessRequest::where('doctor_id', $doctor->doctor_id)->get();
+                    $currentStatus = request('status');
+                @endphp
+                
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                     <a href="{{ route('doctor.access-requests') }}" 
-                       class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                       class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ !$currentStatus ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Semua
-                        <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($requests) ? $requests->count() : 0 }}
+                        <span class="ml-2 {{ !$currentStatus ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $allRequests->count() }}
                         </span>
                     </a>
                     
                     <a href="{{ route('doctor.access-requests', ['status' => 'pending']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'pending' ? 'border-yellow-500 text-yellow-600' : '' }}">
+                       class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $currentStatus === 'pending' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Pending
-                        <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($requests) ? $requests->where('status', 'pending')->count() : 0 }}
+                        <span class="ml-2 {{ $currentStatus === 'pending' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $allRequests->where('status', 'pending')->count() }}
                         </span>
                     </a>
                     
                     <a href="{{ route('doctor.access-requests', ['status' => 'approved']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'approved' ? 'border-green-500 text-green-600' : '' }}">
+                       class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $currentStatus === 'approved' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Disetujui
-                        <span class="ml-2 bg-green-100 text-green-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($requests) ? $requests->where('status', 'approved')->count() : 0 }}
+                        <span class="ml-2 {{ $currentStatus === 'approved' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $allRequests->where('status', 'approved')->count() }}
                         </span>
                     </a>
                     
                     <a href="{{ route('doctor.access-requests', ['status' => 'rejected']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'rejected' ? 'border-red-500 text-red-600' : '' }}">
+                       class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ $currentStatus === 'rejected' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Ditolak
-                        <span class="ml-2 bg-red-100 text-red-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($requests) ? $requests->where('status', 'rejected')->count() : 0 }}
+                        <span class="ml-2 {{ $currentStatus === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $allRequests->where('status', 'rejected')->count() }}
                         </span>
                     </a>
                 </nav>
