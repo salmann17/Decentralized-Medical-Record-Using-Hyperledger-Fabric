@@ -360,7 +360,7 @@ class DoctorController extends Controller
 
             // Query builder for pagination
             $query = MedicalRecord::whereIn('patient_id', $approvedPatientIds)
-                ->with(['patient.user', 'doctor.user', 'hospital'])
+                ->with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
                 ->orderBy('visit_date', 'desc');
 
             // Apply status filter if requested
@@ -403,8 +403,8 @@ class DoctorController extends Controller
             $patient = Patient::with('user')->find($patientId);
             
             $records = MedicalRecord::where('patient_id', $patientId)
-                ->with(['doctor.user', 'hospital'])
-                ->orderBy('visit_date', 'desc')
+                ->with(['doctor.user', 'hospital', 'prescription'])
+                ->orderBy('visit_date', 'asc') // Ubah ke ASC agar rekam medis terlama tampil pertama
                 ->get();
 
             // TIDAK perlu insert audit trail disini karena sudah di-insert
@@ -583,7 +583,7 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'hospital'])
+            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
                 ->find($recordId);
 
             if (!$record) {
@@ -630,6 +630,83 @@ class DoctorController extends Controller
             return view('doctor.records.show', compact('record', 'doctor'));
             
         } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update status rekam medis
+     */
+    public function updateRecordStatus(Request $request, $recordId)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:draft,final,immutable',
+            'reason' => 'nullable|string|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            
+            if (!$doctor) {
+                return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
+            }
+
+            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
+                ->find($recordId);
+
+            if (!$record) {
+                return redirect()->back()->with('error', 'Rekam medis tidak ditemukan');
+            }
+
+            // Cek apakah dokter adalah pemilik record
+            if ($record->doctor_id !== $doctor->doctor_id) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
+            }
+
+            // Cek apakah record bisa diubah (tidak immutable)
+            if ($record->status === 'immutable') {
+                return redirect()->back()->with('error', 'Rekam medis immutable tidak dapat diubah');
+            }
+
+            $oldStatus = $record->status;
+            $newStatus = $request->status;
+
+            // Validasi transisi status
+            $validTransitions = [
+                'draft' => ['final', 'immutable'],
+                'final' => ['immutable']
+            ];
+
+            if (!isset($validTransitions[$oldStatus]) || !in_array($newStatus, $validTransitions[$oldStatus])) {
+                return redirect()->back()->with('error', 'Transisi status dari ' . ucfirst($oldStatus) . ' ke ' . ucfirst($newStatus) . ' tidak diizinkan');
+            }
+
+            // Update status
+            $record->update([
+                'status' => $newStatus
+            ]);
+
+            // TIDAK perlu log audit trail untuk perubahan status
+            // karena aktivitas "create" sudah dicatat saat record pertama kali dibuat
+            // Perubahan status hanya internal workflow, bukan aktivitas medis baru
+
+            // Success message berdasarkan status
+            $message = match($newStatus) {
+                'final' => 'Rekam medis berhasil difinalisasi',
+                'immutable' => 'Rekam medis berhasil dibuat immutable (tidak dapat diubah)',
+                default => 'Status rekam medis berhasil diupdate'
+            };
+
+            return redirect()->back()->with('success', $message);
+            
+        } catch (\Exception $e) {
+            Log::error('Error updating record status: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }

@@ -8,7 +8,7 @@ class MedicalRecord extends Model
 {
     protected $table = 'medical_records';
     protected $primaryKey = 'medicalrecord_id';
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $fillable = [
         'patient_id','hospital_id','doctor_id','visit_date',

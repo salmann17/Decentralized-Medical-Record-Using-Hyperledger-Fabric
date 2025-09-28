@@ -32,6 +32,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->enum('status', ['draft', 'final', 'immutable']);
             $table->unsignedBigInteger('prescription_id');
+            $table->timestamps();
 
             $table->foreign('patient_id')->references('patient_id')->on('patients');
             $table->foreign('hospital_id')->references('hospital_id')->on('hospitals');

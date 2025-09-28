@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients/{patientId}/records/create', [DoctorController::class, 'createRecord'])->name('create-record');
             Route::post('/patients/{patientId}/records', [DoctorController::class, 'storeRecord'])->name('store-record');
             Route::get('/records/{recordId}', [DoctorController::class, 'showRecord'])->name('show-record');
+            Route::patch('/records/{recordId}/status', [DoctorController::class, 'updateRecordStatus'])->name('update-record-status');
             
             // Audit Trail
             Route::get('/audit-trail', [DoctorController::class, 'auditTrail'])->name('audit-trail');

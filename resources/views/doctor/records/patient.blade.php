@@ -141,7 +141,7 @@
                                                         {{ $record->visit_date ? date('d F Y', strtotime($record->visit_date)) : date('d F Y') }}
                                                     </p>
                                                     <h4 class="text-lg font-medium text-gray-900 mt-1">
-                                                        Kunjungan #{{ $records->count() - $index }}
+                                                        Kunjungan #{{ $index + 1 }}
                                                     </h4>
                                                 </div>
                                                 <div class="flex items-center space-x-2">
@@ -167,7 +167,7 @@
                                                 <div>
                                                     <h5 class="text-sm font-medium text-gray-900">Diagnosis</h5>
                                                     <p class="text-sm text-gray-600 mt-1">
-                                                        {{ Str::limit($record->diagnosis ?? 'Diagnosis tidak tersedia', 150) }}
+                                                        {{ Str::limit($record->diagnosis_desc ?? 'Diagnosis tidak tersedia', 150) }}
                                                     </p>
                                                 </div>
 

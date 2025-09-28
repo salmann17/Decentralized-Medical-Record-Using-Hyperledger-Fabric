@@ -4,221 +4,488 @@
 
 @section('content')
 <div class="space-y-6">
+    <!-- Alert Messages -->
+    @if(session('success'))
+    <div class="rounded-md bg-green-50 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="rounded-md bg-red-50 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium text-red-800">{{ session('error') }}</p>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if($errors->any())
+    <div class="rounded-md bg-red-50 p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Terjadi kesalahan:</h3>
+                <div class="mt-2 text-sm text-red-700">
+                    <ul role="list" class="list-disc space-y-1 pl-5">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Header -->
-    <div class="border-b border-gray-200 pb-5">
-        <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-2xl font-semibold leading-6 text-gray-900">
-                    Detail Rekam Medis #{{ $record->medicalrecord_id ?? $record->id ?? 'N/A' }}
-                </h3>
-                <p class="mt-2 max-w-4xl text-sm text-gray-500">
-                    Informasi lengkap rekam medis untuk {{ $record->patient->user->name ?? 'Pasien' }}
-                </p>
-            </div>
-            <div class="flex space-x-3">
-                @if($record->status !== 'immutable')
-                    <a href="#" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                        Edit
-                    </a>
-                @endif
-                <a href="{{ route('doctor.records') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Kembali ke Daftar
-                </a>
-                <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H9.414a1 1 0 01-.707-.293l-2-2A1 1 0 005.414 6H4a2 2 0 00-2 2v6a2 2 0 002 2h2m3 4h6m-3-3v6" />
-                    </svg>
-                    Print / PDF
-                </button>
-            </div>
+    <div class="border-b border-gray-200 pb-5 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <a href="{{ route('doctor.records') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700">
+                <svg class="-ml-1 mr-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                Kembali ke Rekam Medis
+            </a>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium
+                {{ $record->status === 'draft' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                {{ $record->status === 'final' ? 'bg-blue-100 text-blue-800' : '' }}
+                {{ $record->status === 'immutable' ? 'bg-green-100 text-green-800' : '' }}">
+                {{ ucfirst($record->status) }}
+            </span>
+            @if($record->blockchain_hash)
+            <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-sm font-medium">
+                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                </svg>
+                Blockchain Verified
+            </span>
+            @endif
         </div>
     </div>
 
-    <!-- Record Status -->
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    @if($record->status === 'draft')
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                            <svg class="-ml-1 mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 8 8">
-                                <circle cx="4" cy="4" r="3" />
-                            </svg>
-                            Draft
-                        </span>
-                    @elseif($record->status === 'final')
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            <svg class="-ml-1 mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 8 8">
-                                <circle cx="4" cy="4" r="3" />
-                            </svg>
-                            Final
-                        </span>
-                    @else
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
-                            <svg class="-ml-1 mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 8 8">
-                                <circle cx="4" cy="4" r="3" />
-                            </svg>
-                            Immutable
-                        </span>
-                    @endif
-                    
-                    <div class="text-sm text-gray-500">
-                        Dibuat pada {{ isset($record->created_at) ? $record->created_at->format('d F Y, H:i') : date('d F Y, H:i') }}
-                    </div>
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Medical Record Details -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Header Card -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Informasi Kunjungan</h3>
                 </div>
-                
-                <!-- Blockchain Status -->
-                <div class="flex items-center space-x-2 text-sm text-gray-500">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    <span>Blockchain: Pending Integration</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Patient Information -->
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Informasi Pasien</h3>
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Nama Pasien</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $record->patient->user->name ?? 'Pasien' }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm font-medium text-gray-500">Tanggal Kunjungan</dt>
-                    <dd class="mt-1 text-sm text-gray-900">
-                        {{ isset($record->visit_date) ? date('d F Y', strtotime($record->visit_date)) : date('d F Y') }}
-                    </dd>
-                </div>
-            </dl>
-        </div>
-    </div>
-
-    <!-- Medical Information -->
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Informasi Medis</h3>
-            
-            <!-- Chief Complaint -->
-            <div class="mb-6">
-                <h4 class="text-base font-medium text-gray-900 mb-2">Keluhan Utama</h4>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <p class="text-sm text-gray-700">{{ $record->chief_complaint ?? $record->notes ?? 'Tidak ada catatan keluhan utama' }}</p>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                    <dl class="sm:divide-y sm:divide-gray-200">
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Pasien</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->patient->user->name }}</dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Rumah Sakit</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->hospital->name }}</dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Tanggal Kunjungan</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                {{ \Carbon\Carbon::parse($record->visit_date)->format('l, d F Y') }}
+                            </dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Keluhan Utama</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                {{ $record->chief_complaint ?: 'Tidak ada keluhan yang dicatat' }}
+                            </dd>
+                        </div>
+                    </dl>
                 </div>
             </div>
 
             <!-- Vital Signs -->
-            <div class="mb-6">
-                <h4 class="text-base font-medium text-gray-900 mb-2">Tanda Vital</h4>
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                        <div class="text-center">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Tekanan Darah</div>
-                            <div class="mt-1 text-lg font-semibold text-gray-900">
-                                {{ isset($record->vital_signs->blood_pressure) ? $record->vital_signs->blood_pressure : 'N/A' }} 
-                                <span class="text-xs text-gray-500">mmHg</span>
+            @if($record->blood_pressure || $record->heart_rate || $record->temperature || $record->respiratory_rate)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Tanda Vital</h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                        @if($record->blood_pressure)
+                        <div class="flex items-center p-3 bg-red-50 rounded-lg">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-red-800">Tekanan Darah</div>
+                                <div class="text-lg font-bold text-red-900">{{ $record->blood_pressure }}</div>
                             </div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Nadi</div>
-                            <div class="mt-1 text-lg font-semibold text-gray-900">
-                                {{ isset($record->vital_signs->heart_rate) ? $record->vital_signs->heart_rate : 'N/A' }}
-                                <span class="text-xs text-gray-500">bpm</span>
+                        @endif
+
+                        @if($record->heart_rate)
+                        <div class="flex items-center p-3 bg-pink-50 rounded-lg">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-pink-800">Detak Jantung</div>
+                                <div class="text-lg font-bold text-pink-900">{{ $record->heart_rate }} bpm</div>
                             </div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Suhu</div>
-                            <div class="mt-1 text-lg font-semibold text-gray-900">
-                                {{ isset($record->vital_signs->temperature) ? $record->vital_signs->temperature : 'N/A' }}°
-                                <span class="text-xs text-gray-500">C</span>
+                        @endif
+
+                        @if($record->temperature)
+                        <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-orange-800">Suhu Tubuh</div>
+                                <div class="text-lg font-bold text-orange-900">{{ $record->temperature }}°C</div>
                             </div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">Respirasi</div>
-                            <div class="mt-1 text-lg font-semibold text-gray-900">
-                                {{ isset($record->vital_signs->respiratory_rate) ? $record->vital_signs->respiratory_rate : 'N/A' }}
-                                <span class="text-xs text-gray-500">/min</span>
+                        @endif
+
+                        @if($record->respiratory_rate)
+                        <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                            <div class="flex-shrink-0">
+                                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-sm font-medium text-blue-800">Frekuensi Napas</div>
+                                <div class="text-lg font-bold text-blue-900">{{ $record->respiratory_rate }}/min</div>
                             </div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wider">SpO2</div>
-                            <div class="mt-1 text-lg font-semibold text-gray-900">
-                                {{ isset($record->vital_signs->oxygen_saturation) ? $record->vital_signs->oxygen_saturation : 'N/A' }}
-                                <span class="text-xs text-gray-500">%</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Clinical History -->
+            @if($record->history_present_illness)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Riwayat Penyakit Sekarang</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        {!! nl2br(e($record->history_present_illness)) !!}
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Medical Examination -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Pemeriksaan Medis</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                    <dl class="sm:divide-y sm:divide-gray-200">
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Kode Diagnosis</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                <span class="inline-flex items-center rounded-md bg-blue-100 text-blue-800 px-2 py-1 text-xs font-medium">
+                                    {{ $record->diagnosis_code }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Diagnosis</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                @if($record->diagnosis_desc)
+                                    <div class="prose prose-sm max-w-none">
+                                        {!! nl2br(e($record->diagnosis_desc)) !!}
+                                    </div>
+                                @else
+                                    <em class="text-gray-500">Diagnosis belum diisi</em>
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Pemeriksaan Fisik</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                @if($record->physical_examination)
+                                    <div class="prose prose-sm max-w-none">
+                                        {!! nl2br(e($record->physical_examination)) !!}
+                                    </div>
+                                @else
+                                    <em class="text-gray-500">Belum ada catatan pemeriksaan fisik</em>
+                                @endif
+                            </dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Tindakan Medis</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                @if($record->treatment)
+                                    <div class="prose prose-sm max-w-none">
+                                        {!! nl2br(e($record->treatment)) !!}
+                                    </div>
+                                @else
+                                    <em class="text-gray-500">Tidak ada tindakan medis khusus</em>
+                                @endif
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Prescriptions -->
+            @if($record->prescription)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Resep Obat</h3>
+                </div>
+                <div class="border-t border-gray-200">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <div class="text-base font-semibold text-gray-900 mb-2">{{ $record->prescription->item }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dosis</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->dosage }}</div>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Frekuensi</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->frequency }}</div>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->duration }}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            @endif
 
-            <!-- Diagnosis -->
-            <div class="mb-6">
-                <h4 class="text-base font-medium text-gray-900 mb-2">Diagnosis</h4>
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p class="text-sm text-blue-900 font-medium">{{ $record->diagnosis_desc ?? $record->diagnosis ?? 'Diagnosis belum tersedia' }}</p>
+            <!-- Additional Notes -->
+            @if($record->notes)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Catatan Tambahan</h3>
                 </div>
-            </div>
-
-            <!-- Treatment Plan -->
-            <div class="mb-6">
-                <h4 class="text-base font-medium text-gray-900 mb-2">Rencana Pengobatan</h4>
-                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <p class="text-sm text-green-900">{{ $record->treatment ?? 'Rencana pengobatan belum tersedia' }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Blockchain Information -->
-    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <div class="flex items-start">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-purple-800">Tentang Verifikasi Blockchain</h3>
-                <div class="mt-2 text-sm text-purple-700">
-                    <p>
-                        Setelah sistem blockchain terintegrasi, rekam medis ini akan diverifikasi dan dicatat secara permanen di blockchain. 
-                        Hal ini akan memastikan integritas data dan mencegah perubahan yang tidak sah.
-                    </p>
-                    <div class="mt-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            Menunggu Integrasi Blockchain
-                        </span>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        {!! nl2br(e($record->notes)) !!}
                     </div>
                 </div>
             </div>
+            @endif
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Blockchain Information -->
+            @if($record->blockchain_hash)
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-green-800">Blockchain Verified</h3>
+                </div>
+                <div class="mt-2 text-sm text-green-700">
+                    <p>Rekam medis ini telah disimpan ke blockchain dan tidak dapat diubah.</p>
+                    <div class="mt-2 font-mono text-xs bg-white p-2 rounded border">
+                        Hash: {{ $record->blockchain_hash }}
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-yellow-800">Menunggu Blockchain</h3>
+                </div>
+                <div class="mt-2 text-sm text-yellow-700">
+                    <p>Rekam medis ini belum disimpan ke blockchain. Integrasi blockchain akan segera tersedia.</p>
+                </div>
+            </div>
+            @endif
+
+            <!-- Record Information -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rekam Medis</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+                    <dl class="sm:divide-y sm:divide-gray-200">
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Dibuat</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                {{ isset($record->created_at) ? \Carbon\Carbon::parse($record->created_at)->format('d M Y, H:i') : 'N/A' }}
+                            </dd>
+                        </div>
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Terakhir Diupdate</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                {{ isset($record->updated_at) ? \Carbon\Carbon::parse($record->updated_at)->format('d M Y, H:i') : 'N/A' }}
+                            </dd>
+                        </div>
+                        @if(isset($record->finalized_at) && $record->finalized_at)
+                        <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
+                            <dt class="text-sm font-medium text-gray-500">Diselesaikan</dt>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                {{ \Carbon\Carbon::parse($record->finalized_at)->format('d M Y, H:i') }}
+                            </dd>
+                        </div>
+                        @endif
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Pasien</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-12 w-12">
+                            <div class="h-12 w-12 rounded-full bg-blue-500 flex items-center justify-center">
+                                <span class="text-sm font-medium text-white">
+                                    {{ substr($record->patient->user->name, 0, 2) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">{{ $record->patient->user->name }}</div>
+                            @if(isset($record->patient->gender))
+                            <div class="text-sm text-gray-500">{{ $record->patient->gender === 'male' ? 'Laki-laki' : 'Perempuan' }}</div>
+                            @endif
+                            @if(isset($record->patient->birthdate))
+                            <div class="text-xs text-gray-400">
+                                {{ \Carbon\Carbon::parse($record->patient->birthdate)->format('d M Y') }}
+                                ({{ \Carbon\Carbon::parse($record->patient->birthdate)->age }} tahun)
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hospital Information -->
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rumah Sakit</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="text-sm font-medium text-gray-900">{{ $record->hospital->name }}</div>
+                    @if(isset($record->hospital->address))
+                    <div class="text-sm text-gray-500 mt-1">{{ $record->hospital->address }}</div>
+                    @endif
+                    @if(isset($record->hospital->phone))
+                    <div class="text-xs text-gray-400 mt-1">Tel: {{ $record->hospital->phone }}</div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Actions -->
-    <div class="flex justify-end space-x-3">
-        @if($record->status !== 'immutable')
-            <button type="button" class="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
-                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <!-- Action Buttons -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            @if($record->status !== 'immutable')
+            <!-- Status Update Buttons -->
+            @if($record->status === 'draft')
+            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id) }}" class="inline">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="status" value="final">
+                <button type="submit" 
+                        class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
+                        onclick="return confirm('Apakah Anda yakin ingin menfinalisasi rekam medis ini? Status final masih bisa diubah ke immutable.')">
+                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Finalisasi
+                </button>
+            </form>
+            @endif
+
+            @if($record->status === 'final')
+            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id) }}" class="inline">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="status" value="immutable">
+                <button type="submit" 
+                        class="inline-flex items-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500"
+                        onclick="return confirm('PERINGATAN: Setelah menjadi immutable, rekam medis ini TIDAK DAPAT DIUBAH LAGI. Apakah Anda yakin?')">
+                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Buat Immutable
+                </button>
+            </form>
+            @endif
+
+            <button type="button" class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Hapus
             </button>
-        @endif
-        <button type="button" onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H9.414a1 1 0 01-.707-.293l-2-2A1 1 0 005.414 6H4a2 2 0 00-2 2v6a2 2 0 002 2h2m3 4h6m-3-3v6" />
-            </svg>
-            Print
-        </button>
+            <a href="#" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit
+            </a>
+            @endif
+        </div>
+        <div class="flex space-x-3">
+            <button type="button" onclick="window.print()" 
+                    class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Cetak
+            </button>
+            <a href="{{ route('doctor.records') }}" 
+               class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                Kembali ke Daftar
+            </a>
+        </div>
     </div>
 </div>
 
@@ -234,6 +501,9 @@
     .shadow, .border {
         box-shadow: none !important;
         border: 1px solid #e5e7eb !important;
+    }
+    .bg-red-50, .bg-pink-50, .bg-orange-50, .bg-blue-50 {
+        background-color: #f9fafb !important;
     }
 }
 </style>
