@@ -14,9 +14,9 @@
 
     <!-- Statistics Cards -->
     @php
-        $totalAudits = isset($auditTrails) ? $auditTrails->count() : 0;
-        $todayAudits = isset($auditTrails) ? $auditTrails->whereDate('action_timestamp', now()->toDateString())->count() : 0;
-        $weekAudits = isset($auditTrails) ? $auditTrails->where('action_timestamp', '>=', now()->subWeek())->count() : 0;
+        $totalAudits = isset($auditTrails) ? $auditTrails->total() : 0;
+        $todayAudits = isset($auditTrails) ? $auditTrails->where('timestamp', '>=', now()->startOfDay())->count() : 0;
+        $weekAudits = isset($auditTrails) ? $auditTrails->where('timestamp', '>=', now()->subWeek())->count() : 0;
     @endphp
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
@@ -212,7 +212,7 @@
                                             <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            {{ \Carbon\Carbon::parse($audit->action_timestamp)->format('d M Y, H:i') }}
+                                            {{ \Carbon\Carbon::parse($audit->timestamp)->format('d M Y, H:i') }}
                                         </div>
                                         
                                         @if($audit->ip_address)
@@ -237,13 +237,13 @@
                             </div>
                             
                             <!-- Additional Details -->
-                            @if($audit->record_id)
+                            @if($audit->medicalrecord_id)
                             <div class="mt-3 bg-gray-50 rounded-md p-3">
                                 <div class="flex items-center text-xs text-gray-600">
                                     <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
-                                    <span class="font-medium">Record ID:</span>&nbsp;{{ $audit->record_id }}
+                                    <span class="font-medium">Record ID:</span>&nbsp;{{ $audit->medicalrecord_id }}
                                     @if($audit->medicalRecord)
                                     &nbsp;({{ $audit->medicalRecord->visit_date ? \Carbon\Carbon::parse($audit->medicalRecord->visit_date)->format('d M Y') : 'Unknown Date' }})
                                     @endif

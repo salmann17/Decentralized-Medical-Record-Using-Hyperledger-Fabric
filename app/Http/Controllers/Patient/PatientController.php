@@ -58,15 +58,54 @@ class PatientController extends Controller
     /**
      * Show patient medical records
      */
-    public function records()
+    public function records(Request $request)
     {
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
         
-        $records = MedicalRecord::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital', 'prescription'])
-            ->orderBy('visit_date', 'desc')
-            ->paginate(10);
+        $query = MedicalRecord::where('patient_id', $patient->patient_id)
+            ->with(['doctor.user', 'hospital', 'prescription']);
+
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('hospital', function($hospitalQuery) use ($search) {
+                    $hospitalQuery->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('doctor.user', function($doctorQuery) use ($search) {
+                    $doctorQuery->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhere('diagnosis_desc', 'like', '%' . $search . '%')
+                ->orWhere('diagnosis_code', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Apply status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Apply period filter
+        if ($request->filled('period')) {
+            $period = $request->period;
+            switch ($period) {
+                case '7days':
+                    $query->where('visit_date', '>=', now()->subDays(7));
+                    break;
+                case '30days':
+                    $query->where('visit_date', '>=', now()->subDays(30));
+                    break;
+                case '6months':
+                    $query->where('visit_date', '>=', now()->subMonths(6));
+                    break;
+                case '1year':
+                    $query->where('visit_date', '>=', now()->subYear());
+                    break;
+            }
+        }
+
+        $records = $query->orderBy('visit_date', 'desc')->paginate(10);
 
         return view('patient.records.index', compact('patient', 'records'));
     }
@@ -235,19 +274,43 @@ class PatientController extends Controller
     /**
      * Show audit trail
      */
-    public function auditTrail()
+    public function auditTrail(Request $request)
     {
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
         
-        $auditLogs = AuditTrail::whereHas('medicalRecord', function($query) use ($patient) {
-                $query->where('patient_id', $patient->patient_id);
-            })
-            ->with(['user', 'medicalRecord.doctor.user', 'medicalRecord.hospital'])
-            ->orderBy('access_time', 'desc')
-            ->paginate(20);
+        $query = AuditTrail::where('patient_id', $patient->patient_id)
+            ->with(['medicalRecord.doctor.user', 'medicalRecord.hospital']);
 
-        return view('patient.audit-trail.index', compact('patient', 'auditLogs'));
+        // Apply search filter
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('action', 'like', '%' . $search . '%')
+                  ->orWhere('blockchain_hash', 'like', '%' . $search . '%')
+                  ->orWhereHas('medicalRecord', function($recordQuery) use ($search) {
+                      $recordQuery->where('diagnosis_desc', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        // Apply action filter
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        // Apply date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('timestamp', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('timestamp', '<=', $request->date_to);
+        }
+
+        $auditTrails = $query->orderBy('timestamp', 'desc')->paginate(20);
+
+        return view('patient.audit-trail.index', compact('patient', 'auditTrails'));
     }
 
     /**
