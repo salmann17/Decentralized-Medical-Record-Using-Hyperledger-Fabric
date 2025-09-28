@@ -43,6 +43,29 @@ Route::middleware(['auth'])->group(function () {
         ->group(function () {
             Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
             Route::get('/hospitals', [DoctorController::class, 'hospitals'])->name('hospitals');
+            
+            // Permintaan Akses Pasien
+            Route::get('/access-requests', [DoctorController::class, 'accessRequests'])->name('access-requests');
+            Route::get('/access-requests/create', [DoctorController::class, 'createAccessRequest'])->name('access-requests.create');
+            Route::post('/access-requests', [DoctorController::class, 'storeAccessRequest'])->name('access-requests.store');
+            Route::post('/access-requests/{patientId}', [DoctorController::class, 'requestAccess'])->name('request-access');
+            
+            // Daftar Pasien Saya
+            Route::get('/my-patients', [DoctorController::class, 'myPatients'])->name('my-patients');
+            
+            // Rekam Medis
+            Route::get('/records', [DoctorController::class, 'records'])->name('records');
+            Route::get('/patients/{patientId}/records', [DoctorController::class, 'patientRecords'])->name('patient-records');
+            Route::get('/patients/{patientId}/records/create', [DoctorController::class, 'createRecord'])->name('create-record');
+            Route::post('/patients/{patientId}/records', [DoctorController::class, 'storeRecord'])->name('store-record');
+            Route::get('/records/{recordId}', [DoctorController::class, 'showRecord'])->name('show-record');
+            
+            // Audit Trail
+            Route::get('/audit-trail', [DoctorController::class, 'auditTrail'])->name('audit-trail');
+            
+            // Pengaturan Akun
+            Route::get('/settings', [DoctorController::class, 'settings'])->name('settings');
+            Route::post('/settings', [DoctorController::class, 'updateSettings'])->name('settings.update');
         });
 
     Route::middleware([IsPatient::class])
