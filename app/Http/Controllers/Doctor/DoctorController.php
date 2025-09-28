@@ -14,6 +14,7 @@ use App\Models\MedicalRecord;
 use App\Models\AccessRequest;
 use App\Models\Hospital;
 use App\Models\AuditTrail;
+use App\Models\Prescription;
 use App\Models\User;
 
 class DoctorController extends Controller
@@ -456,10 +457,27 @@ class DoctorController extends Controller
         $validator = Validator::make($request->all(), [
             'hospital_id' => 'required|exists:hospitals,hospital_id',
             'visit_date' => 'required|date',
-            'diagnosis_code' => 'required|string|max:10',
-            'diagnosis_desc' => 'required|string|max:500',
-            'treatment' => 'required|string|max:1000',
-            'notes' => 'nullable|string|max:1000'
+            // Vital signs (optional)
+            'blood_pressure' => 'nullable|string|max:45',
+            'heart_rate' => 'nullable|integer|min:30|max:250',
+            'temperature' => 'nullable|numeric|between:30.0,45.0',
+            'respiratory_rate' => 'nullable|integer|min:5|max:60',
+            // Clinical narrative (optional)
+            'chief_complaint' => 'nullable|string',
+            'history_present_illness' => 'nullable|string',
+            'physical_examination' => 'nullable|string',
+            // Assessment (required)
+            'diagnosis_code' => 'required|string|max:45',
+            'diagnosis_desc' => 'required|string|max:135',
+            'treatment' => 'required|string',
+            'notes' => 'nullable|string',
+            'status' => 'required|in:draft,final,immutable',
+            // Prescription fields (multiple items)
+            'prescriptions' => 'required|array|min:1',
+            'prescriptions.*.item' => 'required|string|max:135',
+            'prescriptions.*.dosage' => 'required|string|max:45',
+            'prescriptions.*.frequency' => 'required|string|max:45',
+            'prescriptions.*.duration' => 'required|string|max:45'
         ]);
 
         if ($validator->fails()) {
@@ -485,36 +503,71 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses ke pasien ini');
             }
 
-            // Simpan rekam medis
-            $medicalRecord = MedicalRecord::create([
-                'patient_id' => $patientId,
-                'hospital_id' => $request->hospital_id,
-                'doctor_id' => $doctor->doctor_id,
-                'visit_date' => $request->visit_date,
-                'diagnosis_code' => $request->diagnosis_code,
-                'diagnosis_desc' => $request->diagnosis_desc,
-                'treatment' => $request->treatment,
-                'notes' => $request->notes,
-                'status' => 'active'
-            ]);
+            // Start database transaction
+            DB::beginTransaction();
 
-            // Log audit trail untuk CREATE medical record (buat entry baru)
-            AuditTrail::create([
-                'users_id' => Auth::id(),
-                'patient_id' => $patientId,
-                'medicalrecord_id' => $medicalRecord->medicalrecord_id,
-                'action' => 'create',
-                'timestamp' => now(),
-                'blockchain_hash' => 'record_created_' . uniqid()
-            ]);
+            try {
+                // 1. Buat prescription dengan multiple items
+                // Untuk sementara gunakan item pertama, nanti bisa diperluas ke multiple prescriptions
+                $firstPrescription = $request->prescriptions[0];
+                $prescription = Prescription::create([
+                    'item' => $firstPrescription['item'],
+                    'dosage' => $firstPrescription['dosage'],
+                    'frequency' => $firstPrescription['frequency'],
+                    'duration' => $firstPrescription['duration']
+                ]);
 
-            // TODO: Blockchain integration - record medical record on blockchain
+                // 2. Buat medical record dengan prescription_id
+                $medicalRecord = MedicalRecord::create([
+                    'patient_id' => $patientId,
+                    'hospital_id' => $request->hospital_id,
+                    'doctor_id' => $doctor->doctor_id,
+                    'visit_date' => $request->visit_date,
+                    // Vital signs
+                    'blood_pressure' => $request->blood_pressure,
+                    'heart_rate' => $request->heart_rate,
+                    'temperature' => $request->temperature,
+                    'respiratory_rate' => $request->respiratory_rate,
+                    // Clinical narrative
+                    'chief_complaint' => $request->chief_complaint,
+                    'history_present_illness' => $request->history_present_illness,
+                    'physical_examination' => $request->physical_examination,
+                    // Assessment
+                    'diagnosis_code' => $request->diagnosis_code,
+                    'diagnosis_desc' => $request->diagnosis_desc,
+                    'treatment' => $request->treatment,
+                    'notes' => $request->notes ?? '',
+                    'status' => $request->status,
+                    'prescription_id' => $prescription->prescription_id
+                ]);
 
-            return redirect()->route('doctor.patient-records', $patientId)
-                ->with('success', 'Rekam medis berhasil disimpan');
+                // 3. Log audit trail untuk CREATE medical record
+                AuditTrail::create([
+                    'users_id' => Auth::id(),
+                    'patient_id' => $patientId,
+                    'medicalrecord_id' => $medicalRecord->medicalrecord_id,
+                    'action' => 'create',
+                    'timestamp' => now(),
+                    'blockchain_hash' => 'record_created_' . uniqid()
+                ]);
+
+                // Commit transaction
+                DB::commit();
+
+                // TODO: Blockchain integration - record medical record on blockchain
+
+                return redirect()->route('doctor.patient-records', $patientId)
+                    ->with('success', 'Rekam medis dan resep berhasil disimpan dengan status: ' . ucfirst($request->status));
+                    
+            } catch (\Exception $e) {
+                // Rollback transaction on error
+                DB::rollback();
+                throw $e;
+            }
                 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            Log::error('Error creating medical record: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
 

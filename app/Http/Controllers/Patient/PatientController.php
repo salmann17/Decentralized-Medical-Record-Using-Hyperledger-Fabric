@@ -79,18 +79,18 @@ class PatientController extends Controller
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
         
-        $record = MedicalRecord::where('medical_record_id', $id)
+        $record = MedicalRecord::where('medicalrecord_id', $id)
             ->where('patient_id', $patient->patient_id)
             ->with(['doctor.user', 'hospital'])
             ->firstOrFail();
 
         // Log access for audit trail
         AuditTrail::create([
-            'user_id' => $user->idusers,
-            'medical_record_id' => $record->medical_record_id,
+            'users_id' => $user->idusers,
+            'patient_id' => $patient->patient_id,
+            'medicalrecord_id' => $record->medicalrecord_id,
             'action' => 'view',
-            'access_time' => now(),
-            'ip_address' => request()->ip(),
+            'timestamp' => now(),
             'blockchain_hash' => 'dummy_hash_' . uniqid() // Placeholder for blockchain
         ]);
 

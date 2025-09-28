@@ -17,10 +17,19 @@ return new class extends Migration
             $table->unsignedBigInteger('hospital_id');
             $table->unsignedBigInteger('doctor_id');
             $table->date('visit_date');
+            $table->string('blood_pressure', 45)->nullable();
+            $table->unsignedSmallInteger('heart_rate')->nullable();
+            $table->decimal('temperature', 4, 1)->nullable();
+            $table->unsignedSmallInteger('respiratory_rate')->nullable();
+
+            $table->longText('chief_complaint')->nullable();
+            $table->longText('history_present_illness')->nullable();
+            $table->longText('physical_examination')->nullable();
+
             $table->string('diagnosis_code', 45);
             $table->string('diagnosis_desc', 135);
-            $table->string('treatment', 135);
-            $table->string('notes', 135);
+            $table->text('treatment');
+            $table->text('notes')->nullable();
             $table->enum('status', ['draft', 'final', 'immutable']);
             $table->unsignedBigInteger('prescription_id');
 

@@ -78,7 +78,7 @@
                         @foreach($records as $record)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ $record->medical_record_id }}
+                                #{{ $record->medicalrecord_id }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
