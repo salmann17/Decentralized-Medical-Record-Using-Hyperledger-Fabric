@@ -173,9 +173,8 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Ubah Kata Sandi</h3>
-            <form method="POST" action="{{ route('patient.settings.update') }}" class="space-y-6">
+            <form method="POST" action="{{ route('patient.settings.password.update') }}" class="space-y-6">
                 @csrf
-                <input type="hidden" name="action" value="change_password">
                 
                 <div class="space-y-4">
                     <!-- Current Password -->

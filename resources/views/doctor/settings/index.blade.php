@@ -126,19 +126,26 @@
                             <label for="specialization" class="block text-sm font-medium text-gray-700">Spesialisasi *</label>
                             <select id="specialization" name="specialization" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                <option value="">Pilih Spesialisasi</option>
-                                <option value="umum" {{ isset($doctor) && $doctor->specialization === 'umum' ? 'selected' : '' }}>Dokter Umum</option>
-                                <option value="anak">Dokter Anak</option>
-                                <option value="kandungan">Dokter Kandungan</option>
-                                <option value="jantung">Dokter Jantung</option>
-                                <option value="bedah">Dokter Bedah</option>
-                                <option value="mata">Dokter Mata</option>
-                                <option value="tht">Dokter THT</option>
-                                <option value="kulit">Dokter Kulit</option>
-                                <option value="jiwa">Dokter Jiwa</option>
-                                <option value="saraf">Dokter Saraf</option>
-                                <option value="orthopedi">Dokter Orthopedi</option>
-                                <option value="radiologi">Dokter Radiologi</option>
+                                @if(!isset($doctor) || !$doctor->specialization)
+                                    <option value="" selected>Pilih Spesialisasi</option>
+                                @else
+                                    <option value="">Pilih Spesialisasi</option>
+                                @endif
+                                <option value="Umum" {{ isset($doctor) && $doctor->specialization === 'Umum' ? 'selected' : '' }}>Dokter Umum</option>
+                                <option value="Kardiologi" {{ isset($doctor) && $doctor->specialization === 'Kardiologi' ? 'selected' : '' }}>Kardiologi</option>
+                                <option value="Neurologi" {{ isset($doctor) && $doctor->specialization === 'Neurologi' ? 'selected' : '' }}>Neurologi</option>
+                                <option value="Orthopedi" {{ isset($doctor) && $doctor->specialization === 'Orthopedi' ? 'selected' : '' }}>Orthopedi</option>
+                                <option value="Pediatri" {{ isset($doctor) && $doctor->specialization === 'Pediatri' ? 'selected' : '' }}>Pediatri</option>
+                                <option value="Kandungan" {{ isset($doctor) && $doctor->specialization === 'Kandungan' ? 'selected' : '' }}>Kandungan</option>
+                                <option value="Bedah" {{ isset($doctor) && $doctor->specialization === 'Bedah' ? 'selected' : '' }}>Bedah</option>
+                                <option value="Mata" {{ isset($doctor) && $doctor->specialization === 'Mata' ? 'selected' : '' }}>Mata</option>
+                                <option value="THT" {{ isset($doctor) && $doctor->specialization === 'THT' ? 'selected' : '' }}>THT</option>
+                                <option value="Kulit" {{ isset($doctor) && $doctor->specialization === 'Kulit' ? 'selected' : '' }}>Kulit dan Kelamin</option>
+                                <option value="Jiwa" {{ isset($doctor) && $doctor->specialization === 'Jiwa' ? 'selected' : '' }}>Kesehatan Jiwa</option>
+                                <option value="Radiologi" {{ isset($doctor) && $doctor->specialization === 'Radiologi' ? 'selected' : '' }}>Radiologi</option>
+                                <option value="Anestesi" {{ isset($doctor) && $doctor->specialization === 'Anestesi' ? 'selected' : '' }}>Anestesi</option>
+                                <option value="Patologi" {{ isset($doctor) && $doctor->specialization === 'Patologi' ? 'selected' : '' }}>Patologi</option>
+                                <option value="Rehabilitasi" {{ isset($doctor) && $doctor->specialization === 'Rehabilitasi' ? 'selected' : '' }}>Rehabilitasi Medik</option>
                             </select>
                         </div>
 
@@ -188,7 +195,7 @@
             <div class="px-4 py-5 sm:p-6">
                 <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Ubah Password</h3>
                 
-                <form id="passwordForm" action="{{ route('doctor.settings.update') }}" method="POST">
+                <form id="passwordForm" action="{{ route('doctor.settings.password.update') }}" method="POST">
                     @csrf
                     <div class="space-y-4">
                         <div>

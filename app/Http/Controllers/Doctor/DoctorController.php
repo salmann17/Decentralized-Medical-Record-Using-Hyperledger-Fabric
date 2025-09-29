@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\MedicalRecord;
@@ -741,15 +742,18 @@ class DoctorController extends Controller
     public function settings()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->with('user')->first();
+            $doctor = Doctor::where('doctor_id', Auth::id())
+                ->with(['user', 'hospitals'])
+                ->first();
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $hospitals = Hospital::all();
+            // Debug: Log current specialization value
+            Log::info('Doctor specialization: ' . ($doctor->specialization ?? 'NULL'));
 
-            return view('doctor.settings.index', compact('doctor', 'hospitals'));
+            return view('doctor.settings.index', compact('doctor'));
             
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -764,9 +768,8 @@ class DoctorController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:135',
             'email' => 'required|email|max:135|unique:users,email,' . Auth::id() . ',idusers',
-            'specialization' => 'required|string|max:45',
-            'license_number' => 'required|numeric',
-            'password' => 'nullable|string|min:8|confirmed'
+            'specialization' => 'required|string|in:Umum,Kardiologi,Neurologi,Orthopedi,Pediatri,Kandungan,Bedah,Mata,THT,Kulit,Jiwa,Radiologi,Anestesi,Patologi,Rehabilitasi',
+            'license_number' => 'required|numeric'
         ]);
 
         if ($validator->fails()) {
@@ -789,10 +792,6 @@ class DoctorController extends Controller
                 'email' => $request->email
             ]);
 
-            if ($request->filled('password')) {
-                $user->update(['password' => bcrypt($request->password)]);
-            }
-
             // Update data dokter
             $doctor->update([
                 'specialization' => $request->specialization,
@@ -804,7 +803,45 @@ class DoctorController extends Controller
 
             // TODO: Blockchain integration - record profile update on blockchain
 
-            return redirect()->back()->with('success', 'Pengaturan berhasil diperbarui');
+            return redirect()->back()->with('success', 'Profil dokter berhasil diperbarui');
+            
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update password dokter
+     */
+    public function updatePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $user = User::find(Auth::id());
+            
+            if (!$user) {
+                return redirect()->back()->with('error', 'User tidak ditemukan');
+            }
+
+            // Cek current password
+            if (!Hash::check($request->current_password, $user->password)) {
+                return redirect()->back()->with('error', 'Password saat ini tidak sesuai');
+            }
+
+            // Update password
+            $user->update(['password' => bcrypt($request->password)]);
+
+            return redirect()->back()->with('success', 'Password berhasil diubah');
             
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

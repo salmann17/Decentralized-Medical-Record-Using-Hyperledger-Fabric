@@ -338,13 +338,36 @@ class PatientController extends Controller
         switch ($action) {
             case 'profile':
                 return $this->updateProfile($request, $user, $patient);
-            case 'change_password':
-                return $this->changePassword($request, $user);
             case 'privacy':
                 return $this->updatePrivacy($request, $patient);
             default:
                 return $this->updateProfile($request, $user, $patient);
         }
+    }
+
+    /**
+     * Update patient password
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+        
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()->with('error', 'Password saat ini tidak sesuai');
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return redirect()->back()->with('success', 'Password berhasil diubah');
     }
 
     /**

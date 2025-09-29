@@ -68,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
             // Pengaturan Akun
             Route::get('/settings', [DoctorController::class, 'settings'])->name('settings');
             Route::post('/settings', [DoctorController::class, 'updateSettings'])->name('settings.update');
+            Route::post('/settings/password', [DoctorController::class, 'updatePassword'])->name('settings.password.update');
         });
 
     Route::middleware([IsPatient::class])
@@ -84,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/audit-trail', [PatientController::class, 'auditTrail'])->name('audit-trail');
             Route::get('/settings', [PatientController::class, 'settings'])->name('settings');
             Route::post('/settings', [PatientController::class, 'updateSettings'])->name('settings.update');
+            Route::post('/settings/password', [PatientController::class, 'updatePassword'])->name('settings.password.update');
         });
 
 });
