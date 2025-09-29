@@ -12,6 +12,7 @@ use App\Models\Doctor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class PatientController extends Controller
 {
@@ -233,18 +234,48 @@ class PatientController extends Controller
     /**
      * Show doctors with active access
      */
-    public function activeDoctors()
+    public function activeDoctors(Request $request)
     {
         $user = Auth::user();
         $patient = Patient::where('patient_id', $user->idusers)->first();
         
-        $activeDoctors = AccessRequest::where('patient_id', $patient->patient_id)
+        // Get approved access requests with doctor information
+        $query = AccessRequest::where('patient_id', $patient->patient_id)
             ->where('status', 'approved')
-            ->with(['doctor.user', 'doctor.hospitals'])
-            ->orderBy('response_date', 'desc')
-            ->paginate(10);
+            ->with(['doctor.user', 'doctor.hospitals']);
 
-        return view('patient.active-doctors.index', compact('patient', 'activeDoctors'));
+        // Apply search filter if provided
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('doctor.user', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            })->orWhereHas('doctor.hospitals', function($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $accessRequests = $query->orderBy('responded_at', 'desc')->paginate(10);
+        
+        // Extract doctors from access requests for easier view handling
+        $doctors = $accessRequests->map(function($accessRequest) {
+            $doctor = $accessRequest->doctor;
+            $doctor->accessRequest = $accessRequest; // Attach access request data
+            return $doctor;
+        });
+        
+        // Create a new paginator with doctor data but preserve pagination
+        $doctors = new \Illuminate\Pagination\LengthAwarePaginator(
+            $doctors,
+            $accessRequests->total(),
+            $accessRequests->perPage(),
+            $accessRequests->currentPage(),
+            ['path' => $request->url(), 'pageName' => 'page']
+        );
+
+        // Calculate total medical records for this patient
+        $totalRecords = MedicalRecord::where('patient_id', $patient->patient_id)->count();
+
+        return view('patient.active-doctors.index', compact('patient', 'doctors', 'totalRecords'));
     }
 
     /**

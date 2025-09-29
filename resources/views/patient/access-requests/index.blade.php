@@ -108,8 +108,8 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Diminta {{ \Carbon\Carbon::parse($request->requested_at)->diffForHumans() }}
-                                    @if($request->response_date)
-                                    • Ditanggapi {{ \Carbon\Carbon::parse($request->response_date)->diffForHumans() }}
+                                    @if($request->responded_at)
+                                    • Ditanggapi {{ \Carbon\Carbon::parse($request->responded_at)->diffForHumans() }}
                                     @endif
                                 </div>
                             </div>

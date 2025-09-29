@@ -119,23 +119,20 @@
                             
                             <!-- Access Information -->
                             <div class="mt-3">
-                                @php
-                                    $accessRequest = $doctor->accessRequests->where('patient_id', auth()->id())->first();
-                                @endphp
-                                @if($accessRequest)
+                                @if($doctor->accessRequest)
                                 <div class="flex items-center text-xs text-gray-500 space-x-4">
                                     <div class="flex items-center">
                                         <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        Akses diberikan {{ \Carbon\Carbon::parse($accessRequest->response_date)->diffForHumans() }}
+                                        Akses diberikan {{ \Carbon\Carbon::parse($doctor->accessRequest->responded_at)->diffForHumans() }}
                                     </div>
-                                    @if($accessRequest->expires_at)
+                                    @if($doctor->accessRequest->expires_at)
                                     <div class="flex items-center">
                                         <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
-                                        Berlaku hingga {{ \Carbon\Carbon::parse($accessRequest->expires_at)->format('d M Y') }}
+                                        Berlaku hingga {{ \Carbon\Carbon::parse($doctor->accessRequest->expires_at)->format('d M Y') }}
                                     </div>
                                     @endif
                                 </div>
@@ -155,7 +152,7 @@
                         </span>
                         
                         <!-- Revoke Access Button -->
-                        <form method="POST" action="{{ route('patient.active-doctors.revoke', $doctor->doctor_id) }}" class="inline">
+                        <form method="POST" action="{{ route('patient.active-doctors.revoke', $doctor->accessRequest->request_id) }}" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 
