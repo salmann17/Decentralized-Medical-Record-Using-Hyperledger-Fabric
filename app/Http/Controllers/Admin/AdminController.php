@@ -99,6 +99,11 @@ class AdminController extends Controller
         $user = Auth::user();
         $hospital = Hospital::where('hospital_id', $user->idusers)->first();
         
+        if (!$hospital) {
+            return view('admin.patients.index', compact('hospital'))
+                ->with('error', 'Hospital not found.');
+        }
+
         // Get patients who have medical records in this hospital
         $patients = Patient::with('user')
             ->whereHas('medicalRecords', function($query) use ($hospital) {
@@ -106,7 +111,35 @@ class AdminController extends Controller
             })
             ->paginate(10);
 
-        return view('admin.patients.index', compact('patients', 'hospital'));
+        // Calculate total patients count
+        $totalPatients = Patient::whereHas('medicalRecords', function($query) use ($hospital) {
+                $query->where('hospital_id', $hospital->hospital_id);
+            })->count();
+
+        // Calculate active patients this month (patients with visits this month)
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+        
+        $activePatientsThisMonth = Patient::whereHas('medicalRecords', function($query) use ($hospital, $currentMonth, $currentYear) {
+                $query->where('hospital_id', $hospital->hospital_id)
+                      ->whereMonth('visit_date', $currentMonth)
+                      ->whereYear('visit_date', $currentYear);
+            })->distinct()->count();
+
+        // Get last visit date from medical records
+        $lastVisitRecord = MedicalRecord::where('hospital_id', $hospital->hospital_id)
+            ->orderBy('visit_date', 'desc')
+            ->first();
+            
+        $lastVisitDate = $lastVisitRecord ? $lastVisitRecord->visit_date : null;
+
+        return view('admin.patients.index', compact(
+            'patients', 
+            'hospital', 
+            'totalPatients',
+            'activePatientsThisMonth',
+            'lastVisitDate'
+        ));
     }
 
     /**

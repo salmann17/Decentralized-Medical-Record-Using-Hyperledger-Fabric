@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Manajemen Pasien</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Daftar pasien yang memiliki rekam medis di {{ $hospital->name }}. 
+            Daftar pasien yang memiliki rekam medis di {{ $hospital ? $hospital->name : 'rumah sakit ini' }}. 
             <span class="text-orange-600 font-medium">Data ditampilkan sesuai aturan privasi - hanya informasi identitas dasar.</span>
         </p>
     </div>
@@ -17,15 +17,17 @@
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Total Pasien</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $patients->total() }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $totalPatients ?? 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Pasien Aktif Bulan Ini</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">-</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $activePatientsThisMonth ?? 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Kunjungan Terakhir</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">-</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+                {{ $lastVisitDate ? \Carbon\Carbon::parse($lastVisitDate)->format('d/m/Y') : '-' }}
+            </dd>
         </div>
     </div>
 
@@ -38,7 +40,7 @@
             </p>
         </div>
 
-        @if($patients->count() > 0)
+        @if($patients && $patients->count() > 0)
         <div class="border-t border-gray-200">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -87,17 +89,21 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                                    {{ $patient->gender === 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
-                                    {{ $patient->gender === 'L' ? 'Laki-laki' : 'Perempuan' }}
+                                    {{ $patient->gender === 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
+                                    {{ $patient->gender === 'male' ? 'Laki-laki' : 'Perempuan' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ \Carbon\Carbon::parse($patient->date_of_birth)->format('d/m/Y') }}
+                                {{ \Carbon\Carbon::parse($patient->birthdate)->format('d/m/Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                    {{ $patient->blood_type }}
-                                </span>
+                                @if($patient->blood)
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                        {{ $patient->blood }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                 {{ Str::limit($patient->address, 30) }}
