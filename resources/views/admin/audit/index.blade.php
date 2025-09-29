@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Audit Trail</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Log akses rekam medis di {{ $hospital->name }}. 
+            Log akses rekam medis di {{ $hospital ? $hospital->name : 'rumah sakit ini' }}. 
             <span class="text-orange-600 font-medium">Menampilkan metadata akses tanpa detail isi rekam medis.</span>
         </p>
     </div>
@@ -17,25 +17,19 @@
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Total Akses</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $auditLogs->total() }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $totalAccess ?? 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Akses Hari Ini</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">
-                {{ $auditLogs->where('access_time', '>=', now()->startOfDay())->count() }}
-            </dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ $todayAccess ?? 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Akses View</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">
-                {{ $auditLogs->where('action', 'view')->count() }}
-            </dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">{{ $viewAccess ?? 0 }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Akses Create</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-purple-600">
-                {{ $auditLogs->where('action', 'create')->count() }}
-            </dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-purple-600">{{ $createAccess ?? 0 }}</dd>
         </div>
     </div>
 
@@ -50,7 +44,6 @@
                         <option value="">Semua Aksi</option>
                         <option value="view" {{ request('action') === 'view' ? 'selected' : '' }}>View</option>
                         <option value="create" {{ request('action') === 'create' ? 'selected' : '' }}>Create</option>
-                        <option value="update" {{ request('action') === 'update' ? 'selected' : '' }}>Update</option>
                     </select>
                 </div>
                 <div>
@@ -84,7 +77,7 @@
             </p>
         </div>
 
-        @if($auditLogs->count() > 0)
+        @if($auditLogs && $auditLogs->count() > 0)
         <div class="border-t border-gray-200">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -106,7 +99,7 @@
                                 Pasien
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                IP Address
+                                Blockchain Hash
                             </th>
                         </tr>
                     </thead>
@@ -114,7 +107,7 @@
                         @foreach($auditLogs as $log)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ \Carbon\Carbon::parse($log->access_time)->format('d/m/Y H:i:s') }}
+                                {{ \Carbon\Carbon::parse($log->timestamp)->format('d/m/Y H:i:s') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -151,14 +144,24 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ $log->medicalRecord->medicalrecord_id }}
+                                @if($log->medicalRecord)
+                                    #{{ $log->medicalRecord->medicalrecord_id }}
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">{{ $log->medicalRecord->patient->user->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $log->medicalRecord->patient->nik }}</div>
+                                @if($log->medicalRecord && $log->medicalRecord->patient)
+                                    <div class="text-sm font-medium text-gray-900">{{ $log->medicalRecord->patient->user->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $log->medicalRecord->patient->nik }}</div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                                {{ $log->ip_address ?? '-' }}
+                                <span class="truncate block max-w-xs" title="{{ $log->blockchain_hash }}">
+                                    {{ Str::limit($log->blockchain_hash, 20) }}
+                                </span>
                             </td>
                         </tr>
                         @endforeach

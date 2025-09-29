@@ -167,15 +167,64 @@ class AdminController extends Controller
         $user = Auth::user();
         $hospital = Hospital::where('hospital_id', $user->idusers)->first();
         
-        // Get audit trail for this hospital
-        $auditLogs = \App\Models\AuditTrail::with(['user', 'medicalRecord.patient.user'])
-            ->whereHas('medicalRecord', function($query) use ($hospital) {
-                $query->where('hospital_id', $hospital->hospital_id);
-            })
-            ->orderBy('access_time', 'desc')
-            ->paginate(20);
+        if (!$hospital) {
+            return view('admin.audit.index', compact('hospital'))
+                ->with('error', 'Hospital not found.');
+        }
+        
+        // Base query for audit logs
+        $query = \App\Models\AuditTrail::with(['user', 'medicalRecord.patient.user'])
+            ->whereHas('medicalRecord', function($subQuery) use ($hospital) {
+                $subQuery->where('hospital_id', $hospital->hospital_id);
+            });
 
-        return view('admin.audit.index', compact('auditLogs', 'hospital'));
+        // Apply filters if provided
+        if (request('action')) {
+            $query->where('action', request('action'));
+        }
+
+        if (request('date_from')) {
+            $query->whereDate('timestamp', '>=', request('date_from'));
+        }
+
+        if (request('date_to')) {
+            $query->whereDate('timestamp', '<=', request('date_to'));
+        }
+
+        // Get paginated results
+        $auditLogs = $query->orderBy('timestamp', 'desc')->paginate(20);
+
+        // Calculate statistics
+        $totalAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
+                $subQuery->where('hospital_id', $hospital->hospital_id);
+            })->count();
+
+        $todayAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
+                $subQuery->where('hospital_id', $hospital->hospital_id);
+            })
+            ->whereDate('timestamp', now()->toDateString())
+            ->count();
+
+        $viewAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
+                $subQuery->where('hospital_id', $hospital->hospital_id);
+            })
+            ->where('action', 'view')
+            ->count();
+
+        $createAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
+                $subQuery->where('hospital_id', $hospital->hospital_id);
+            })
+            ->where('action', 'create')
+            ->count();
+
+        return view('admin.audit.index', compact(
+            'auditLogs', 
+            'hospital',
+            'totalAccess',
+            'todayAccess',
+            'viewAccess',
+            'createAccess'
+        ));
     }
 
     /**
