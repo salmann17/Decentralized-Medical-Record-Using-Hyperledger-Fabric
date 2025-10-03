@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $primaryKey = 'idusers';
 
     protected $fillable = [
-        'name', 'email', 'password', 'role',
+        'name', 'email', 'password',
     ];
 
     protected $hidden = ['password'];
@@ -35,5 +35,29 @@ class User extends Authenticatable
     public function admin()
     {
         return $this->hasOne(Admin::class, 'idadmin', 'idusers');
+    }
+
+    // Helper methods untuk mengecek role
+    public function isPatient()
+    {
+        return $this->patient()->exists();
+    }
+
+    public function isDoctor()
+    {
+        return $this->doctor()->exists();
+    }
+
+    public function isAdmin()
+    {
+        return $this->admin()->exists();
+    }
+
+    public function getRole()
+    {
+        if ($this->isAdmin()) return 'admin';
+        if ($this->isDoctor()) return 'doctor';
+        if ($this->isPatient()) return 'patient';
+        return null;
     }
 }

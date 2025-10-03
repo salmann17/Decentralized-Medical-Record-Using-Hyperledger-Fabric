@@ -41,17 +41,16 @@ class RegisterController extends Controller
         }
 
         try {
-            // Create user with patient role
+            // Create user without role
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'role' => 'pasien',
             ]);
 
             // Create patient profile
             Patient::create([
-                'patient_id' => $user->idusers,
+                'idpatient' => $user->idusers,
                 'nik' => $request->nik,
                 'birthdate' => $request->birthdate,
                 'gender' => $request->gender,

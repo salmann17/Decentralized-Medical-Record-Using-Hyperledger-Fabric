@@ -7,9 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Doctor\DoctorController;
 use App\Http\Controllers\Patient\PatientController;
-use App\Http\Middleware\IsAdmin;
-use App\Http\Middleware\IsDoctor;
-use App\Http\Middleware\IsPatient;
+use App\Http\Middleware\RoleMiddleware;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -24,7 +22,7 @@ Route::post('/register', [RegisterController::class, 'register'])->name('registe
 // Protected routes
 Route::middleware(['auth'])->group(function () {
 
-    Route::middleware([IsAdmin::class])
+    Route::middleware(['role:admin'])
         ->prefix('admin')->name('admin.')
         ->group(function () {
             Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
@@ -38,7 +36,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
         });
 
-    Route::middleware([IsDoctor::class])
+    Route::middleware(['role:doctor'])
         ->prefix('doctor')->name('doctor.')
         ->group(function () {
             Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
@@ -71,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/settings/password', [DoctorController::class, 'updatePassword'])->name('settings.password.update');
         });
 
-    Route::middleware([IsPatient::class])
+    Route::middleware(['role:patient'])
         ->prefix('patient')->name('patient.')
         ->group(function () {
             Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');

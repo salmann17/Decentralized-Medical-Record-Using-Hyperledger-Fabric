@@ -38,16 +38,15 @@ class LoginController extends Controller
             
             $user = Auth::user();
             
-            // Redirect based on role
-            switch ($user->role) {
-                case 'admin':
-                    return redirect()->route('admin.dashboard');
-                case 'dokter':
-                    return redirect()->route('doctor.dashboard');
-                case 'pasien':
-                    return redirect()->route('patient.dashboard');
-                default:
-                    return redirect()->route('home');
+            // Redirect based on user relationships
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->isDoctor()) {
+                return redirect()->route('doctor.dashboard');
+            } elseif ($user->isPatient()) {
+                return redirect()->route('patient.dashboard');
+            } else {
+                return redirect()->route('home');
             }
         }
 

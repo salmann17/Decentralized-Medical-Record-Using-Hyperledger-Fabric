@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\MedicalRecord;
-use App\Models\Hospital;
+use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,17 +19,20 @@ class AdminController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
+        $admin = $user->admin;
         
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        if (!$admin) {
+            return redirect()->route('home')->with('error', 'Admin profile not found.');
+        }
         
-        $doctorsCount = $hospital ? $hospital->doctors()->count() : 0;
+        $doctorsCount = $admin->doctors()->count();
         $patientsCount = Patient::count(); 
-        $medicalRecordsCount = $hospital ? $hospital->medicalRecords()->count() : 0;
+        $medicalRecordsCount = $admin->medicalRecords()->count();
         
-        $recentDoctors = $hospital ? $hospital->doctors()->with('user')->latest('doctor_hospital.created_at')->take(5)->get() : collect();
+        $recentDoctors = $admin->doctors()->with('user')->latest()->take(5)->get();
 
         return view('admin.dashboard', compact(
-            'hospital',
+            'admin',
             'doctorsCount',
             'patientsCount', 
             'medicalRecordsCount',
@@ -43,52 +46,56 @@ class AdminController extends Controller
     public function doctors()
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         
-        $hospitalDoctors = $hospital ? $hospital->doctors()->with('user')->get() : collect();
+        if (!$admin) {
+            return redirect()->route('home')->with('error', 'Admin profile not found.');
+        }
+        
+        $adminDoctors = $admin->doctors()->with('user')->get();
         
         $availableDoctors = Doctor::with('user')
-            ->whereDoesntHave('hospitals', function($query) use ($hospital) {
-                $query->where('hospitals.hospital_id', $hospital->hospital_id);
+            ->whereDoesntHave('admins', function($query) use ($admin) {
+                $query->where('admins.idadmin', $admin->idadmin);
             })
             ->get();
 
-        return view('admin.doctors.index', compact('hospital', 'hospitalDoctors', 'availableDoctors'));
+        return view('admin.doctors.index', compact('admin', 'adminDoctors', 'availableDoctors'));
     }
 
     /**
-     * Assign doctor to hospital
+     * Assign doctor to admin
      */
     public function assignDoctor(Request $request)
     {
         $request->validate([
-            'doctor_id' => 'required|exists:doctors,doctor_id'
+            'doctor_id' => 'required|exists:doctors,iddoctor'
         ]);
 
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         $doctor = Doctor::find($request->doctor_id);
 
         // Check if already assigned
-        if (!$hospital->doctors()->where('doctors.doctor_id', $doctor->doctor_id)->exists()) {
-            $hospital->doctors()->attach($doctor->doctor_id);
-            return redirect()->back()->with('success', 'Dokter berhasil ditambahkan ke rumah sakit.');
+        if (!$admin->doctors()->where('doctors.iddoctor', $doctor->iddoctor)->exists()) {
+            $admin->doctors()->attach($doctor->iddoctor);
+            return redirect()->back()->with('success', 'Dokter berhasil ditambahkan ke admin.');
         }
 
-        return redirect()->back()->with('error', 'Dokter sudah terdaftar di rumah sakit ini.');
+        return redirect()->back()->with('error', 'Dokter sudah terdaftar di admin ini.');
     }
 
     /**
-     * Remove doctor from hospital
+     * Remove doctor from admin
      */
     public function removeDoctor(Request $request, $doctorId)
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         
-        $hospital->doctors()->detach($doctorId);
+        $admin->doctors()->detach($doctorId);
         
-        return redirect()->back()->with('success', 'Dokter berhasil dihapus dari rumah sakit.');
+        return redirect()->back()->with('success', 'Dokter berhasil dihapus dari admin.');
     }
 
     /**
@@ -97,37 +104,36 @@ class AdminController extends Controller
     public function patients()
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         
-        if (!$hospital) {
-            return view('admin.patients.index', compact('hospital'))
-                ->with('error', 'Hospital not found.');
+        if (!$admin) {
+            return redirect()->route('home')->with('error', 'Admin profile not found.');
         }
 
-        // Get patients who have medical records in this hospital
+        // Get patients who have medical records in this admin
         $patients = Patient::with('user')
-            ->whereHas('medicalRecords', function($query) use ($hospital) {
-                $query->where('hospital_id', $hospital->hospital_id);
+            ->whereHas('medicalRecords', function($query) use ($admin) {
+                $query->where('admin_id', $admin->idadmin);
             })
             ->paginate(10);
 
         // Calculate total patients count
-        $totalPatients = Patient::whereHas('medicalRecords', function($query) use ($hospital) {
-                $query->where('hospital_id', $hospital->hospital_id);
+        $totalPatients = Patient::whereHas('medicalRecords', function($query) use ($admin) {
+                $query->where('admin_id', $admin->idadmin);
             })->count();
 
         // Calculate active patients this month (patients with visits this month)
         $currentMonth = now()->month;
         $currentYear = now()->year;
         
-        $activePatientsThisMonth = Patient::whereHas('medicalRecords', function($query) use ($hospital, $currentMonth, $currentYear) {
-                $query->where('hospital_id', $hospital->hospital_id)
+        $activePatientsThisMonth = Patient::whereHas('medicalRecords', function($query) use ($admin, $currentMonth, $currentYear) {
+                $query->where('admin_id', $admin->idadmin)
                       ->whereMonth('visit_date', $currentMonth)
                       ->whereYear('visit_date', $currentYear);
             })->distinct()->count();
 
         // Get last visit date from medical records
-        $lastVisitRecord = MedicalRecord::where('hospital_id', $hospital->hospital_id)
+        $lastVisitRecord = MedicalRecord::where('admin_id', $admin->idadmin)
             ->orderBy('visit_date', 'desc')
             ->first();
             
@@ -135,7 +141,7 @@ class AdminController extends Controller
 
         return view('admin.patients.index', compact(
             'patients', 
-            'hospital', 
+            'admin', 
             'totalPatients',
             'activePatientsThisMonth',
             'lastVisitDate'
@@ -148,15 +154,15 @@ class AdminController extends Controller
     public function records()
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         
-        // Get medical records created in this hospital (metadata only)
+        // Get medical records created in this admin (metadata only)
         $records = MedicalRecord::with(['patient.user', 'doctor.user'])
-            ->where('hospital_id', $hospital->hospital_id)
+            ->where('admin_id', $admin->idadmin)
             ->orderBy('visit_date', 'desc')
             ->paginate(15);
 
-        return view('admin.records.index', compact('records', 'hospital'));
+        return view('admin.records.index', compact('records', 'admin'));
     }
 
     /**
@@ -165,17 +171,17 @@ class AdminController extends Controller
     public function audit()
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
         
-        if (!$hospital) {
-            return view('admin.audit.index', compact('hospital'))
-                ->with('error', 'Hospital not found.');
+        if (!$admin) {
+            return view('admin.audit.index', compact('admin'))
+                ->with('error', 'Admin not found.');
         }
         
         // Base query for audit logs
-        $query = \App\Models\AuditTrail::with(['user', 'medicalRecord.patient.user'])
-            ->whereHas('medicalRecord', function($subQuery) use ($hospital) {
-                $subQuery->where('hospital_id', $hospital->hospital_id);
+        $query = \App\Models\AuditTrail::with(['patient', 'doctor.user', 'medicalRecord.patient.user'])
+            ->whereHas('medicalRecord', function($subQuery) use ($admin) {
+                $subQuery->where('admin_id', $admin->idadmin);
             });
 
         // Apply filters if provided
@@ -195,31 +201,31 @@ class AdminController extends Controller
         $auditLogs = $query->orderBy('timestamp', 'desc')->paginate(20);
 
         // Calculate statistics
-        $totalAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
-                $subQuery->where('hospital_id', $hospital->hospital_id);
+        $totalAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($admin) {
+                $subQuery->where('admin_id', $admin->idadmin);
             })->count();
 
-        $todayAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
-                $subQuery->where('hospital_id', $hospital->hospital_id);
+        $todayAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($admin) {
+                $subQuery->where('admin_id', $admin->idadmin);
             })
             ->whereDate('timestamp', now()->toDateString())
             ->count();
 
-        $viewAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
-                $subQuery->where('hospital_id', $hospital->hospital_id);
+        $viewAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($admin) {
+                $subQuery->where('admin_id', $admin->idadmin);
             })
             ->where('action', 'view')
             ->count();
 
-        $createAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($hospital) {
-                $subQuery->where('hospital_id', $hospital->hospital_id);
+        $createAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($admin) {
+                $subQuery->where('admin_id', $admin->idadmin);
             })
             ->where('action', 'create')
             ->count();
 
         return view('admin.audit.index', compact(
             'auditLogs', 
-            'hospital',
+            'admin',
             'totalAccess',
             'todayAccess',
             'viewAccess',
@@ -228,18 +234,18 @@ class AdminController extends Controller
     }
 
     /**
-     * Show hospital settings page
+     * Show admin settings page
      */
     public function settings()
     {
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
 
-        return view('admin.settings.index', compact('hospital'));
+        return view('admin.settings.index', compact('admin'));
     }
 
     /**
-     * Update hospital settings
+     * Update admin settings
      */
     public function updateSettings(Request $request)
     {
@@ -250,14 +256,14 @@ class AdminController extends Controller
         ]);
 
         $user = Auth::user();
-        $hospital = Hospital::where('hospital_id', $user->idusers)->first();
+        $admin = $user->admin;
 
-        $hospital->update([
+        $admin->update([
             'name' => $request->name,
             'type' => $request->type,
             'address' => $request->address,
         ]);
 
-        return redirect()->back()->with('success', 'Pengaturan rumah sakit berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Pengaturan admin berhasil diperbarui.');
     }
 }
