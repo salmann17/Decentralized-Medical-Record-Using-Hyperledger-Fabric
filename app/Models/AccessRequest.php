@@ -3,23 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AccessRequest extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'access_request';
-    protected $primaryKey = 'request_id';
-    public $timestamps = false;
+    protected $primaryKey = 'idrequest';
 
-    protected $fillable = ['doctor_id','patient_id','status','requested_at','responded_at'];
+    protected $fillable = ['patient_id','doctor_id','status','requested_at','responded_at'];
 
-    public function doctor()
-    {
-        return $this->belongsTo(Doctor::class, 'doctor_id', 'doctor_id');
-    }
+    protected $dates = ['deleted_at'];
 
     public function patient()
     {
-        return $this->belongsTo(Patient::class, 'patient_id', 'patient_id');
+        return $this->belongsTo(Patient::class, 'patient_id', 'idpatient');
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'iddoctor');
     }
 }
 

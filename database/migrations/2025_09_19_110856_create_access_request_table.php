@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('access_request', function (Blueprint $table) {
             $table->id('idrequest');
             $table->unsignedBigInteger('patient_id');
-            $table->unsignedBigInteger('admin_id');
+            $table->unsignedBigInteger('doctor_id');
             $table->enum('status', ['pending', 'approved', 'rejected', 'revoked']);
             $table->dateTime('requested_at');
             $table->dateTime('responded_at')->nullable();
 
             $table->foreign('patient_id')->references('idpatient')->on('patients');
-            $table->foreign('admin_id')->references('idadmin')->on('admins');
+            $table->foreign('doctor_id')->references('iddoctor')->on('doctors');
 
             $table->timestamps();
             $table->softDeletes();

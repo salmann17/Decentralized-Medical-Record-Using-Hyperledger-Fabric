@@ -3,37 +3,44 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Doctor extends Model
 {
-    protected $table = 'doctors';
-    protected $primaryKey = 'doctor_id';
-    public $timestamps = false;
+    use SoftDeletes;
 
-    protected $fillable = ['license_number', 'specialization'];
+    protected $table = 'doctors';
+    protected $primaryKey = 'iddoctor';
+
+    protected $fillable = ['license_number', 'spesialization'];
+
+    protected $dates = ['deleted_at'];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'doctor_id', 'idusers');
+        return $this->belongsTo(User::class, 'iddoctor', 'idusers');
     }
 
-    public function hospitals()
+    public function admins()
     {
         return $this->belongsToMany(
-            Hospital::class,
-            'doctor_hospital',
+            Admin::class,
+            'doctors_admins',
             'doctor_id',
-            'hospital_id'
-        )->withTimestamps();
+            'admin_id',
+            'iddoctor',
+            'idadmin'
+        )->withTimestamps()->withTrashed();
     }
 
     public function medicalRecords()
     {
-        return $this->hasMany(MedicalRecord::class, 'doctor_id', 'doctor_id');
+        return $this->hasMany(MedicalRecord::class, 'doctor_id', 'iddoctor');
     }
 
-    public function accessRequests()
+    public function auditTrails()
     {
-        return $this->hasMany(AccessRequest::class, 'doctor_id', 'doctor_id');
+        return $this->hasMany(AuditTrail::class, 'doctor_id', 'iddoctor');
     }
+
 }

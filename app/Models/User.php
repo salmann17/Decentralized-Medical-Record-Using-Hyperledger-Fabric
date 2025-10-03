@@ -24,11 +24,16 @@ class User extends Authenticatable
     // Relasi
     public function patient()
     {
-        return $this->hasOne(Patient::class, 'patient_id', 'idusers');
+        return $this->hasOne(Patient::class, 'idpatient', 'idusers');
     }
 
     public function doctor()
     {
-        return $this->hasOne(Doctor::class, 'doctor_id', 'idusers');
+        return $this->hasOne(Doctor::class, 'iddoctor', 'idusers');
+    }
+
+    public function admin()
+    {
+        return $this->hasOne(Admin::class, 'idadmin', 'idusers');
     }
 }
