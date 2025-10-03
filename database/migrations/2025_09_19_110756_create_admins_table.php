@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('hospitals', function (Blueprint $table) {
-            $table->id('hospital_id');
+        Schema::create('admins', function (Blueprint $table) {
+            $table->id('idhospital');
             $table->string('name', 135);
             $table->string('address', 135);
             $table->enum('type', ['Rumah Sakit', 'Klinik', 'Puskesmas']);
 
-            $table->foreign('hospital_id')->references('idusers')->on('users');
+            $table->foreign('idhospital')->references('idusers')->on('users');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('hospitals');
+        Schema::dropIfExists('admins');
     }
 };

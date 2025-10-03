@@ -11,18 +11,21 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audit_trail', function (Blueprint $table) {
-            $table->id('audit_id');
-            $table->unsignedBigInteger('users_id');
+        Schema::create('audit_trails', function (Blueprint $table) {
+            $table->id('idaudit');
             $table->unsignedBigInteger('patient_id');
+            $table->unsignedBigInteger('doctor_id');
             $table->unsignedBigInteger('medicalrecord_id')->nullable();
             $table->enum('action', ['view', 'create']);
             $table->timestamp('timestamp')->useCurrent();
             $table->longText('blockchain_hash');
 
-            $table->foreign('users_id')->references('idusers')->on('users');
-            $table->foreign('patient_id')->references('patient_id')->on('patients');
-            $table->foreign('medicalrecord_id')->references('medicalrecord_id')->on('medical_records');
+            $table->foreign('patient_id')->references('idpatient')->on('patients');
+            $table->foreign('doctor_id')->references('iddoctor')->on('doctors');
+            $table->foreign('medicalrecord_id')->references('idmedicalrecord')->on('medical_records');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

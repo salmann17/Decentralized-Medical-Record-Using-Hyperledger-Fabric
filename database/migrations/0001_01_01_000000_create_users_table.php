@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id('idusers');
             $table->string('name', 135);
-            $table->string('email', 135)->unique();
+            $table->string('email', 45)->unique();
             $table->string('password', 135);
-            $table->enum('role', ['pasien', 'dokter', 'admin']);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('sessions', function (Blueprint $table) {

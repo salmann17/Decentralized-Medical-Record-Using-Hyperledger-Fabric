@@ -12,15 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('access_request', function (Blueprint $table) {
-            $table->id('request_id');
-            $table->unsignedBigInteger('doctor_id');
+            $table->id('idrequest');
             $table->unsignedBigInteger('patient_id');
+            $table->unsignedBigInteger('hospital_id');
             $table->enum('status', ['pending', 'approved', 'rejected', 'revoked']);
             $table->dateTime('requested_at');
             $table->dateTime('responded_at')->nullable();
 
-            $table->foreign('doctor_id')->references('doctor_id')->on('doctors');
-            $table->foreign('patient_id')->references('patient_id')->on('patients');
+            $table->foreign('patient_id')->references('idpatient')->on('patients');
+            $table->foreign('hospital_id')->references('idhospital')->on('admins');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

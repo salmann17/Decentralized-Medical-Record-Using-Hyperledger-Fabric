@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('medical_records', function (Blueprint $table) {
-            $table->id('medicalrecord_id');
+            $table->id('idmedicalrecord');
             $table->unsignedBigInteger('patient_id');
-            $table->unsignedBigInteger('hospital_id');
             $table->unsignedBigInteger('doctor_id');
+            $table->unsignedBigInteger('admin_id');
             $table->date('visit_date');
-            $table->string('blood_pressure', 45)->nullable();
-            $table->unsignedSmallInteger('heart_rate')->nullable();
-            $table->decimal('temperature', 4, 1)->nullable();
-            $table->unsignedSmallInteger('respiratory_rate')->nullable();
+            $table->string('blood_pressure', 45);
+            $table->integer('heart_rate');
+            $table->decimal('temperature', 4, 1);
+            $table->integer('respiratory_rate');
 
             $table->longText('chief_complaint')->nullable();
             $table->longText('history_present_illness')->nullable();
@@ -28,16 +28,17 @@ return new class extends Migration
 
             $table->string('diagnosis_code', 45);
             $table->string('diagnosis_desc', 135);
-            $table->text('treatment');
-            $table->text('notes')->nullable();
-            $table->enum('status', ['draft', 'final', 'immutable']);
-            $table->unsignedBigInteger('prescription_id');
-            $table->timestamps();
+            $table->string('treatment', 135);
+            $table->string('notes', 135)->nullable();
+            $table->enum('status', ['draft', 'final']);
+            $table->integer('version');
 
-            $table->foreign('patient_id')->references('patient_id')->on('patients');
-            $table->foreign('hospital_id')->references('hospital_id')->on('hospitals');
-            $table->foreign('doctor_id')->references('doctor_id')->on('doctors');
-            $table->foreign('prescription_id')->references('prescription_id')->on('prescriptions');
+            $table->foreign('patient_id')->references('idpatient')->on('patients');
+            $table->foreign('doctor_id')->references('iddoctor')->on('doctors');
+            $table->foreign('admin_id')->references('idhospital')->on('admins');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -12,11 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('prescriptions', function (Blueprint $table) {
-            $table->id('prescription_id');
-            $table->string('item', 135);
-            $table->string('dosage', 45);
-            $table->string('frequency', 45);
-            $table->string('duration', 45);
+            $table->id('idprescription');
+            $table->unsignedBigInteger('medicalrecord_id');
+            $table->enum('type', ['single', 'compound']);
+            $table->longText('instructions');
+
+            $table->foreign('medicalrecord_id')->references('idmedicalrecord')->on('medical_records');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

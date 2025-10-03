@@ -12,14 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('patients', function (Blueprint $table) {
-            $table->id('patient_id');
+            $table->id('idpatient');
             $table->unsignedBigInteger('nik');
             $table->date('birthdate');
             $table->enum('gender', ['male', 'female']);
             $table->enum('blood', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
             $table->string('address', 135);
 
-            $table->foreign('patient_id')->references('idusers')->on('users');
+            $table->foreign('idpatient')->references('idusers')->on('users');
+
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
