@@ -35,7 +35,7 @@ return new class extends Migration
 
             $table->foreign('patient_id')->references('idpatient')->on('patients');
             $table->foreign('doctor_id')->references('iddoctor')->on('doctors');
-            $table->foreign('admin_id')->references('idhospital')->on('admins');
+            $table->foreign('admin_id')->references('idadmin')->on('admins');
 
             $table->timestamps();
             $table->softDeletes();

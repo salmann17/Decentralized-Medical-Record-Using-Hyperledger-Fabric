@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('doctors_admins', function (Blueprint $table) {
             $table->unsignedBigInteger('doctor_id');
-            $table->unsignedBigInteger('hospital_id');
+            $table->unsignedBigInteger('admin_id');
 
-            $table->primary(['doctor_id', 'hospital_id']);
+            $table->primary(['doctor_id', 'admin_id']);
 
             $table->foreign('doctor_id')->references('iddoctor')->on('doctors')->onDelete('cascade');
-            $table->foreign('hospital_id')->references('idhospital')->on('admins')->onDelete('cascade');
+            $table->foreign('admin_id')->references('idadmin')->on('admins')->onDelete('cascade');
 
             $table->timestamps();
             $table->softDeletes();
