@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Audit Trail</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Log akses rekam medis di {{ $hospital ? $hospital->name : 'rumah sakit ini' }}. 
+            Log akses rekam medis di {{ $admin ? $admin->name : 'rumah sakit ini' }}. 
             <span class="text-orange-600 font-medium">Menampilkan metadata akses tanpa detail isi rekam medis.</span>
         </p>
     </div>
@@ -119,8 +119,8 @@
                                         </div>
                                     </div>
                                     <div class="ml-3">
-                                        <div class="text-sm font-medium text-gray-900">{{ $log->user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ ucfirst($log->user->role) }}</div>
+                                        <div class="text-sm font-medium text-gray-900">{{ $log->doctor->user->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ ucfirst($log->doctor->user->getRole()) }}</div>
                                     </div>
                                 </div>
                             </td>

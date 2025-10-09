@@ -16,7 +16,7 @@
                 </p>
             </div>
             <div class="flex space-x-3">
-                <a href="{{ route('doctor.create-record', $patient->patient_id) }}" 
+                <a href="{{ route('doctor.create-record', $patient->idpatient) }}" 
                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -233,7 +233,7 @@
                 Belum ada rekam medis untuk pasien {{ $patient->user->name ?? 'ini' }}. Mulai dengan membuat rekam medis pertama.
             </p>
             <div class="mt-6">
-                <a href="{{ route('doctor.create-record', $patient->patient_id) }}" 
+                <a href="{{ route('doctor.create-record', $patient->idpatient) }}" 
                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />

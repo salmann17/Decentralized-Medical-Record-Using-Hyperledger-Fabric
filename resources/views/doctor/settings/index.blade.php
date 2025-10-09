@@ -123,42 +123,42 @@
 
                         <!-- Specialization -->
                         <div>
-                            <label for="specialization" class="block text-sm font-medium text-gray-700">Spesialisasi *</label>
-                            <select id="specialization" name="specialization" required
+                            <label for="spesialization" class="block text-sm font-medium text-gray-700">Spesialisasi *</label>
+                            <select id="spesialization" name="spesialization" required
                                     class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                @if(!isset($doctor) || !$doctor->specialization)
+                                @if(!isset($doctor) || !$doctor->spesialization)
                                     <option value="" selected>Pilih Spesialisasi</option>
                                 @else
                                     <option value="">Pilih Spesialisasi</option>
                                 @endif
-                                <option value="Umum" {{ isset($doctor) && $doctor->specialization === 'Umum' ? 'selected' : '' }}>Dokter Umum</option>
-                                <option value="Kardiologi" {{ isset($doctor) && $doctor->specialization === 'Kardiologi' ? 'selected' : '' }}>Kardiologi</option>
-                                <option value="Neurologi" {{ isset($doctor) && $doctor->specialization === 'Neurologi' ? 'selected' : '' }}>Neurologi</option>
-                                <option value="Orthopedi" {{ isset($doctor) && $doctor->specialization === 'Orthopedi' ? 'selected' : '' }}>Orthopedi</option>
-                                <option value="Pediatri" {{ isset($doctor) && $doctor->specialization === 'Pediatri' ? 'selected' : '' }}>Pediatri</option>
-                                <option value="Kandungan" {{ isset($doctor) && $doctor->specialization === 'Kandungan' ? 'selected' : '' }}>Kandungan</option>
-                                <option value="Bedah" {{ isset($doctor) && $doctor->specialization === 'Bedah' ? 'selected' : '' }}>Bedah</option>
-                                <option value="Mata" {{ isset($doctor) && $doctor->specialization === 'Mata' ? 'selected' : '' }}>Mata</option>
-                                <option value="THT" {{ isset($doctor) && $doctor->specialization === 'THT' ? 'selected' : '' }}>THT</option>
-                                <option value="Kulit" {{ isset($doctor) && $doctor->specialization === 'Kulit' ? 'selected' : '' }}>Kulit dan Kelamin</option>
-                                <option value="Jiwa" {{ isset($doctor) && $doctor->specialization === 'Jiwa' ? 'selected' : '' }}>Kesehatan Jiwa</option>
-                                <option value="Radiologi" {{ isset($doctor) && $doctor->specialization === 'Radiologi' ? 'selected' : '' }}>Radiologi</option>
-                                <option value="Anestesi" {{ isset($doctor) && $doctor->specialization === 'Anestesi' ? 'selected' : '' }}>Anestesi</option>
-                                <option value="Patologi" {{ isset($doctor) && $doctor->specialization === 'Patologi' ? 'selected' : '' }}>Patologi</option>
-                                <option value="Rehabilitasi" {{ isset($doctor) && $doctor->specialization === 'Rehabilitasi' ? 'selected' : '' }}>Rehabilitasi Medik</option>
+                                <option value="Umum" {{ isset($doctor) && $doctor->spesialization === 'Umum' ? 'selected' : '' }}>Dokter Umum</option>
+                                <option value="Kardiologi" {{ isset($doctor) && $doctor->spesialization === 'Kardiologi' ? 'selected' : '' }}>Kardiologi</option>
+                                <option value="Neurologi" {{ isset($doctor) && $doctor->spesialization === 'Neurologi' ? 'selected' : '' }}>Neurologi</option>
+                                <option value="Orthopedi" {{ isset($doctor) && $doctor->spesialization === 'Orthopedi' ? 'selected' : '' }}>Orthopedi</option>
+                                <option value="Pediatri" {{ isset($doctor) && $doctor->spesialization === 'Pediatri' ? 'selected' : '' }}>Pediatri</option>
+                                <option value="Kandungan" {{ isset($doctor) && $doctor->spesialization === 'Kandungan' ? 'selected' : '' }}>Kandungan</option>
+                                <option value="Bedah" {{ isset($doctor) && $doctor->spesialization === 'Bedah' ? 'selected' : '' }}>Bedah</option>
+                                <option value="Mata" {{ isset($doctor) && $doctor->spesialization === 'Mata' ? 'selected' : '' }}>Mata</option>
+                                <option value="THT" {{ isset($doctor) && $doctor->spesialization === 'THT' ? 'selected' : '' }}>THT</option>
+                                <option value="Kulit" {{ isset($doctor) && $doctor->spesialization === 'Kulit' ? 'selected' : '' }}>Kulit dan Kelamin</option>
+                                <option value="Jiwa" {{ isset($doctor) && $doctor->spesialization === 'Jiwa' ? 'selected' : '' }}>Kesehatan Jiwa</option>
+                                <option value="Radiologi" {{ isset($doctor) && $doctor->spesialization === 'Radiologi' ? 'selected' : '' }}>Radiologi</option>
+                                <option value="Anestesi" {{ isset($doctor) && $doctor->spesialization === 'Anestesi' ? 'selected' : '' }}>Anestesi</option>
+                                <option value="Patologi" {{ isset($doctor) && $doctor->spesialization === 'Patologi' ? 'selected' : '' }}>Patologi</option>
+                                <option value="Rehabilitasi" {{ isset($doctor) && $doctor->spesialization === 'Rehabilitasi' ? 'selected' : '' }}>Rehabilitasi Medik</option>
                             </select>
                         </div>
 
                         <!-- Hospitals (Many-to-Many Relationship) -->
                         <div class="sm:col-span-2">
-                            <label for="hospitals" class="block text-sm font-medium text-gray-700">Rumah Sakit/Klinik Terkait</label>
+                            <label for="admins" class="block text-sm font-medium text-gray-700">Rumah Sakit/Klinik Terkait</label>
                             <div class="mt-2 space-y-2">
-                                @if(isset($doctor) && $doctor->hospitals && $doctor->hospitals->count() > 0)
-                                    @foreach($doctor->hospitals as $hospital)
+                                @if(isset($doctor) && $doctor->admins && $doctor->admins->count() > 0)
+                                    @foreach($doctor->admins as $admin)
                                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div>
-                                                <p class="font-medium text-gray-900">{{ $hospital->name }}</p>
-                                                <p class="text-sm text-gray-500">{{ $hospital->address }}</p>
+                                                <p class="font-medium text-gray-900">{{ $admin->name }}</p>
+                                                <p class="text-sm text-gray-500">{{ $admin->address }}</p>
                                             </div>
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 Aktif

@@ -35,7 +35,7 @@
 
                 <!-- Authenticated Navigation -->
                 @auth
-                    @if(auth()->user()->role === 'admin')
+                    @if(auth()->user()->getRole() === 'admin')
                         <!-- Admin Navigation -->
                         <li>
                             <a href="{{ route('admin.dashboard') }}" 
@@ -93,7 +93,7 @@
                             </a>
                         </li>
 
-                    @elseif(auth()->user()->role === 'dokter')
+                    @elseif(auth()->user()->getRole() === 'doctor')
                         <!-- Doctor Navigation -->
                         <li>
                             <a href="{{ route('doctor.dashboard') }}" 
@@ -151,7 +151,7 @@
                             </a>
                         </li>
 
-                    @elseif(auth()->user()->role === 'pasien')
+                    @elseif(auth()->user()->getRole() === 'patient')
                         <!-- Patient Navigation -->
                         <li>
                             <a href="{{ route('patient.dashboard') }}" 

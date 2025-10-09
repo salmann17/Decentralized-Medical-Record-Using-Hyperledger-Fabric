@@ -10,7 +10,7 @@
             <div>
                 <h3 class="text-2xl font-semibold leading-6 text-gray-900">Kelola Dokter</h3>
                 <p class="mt-2 max-w-4xl text-sm text-gray-500">
-                    Kelola dokter yang terdaftar di {{ $hospital->name }}
+                    Kelola dokter yang terdaftar di {{ $admin->name }}
                 </p>
             </div>
         </div>
@@ -32,8 +32,8 @@
                         <select id="doctor_id" name="doctor_id" class="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm">
                             <option value="">Pilih dokter...</option>
                             @foreach($availableDoctors as $doctor)
-                                <option value="{{ $doctor->doctor_id }}">
-                                    {{ $doctor->user->name }} - {{ $doctor->specialization ?? 'Spesialisasi belum ditentukan' }}
+                                <option value="{{ $doctor->iddoctor }}">
+                                    {{ $doctor->user->name }} - {{ $doctor->spesialization ?? 'Spesialisasi belum ditentukan' }}
                                 </option>
                             @endforeach
                         </select>
@@ -50,11 +50,11 @@
     </div>
     @endif
 
-    <!-- Hospital Doctors List -->
+    <!-- Admin Doctors List -->
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900">Daftar Dokter di Rumah Sakit</h3>
-            @if($hospitalDoctors->count() > 0)
+            @if($adminDoctors->count() > 0)
                 <div class="mt-6 flow-root">
                     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
@@ -72,7 +72,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    @foreach($hospitalDoctors as $doctor)
+                                    @foreach($adminDoctors as $doctor)
                                     <tr>
                                         <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
                                             <div class="flex items-center">
@@ -89,7 +89,7 @@
                                             </div>
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            {{ $doctor->specialization ?? 'Belum ditentukan' }}
+                                            {{ $doctor->spesialization ?? 'Belum ditentukan' }}
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                             {{ $doctor->license_number }}
@@ -101,7 +101,7 @@
                                             {{ $doctor->pivot->created_at ? $doctor->pivot->created_at->format('d M Y') : 'N/A' }}
                                         </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
-                                            <form method="POST" action="{{ route('admin.doctors.remove', $doctor->doctor_id) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus dokter ini dari rumah sakit?')">
+                                            <form method="POST" action="{{ route('admin.doctors.remove', $doctor->iddoctor) }}" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus dokter ini dari rumah sakit?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="text-red-600 hover:text-red-900">
@@ -143,7 +143,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Total Dokter Terdaftar</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $hospitalDoctors->count() }}</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $adminDoctors->count() }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Spesialisasi Berbeda</dt>
-                            <dd class="text-lg font-medium text-gray-900">{{ $hospitalDoctors->unique('specialization')->count() }}</dd>
+                            <dd class="text-lg font-medium text-gray-900">{{ $adminDoctors->unique('spesialization')->count() }}</dd>
                         </dl>
                     </div>
                 </div>

@@ -31,7 +31,7 @@
             <div class="border-b border-gray-200">
                 @php
                     // Get all requests for counting (tidak difilter)
-                    $allRequests = App\Models\AccessRequest::where('doctor_id', $doctor->doctor_id)->get();
+                    $allRequests = App\Models\AccessRequest::where('admin_id', $admin->idadmin)->get();
                     $currentStatus = request('status');
                 @endphp
                 
@@ -160,7 +160,7 @@
                                         </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                             @if($request->status === 'approved')
-                                                <a href="{{ route('doctor.patient-records', $request->patient_id) }}" 
+                                                <a href="{{ route('doctor.patient-records', $request->patient->idpatient) }}" 
                                                    class="text-blue-600 hover:text-blue-900">
                                                     Lihat Rekam Medis
                                                 </a>

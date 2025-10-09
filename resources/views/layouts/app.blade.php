@@ -42,7 +42,7 @@
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-700">{{ auth()->user()->name }}</span>
                         <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                            {{ ucfirst(auth()->user()->role) }}
+                            {{ ucfirst(auth()->user()->getRole()) }}
                         </span>
                     </div>
                     @endauth

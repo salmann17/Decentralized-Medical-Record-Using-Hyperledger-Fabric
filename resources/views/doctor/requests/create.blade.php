@@ -183,7 +183,7 @@ function displaySearchResults(patients) {
                     </div>
                 </div>
                 <button type="button" 
-                        onclick="selectPatient(${patient.patient_id}, '${patient.name}', '${patient.email}')" 
+                        onclick="selectPatient(${patient.idpatient}, '${patient.name}', '${patient.email}')" 
                         class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                     Pilih
                 </button>

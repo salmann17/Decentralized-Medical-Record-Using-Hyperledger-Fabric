@@ -114,11 +114,11 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-6 flex space-x-3">
-                        <a href="{{ route('doctor.patient-records', $patient->patient_id) }}" 
+                        <a href="{{ route('doctor.patient-records', $patient->idpatient) }}" 
                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-4 py-2 text-sm font-medium rounded-md">
                             Lihat Rekam Medis
                         </a>
-                        <a href="{{ route('doctor.create-record', $patient->patient_id) }}" 
+                        <a href="{{ route('doctor.create-record', $patient->idpatient) }}" 
                            class="flex-1 bg-green-600 hover:bg-green-700 text-white text-center px-4 py-2 text-sm font-medium rounded-md">
                             Tambah Record
                         </a>

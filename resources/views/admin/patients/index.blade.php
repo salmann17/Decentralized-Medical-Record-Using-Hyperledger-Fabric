@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Manajemen Pasien</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Daftar pasien yang memiliki rekam medis di {{ $hospital ? $hospital->name : 'rumah sakit ini' }}. 
+            Daftar pasien yang memiliki rekam medis di {{ $admin ? $admin->name : 'rumah sakit ini' }}. 
             <span class="text-orange-600 font-medium">Data ditampilkan sesuai aturan privasi - hanya informasi identitas dasar.</span>
         </p>
     </div>

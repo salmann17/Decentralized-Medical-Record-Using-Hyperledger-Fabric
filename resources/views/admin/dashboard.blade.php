@@ -8,8 +8,8 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Dashboard Admin</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            @if($hospital)
-                Selamat datang di dashboard {{ $hospital->name }}. Kelola dokter, pasien, dan rekam medis rumah sakit Anda.
+            @if($admin)
+                Selamat datang di dashboard {{ $admin->name }}. Kelola dokter, pasien, dan rekam medis rumah sakit Anda.
             @else
                 Selamat datang di dashboard admin.
             @endif
@@ -37,8 +37,8 @@
         </div>
     </div>
 
-    <!-- Hospital Info -->
-    @if($hospital)
+    <!-- Admin Info -->
+    @if($admin)
     <div class="overflow-hidden bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <h3 class="text-base font-semibold leading-6 text-gray-900">Informasi Rumah Sakit</h3>
@@ -48,15 +48,15 @@
             <dl class="sm:divide-y sm:divide-gray-200">
                 <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Nama</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $hospital->name }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $admin->name }}</dd>
                 </div>
                 <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Tipe</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $hospital->type }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $admin->type }}</dd>
                 </div>
                 <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                     <dt class="text-sm font-medium text-gray-500">Alamat</dt>
-                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $hospital->address }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $admin->address }}</dd>
                 </div>
             </dl>
         </div>
@@ -86,7 +86,7 @@
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">{{ $doctor->user->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $doctor->specialization }}</div>
+                                <div class="text-sm text-gray-500">{{ $doctor->spesialization }}</div>
                             </div>
                         </div>
                         <div class="text-sm text-gray-500">

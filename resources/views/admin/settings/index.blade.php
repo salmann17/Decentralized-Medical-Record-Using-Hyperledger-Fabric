@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Pengaturan Rumah Sakit</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Kelola informasi profil dan pengaturan {{ $hospital->name }}.
+            Kelola informasi profil dan pengaturan {{ $admin->name }}.
         </p>
     </div>
 
@@ -40,7 +40,7 @@
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Nama Rumah Sakit</label>
                     <input type="text" name="name" id="name" 
-                           value="{{ old('name', $hospital->name) }}" 
+                           value="{{ old('name', $admin->name) }}" 
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-500 @enderror"
                            required>
                     @error('name')
@@ -55,23 +55,14 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('type') border-red-500 @enderror"
                             required>
                         <option value="">Pilih Tipe Rumah Sakit</option>
-                        <option value="Rumah Sakit Umum" {{ old('type', $hospital->type) === 'Rumah Sakit Umum' ? 'selected' : '' }}>
-                            Rumah Sakit Umum
+                        <option value="Rumah Sakit" {{ old('type', $admin->type) === 'Rumah Sakit' ? 'selected' : '' }}>
+                            Rumah Sakit
                         </option>
-                        <option value="Rumah Sakit Khusus" {{ old('type', $hospital->type) === 'Rumah Sakit Khusus' ? 'selected' : '' }}>
-                            Rumah Sakit Khusus
-                        </option>
-                        <option value="Rumah Sakit Pendidikan" {{ old('type', $hospital->type) === 'Rumah Sakit Pendidikan' ? 'selected' : '' }}>
-                            Rumah Sakit Pendidikan
-                        </option>
-                        <option value="Rumah Sakit Pemerintah" {{ old('type', $hospital->type) === 'Rumah Sakit Pemerintah' ? 'selected' : '' }}>
-                            Rumah Sakit Pemerintah
-                        </option>
-                        <option value="Rumah Sakit Swasta" {{ old('type', $hospital->type) === 'Rumah Sakit Swasta' ? 'selected' : '' }}>
-                            Rumah Sakit Swasta
-                        </option>
-                        <option value="Klinik" {{ old('type', $hospital->type) === 'Klinik' ? 'selected' : '' }}>
+                        <option value="Klinik" {{ old('type', $admin->type) === 'Klinik' ? 'selected' : '' }}>
                             Klinik
+                        </option>
+                        <option value="Puskesmas" {{ old('type', $admin->type) === 'Puskesmas' ? 'selected' : '' }}>
+                            Puskesmas
                         </option>
                     </select>
                     @error('type')
@@ -84,7 +75,7 @@
                     <label for="address" class="block text-sm font-medium text-gray-700">Alamat Lengkap</label>
                     <textarea name="address" id="address" rows="4" 
                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('address') border-red-500 @enderror"
-                              required>{{ old('address', $hospital->address) }}</textarea>
+                              required>{{ old('address', $admin->address) }}</textarea>
                     @error('address')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -110,19 +101,19 @@
                 <div class="bg-gray-50 px-4 py-5 rounded-lg">
                     <dt class="text-sm font-medium text-gray-500 truncate">Total Dokter</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                        {{ $hospital->doctors()->count() }}
+                        {{ $admin->doctors()->count() }}
                     </dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 rounded-lg">
                     <dt class="text-sm font-medium text-gray-500 truncate">Total Pasien</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                        {{ $hospital->medicalRecords()->distinct('patient_id')->count() }}
+                        {{ $admin->medicalRecords()->distinct('patient_id')->count() }}
                     </dd>
                 </div>
                 <div class="bg-gray-50 px-4 py-5 rounded-lg">
                     <dt class="text-sm font-medium text-gray-500 truncate">Total Rekam Medis</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                        {{ $hospital->medicalRecords()->count() }}
+                        {{ $admin->medicalRecords()->count() }}
                     </dd>
                 </div>
             </div>
@@ -137,18 +128,18 @@
             <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
                 <div>
                     <dt class="text-sm font-medium text-gray-500">ID Rumah Sakit</dt>
-                    <dd class="mt-1 text-sm text-gray-900 font-mono">{{ $hospital->hospital_id }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 font-mono">{{ $admin->idadmin }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Tanggal Registrasi</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                        {{ \Carbon\Carbon::parse($hospital->created_at)->format('d/m/Y H:i') }}
+                        {{ \Carbon\Carbon::parse($admin->created_at)->format('d/m/Y H:i') }}
                     </dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Terakhir Diperbarui</dt>
                     <dd class="mt-1 text-sm text-gray-900">
-                        {{ \Carbon\Carbon::parse($hospital->updated_at)->format('d/m/Y H:i') }}
+                        {{ \Carbon\Carbon::parse($admin->updated_at)->format('d/m/Y H:i') }}
                     </dd>
                 </div>
                 <div>

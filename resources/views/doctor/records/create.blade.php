@@ -18,7 +18,7 @@
                 </p>
             </div>
             <div>
-                <a href="{{ isset($patient) ? route('doctor.patient-records', $patient->patient_id) : route('doctor.my-patients') }}" 
+                <a href="{{ isset($patient) ? route('doctor.patient-records', $patient->idpatient) : route('doctor.my-patients') }}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -59,7 +59,7 @@
         <!-- Medical Record Form -->
         <div class="bg-white shadow sm:rounded-lg">
             <div class="px-4 py-5 sm:p-6">
-                <form action="{{ route('doctor.store-record', $patient->patient_id) }}" method="POST" class="space-y-6">
+                <form action="{{ route('doctor.store-record', $patient->idpatient) }}" method="POST" class="space-y-6">
                     @csrf
                     
                     <!-- Visit Information -->
@@ -81,23 +81,23 @@
                                 @enderror
                             </div>
                             <div>
-                                <label for="hospital_id" class="block text-sm font-medium text-gray-700">Rumah Sakit</label>
+                                <label for="admin_id" class="block text-sm font-medium text-gray-700">Rumah Sakit</label>
                                 <div class="mt-1">
-                                    <select id="hospital_id" 
-                                            name="hospital_id"
-                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md @error('hospital_id') border-red-300 @enderror"
+                                    <select id="admin_id" 
+                                            name="admin_id"
+                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md @error('admin_id') border-red-300 @enderror"
                                             required>
                                         <option value="">Pilih Rumah Sakit</option>
-                                        @if(isset($hospitals) && $hospitals->count() > 0)
-                                            @foreach($hospitals as $hospital)
-                                                <option value="{{ $hospital->hospital_id }}" {{ old('hospital_id') == $hospital->hospital_id ? 'selected' : '' }}>
-                                                    {{ $hospital->name }}
+                                        @if(isset($admins) && $admins->count() > 0)
+                                            @foreach($admins as $admin)
+                                                <option value="{{ $admin->idadmin }}" {{ old('admin_id') == $admin->idadmin ? 'selected' : '' }}>
+                                                    {{ $admin->name }}
                                                 </option>
                                             @endforeach
                                         @endif
                                     </select>
                                 </div>
-                                @error('hospital_id')
+                                @error('admin_id')
                                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                                 @enderror
                             </div>

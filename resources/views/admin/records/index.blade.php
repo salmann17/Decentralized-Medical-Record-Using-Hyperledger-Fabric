@@ -8,7 +8,7 @@
     <div class="border-b border-gray-200 pb-5">
         <h3 class="text-2xl font-semibold leading-6 text-gray-900">Rekam Medis</h3>
         <p class="mt-2 max-w-4xl text-sm text-gray-500">
-            Metadata rekam medis yang dibuat di {{ $hospital->name }}. 
+            Metadata rekam medis yang dibuat di {{ $admin->name }}. 
             <span class="text-orange-600 font-medium">Isi detail rekam medis tidak ditampilkan sesuai aturan privasi.</span>
         </p>
     </div>
@@ -97,7 +97,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">{{ $record->doctor->user->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $record->doctor->specialization }}</div>
+                                <div class="text-sm text-gray-500">{{ $record->doctor->spesialization }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ \Carbon\Carbon::parse($record->visit_date)->format('d/m/Y H:i') }}

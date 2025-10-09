@@ -15,7 +15,7 @@
     <!-- Statistics Cards -->
     @php
         // Get all requests for counting (tidak difilter)
-        $allRequests = App\Models\AccessRequest::where('patient_id', $patient->patient_id)->get();
+        $allRequests = App\Models\AccessRequest::where('patient_id', $patient->idpatient)->get();
         $pendingCount = $allRequests->where('status', 'pending')->count();
         $approvedCount = $allRequests->where('status', 'approved')->count();
         $rejectedCount = $allRequests->where('status', 'rejected')->count();
