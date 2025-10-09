@@ -22,7 +22,7 @@
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900">Tambah Dokter ke Rumah Sakit</h3>
             <div class="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Pilih dokter untuk ditambahkan ke rumah sakit Anda.</p>
+                <p>Pilih dokter untuk ditambahkan ke rumah sakit Anda. Dokter dengan label "Removed" akan dikembalikan secara otomatis.</p>
             </div>
             <form class="mt-5" method="POST" action="{{ route('admin.doctors.assign') }}">
                 @csrf
@@ -34,6 +34,9 @@
                             @foreach($availableDoctors as $doctor)
                                 <option value="{{ $doctor->iddoctor }}">
                                     {{ $doctor->user->name }} - {{ $doctor->spesialization ?? 'Spesialisasi belum ditentukan' }}
+                                    @if($doctor->pivot && $doctor->pivot->deleted_at)
+                                        (Removed - akan dikembalikan)
+                                    @endif
                                 </option>
                             @endforeach
                         </select>

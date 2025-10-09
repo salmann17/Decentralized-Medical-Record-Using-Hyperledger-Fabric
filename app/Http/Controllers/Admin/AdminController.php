@@ -10,6 +10,7 @@ use App\Models\Admin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -52,15 +53,23 @@ class AdminController extends Controller
             return redirect()->route('home')->with('error', 'Admin profile not found.');
         }
         
+        // Dokter aktif (deleted_at = null di pivot)
         $adminDoctors = $admin->doctors()->with('user')->get();
         
+        // Dokter yang di-soft delete (deleted_at != null di pivot)
+        $deletedDoctors = $admin->doctorsOnlyTrashed()->with('user')->get();
+        
+        // Dokter yang tersedia untuk dropdown (belum terdaftar ATAU sudah di-soft delete)
+        // Gabungkan dokter baru + dokter yang sudah di-remove
         $availableDoctors = Doctor::with('user')
-            ->whereDoesntHave('admins', function($query) use ($admin) {
+            ->whereDoesntHave('adminsWithTrashed', function($query) use ($admin) {
                 $query->where('admins.idadmin', $admin->idadmin);
             })
-            ->get();
+            ->get()
+            ->merge($deletedDoctors) // Tambahkan dokter yang di-soft delete
+            ->sortBy('user.name'); // Sort berdasarkan nama
 
-        return view('admin.doctors.index', compact('admin', 'adminDoctors', 'availableDoctors'));
+        return view('admin.doctors.index', compact('admin', 'adminDoctors', 'deletedDoctors', 'availableDoctors'));
     }
 
     /**
@@ -76,26 +85,63 @@ class AdminController extends Controller
         $admin = $user->admin;
         $doctor = Doctor::find($request->doctor_id);
 
-        // Check if already assigned
-        if (!$admin->doctors()->where('doctors.iddoctor', $doctor->iddoctor)->exists()) {
+        // Cek apakah dokter pernah terdaftar (termasuk yang soft deleted)
+        $existingPivot = DB::table('doctors_admins')
+            ->where('admin_id', $admin->idadmin)
+            ->where('doctor_id', $doctor->iddoctor)
+            ->first();
+
+        if ($existingPivot) {
+            // Jika sudah ada tapi deleted, restore
+            if ($existingPivot->deleted_at) {
+                DB::table('doctors_admins')
+                    ->where('admin_id', $admin->idadmin)
+                    ->where('doctor_id', $doctor->iddoctor)
+                    ->update(['deleted_at' => null, 'updated_at' => now()]);
+                
+                return redirect()->back()->with('success', 'Dokter berhasil dikembalikan ke admin.');
+            } else {
+                // Sudah aktif
+                return redirect()->back()->with('error', 'Dokter sudah terdaftar di admin ini.');
+            }
+        } else {
+            // Belum pernah terdaftar, attach baru
             $admin->doctors()->attach($doctor->iddoctor);
             return redirect()->back()->with('success', 'Dokter berhasil ditambahkan ke admin.');
         }
-
-        return redirect()->back()->with('error', 'Dokter sudah terdaftar di admin ini.');
     }
 
     /**
-     * Remove doctor from admin
+     * Remove doctor from admin (Soft Delete)
      */
     public function removeDoctor(Request $request, $doctorId)
     {
         $user = Auth::user();
         $admin = $user->admin;
         
-        $admin->doctors()->detach($doctorId);
+        // Update pivot table dengan deleted_at
+        $admin->doctors()->updateExistingPivot($doctorId, [
+            'deleted_at' => now()
+        ]);
         
-        return redirect()->back()->with('success', 'Dokter berhasil dihapus dari admin.');
+        return redirect()->back()->with('success', 'Dokter berhasil dinonaktifkan dari admin.');
+    }
+
+    /**
+     * Restore doctor to admin
+     */
+    public function restoreDoctor(Request $request, $doctorId)
+    {
+        $user = Auth::user();
+        $admin = $user->admin;
+        
+        // Set deleted_at ke null untuk restore
+        DB::table('doctors_admins')
+            ->where('admin_id', $admin->idadmin)
+            ->where('doctor_id', $doctorId)
+            ->update(['deleted_at' => null]);
+        
+        return redirect()->back()->with('success', 'Dokter berhasil dikembalikan ke admin.');
     }
 
     /**

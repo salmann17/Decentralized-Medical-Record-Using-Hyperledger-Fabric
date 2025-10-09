@@ -30,7 +30,31 @@ class Doctor extends Model
             'admin_id',
             'iddoctor',
             'idadmin'
-        )->withTimestamps()->withTrashed();
+        )->withTimestamps()->withPivot('deleted_at')->wherePivot('deleted_at', null);
+    }
+
+    public function adminsWithTrashed()
+    {
+        return $this->belongsToMany(
+            Admin::class,
+            'doctors_admins',
+            'doctor_id',
+            'admin_id',
+            'iddoctor',
+            'idadmin'
+        )->withTimestamps()->withPivot('deleted_at');
+    }
+
+    public function adminsOnlyTrashed()
+    {
+        return $this->belongsToMany(
+            Admin::class,
+            'doctors_admins',
+            'doctor_id',
+            'admin_id',
+            'iddoctor',
+            'idadmin'
+        )->withTimestamps()->withPivot('deleted_at')->wherePivotNotNull('deleted_at');
     }
 
     public function medicalRecords()
