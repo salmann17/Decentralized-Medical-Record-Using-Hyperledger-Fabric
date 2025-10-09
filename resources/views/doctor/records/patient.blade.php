@@ -149,13 +149,9 @@
                                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                                             Draft
                                                         </span>
-                                                    @elseif($record->status === 'final')
+                                                    @else
                                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                             Final
-                                                        </span>
-                                                    @else
-                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                            Immutable
                                                         </span>
                                                     @endif
                                                 </div>
@@ -193,7 +189,7 @@
                                                 </div>
                                                 
                                                 <div class="flex space-x-2">
-                                                    <a href="{{ route('doctor.show-record', $record->medicalrecord_id ?? $record->id ?? 1) }}" 
+                                                    <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}" 
                                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                                                         Lihat Detail
                                                     </a>
@@ -303,23 +299,6 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="bg-purple-50 overflow-hidden shadow rounded-lg">
-                    <div class="p-5">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                            <div class="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt class="text-sm font-medium text-purple-900 truncate">Immutable</dt>
-                                    <dd class="text-lg font-semibold text-purple-900">{{ $records->where('status', 'immutable')->count() }}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -339,9 +318,8 @@
                 <div class="mt-2 text-sm text-blue-700">
                     <ul class="list-disc list-inside space-y-1">
                         <li>Timeline menampilkan rekam medis dari yang terbaru ke terlama</li>
-                        <li>Status "Draft" memungkinkan edit, "Final" sudah lengkap, "Immutable" tidak dapat diubah</li>
+                        <li>Status "Draft" memungkinkan edit, "Final" sudah lengkap</li>
                         <li>Semua perubahan dan akses akan tercatat dalam audit trail</li>
-                        <li>Blockchain verification akan aktif setelah sistem blockchain terintegrasi</li>
                     </ul>
                 </div>
             </div>

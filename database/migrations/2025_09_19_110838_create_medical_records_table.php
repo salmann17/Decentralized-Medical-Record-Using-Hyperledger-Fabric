@@ -27,10 +27,10 @@ return new class extends Migration
             $table->longText('physical_examination')->nullable();
 
             $table->string('diagnosis_code', 45);
-            $table->string('diagnosis_desc', 135);
-            $table->string('treatment', 135);
-            $table->string('notes', 135)->nullable();
-            $table->enum('status', ['draft', 'final']);
+            $table->longText('diagnosis_desc');
+            $table->longText('treatment');
+            $table->longText('notes')->nullable();
+            $table->enum('status', ['draft', 'final', 'immutable']);
             $table->integer('version');
 
             $table->foreign('patient_id')->references('idpatient')->on('patients');

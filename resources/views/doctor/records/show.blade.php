@@ -102,7 +102,7 @@
                         </div>
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Rumah Sakit</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->hospital->name }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->admin->hospital_name ?? 'N/A' }}</dd>
                         </div>
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Tanggal Kunjungan</dt>
@@ -189,6 +189,19 @@
             @endif
 
             <!-- Clinical History -->
+            @if($record->chief_complaint)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Keluhan Utama</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        {!! nl2br(e($record->chief_complaint)) !!}
+                    </div>
+                </div>
+            </div>
+            @endif
+
             @if($record->history_present_illness)
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6">
@@ -197,6 +210,19 @@
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
                     <div class="prose prose-sm max-w-none text-gray-700">
                         {!! nl2br(e($record->history_present_illness)) !!}
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($record->physical_examination)
+            <div class="bg-white shadow sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg font-medium leading-6 text-gray-900">Pemeriksaan Fisik</h3>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                    <div class="prose prose-sm max-w-none text-gray-700">
+                        {!! nl2br(e($record->physical_examination)) !!}
                     </div>
                 </div>
             </div>
@@ -258,40 +284,65 @@
             </div>
 
             <!-- Prescriptions -->
-            @if($record->prescription)
+            @if($record->prescriptions && $record->prescriptions->count() > 0)
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="px-4 py-5 sm:px-6">
                     <h3 class="text-lg font-medium leading-6 text-gray-900">Resep Obat</h3>
+                    <p class="mt-1 text-sm text-gray-500">Daftar resep obat untuk pasien ini</p>
                 </div>
                 <div class="border-t border-gray-200">
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z" />
-                                    </svg>
+                    @foreach($record->prescriptions as $prescription)
+                    <div class="px-4 py-4 sm:px-6 {{ !$loop->last ? 'border-b border-gray-200' : '' }}">
+                        <div class="mb-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {{ $prescription->type === 'single' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                {{ $prescription->type === 'single' ? 'Resep Tunggal' : 'Resep Racikan' }}
+                            </span>
+                        </div>
+                        
+                        @if($prescription->instructions)
+                        <div class="mb-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                            <p class="text-sm text-yellow-800"><strong>Instruksi:</strong> {{ $prescription->instructions }}</p>
+                        </div>
+                        @endif
+
+                        <div class="space-y-3">
+                            @foreach($prescription->prescriptionItems as $item)
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                        <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <div class="text-base font-semibold text-gray-900 mb-2">{{ $item->name }}</div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dosis</div>
+                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->dosage }}</div>
+                                        </div>
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Frekuensi</div>
+                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->frequency }}</div>
+                                        </div>
+                                        <div class="bg-gray-50 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</div>
+                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->duration }}</div>
+                                        </div>
+                                    </div>
+                                    @if($item->notes)
+                                    <div class="mt-2 text-sm text-gray-600 italic">
+                                        Catatan: {{ $item->notes }}
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
-                            <div class="ml-4 flex-1">
-                                <div class="text-base font-semibold text-gray-900 mb-2">{{ $record->prescription->item }}</div>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="bg-gray-50 rounded-lg p-3">
-                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dosis</div>
-                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->dosage }}</div>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
-                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Frekuensi</div>
-                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->frequency }}</div>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg p-3">
-                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</div>
-                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $record->prescription->duration }}</div>
-                                    </div>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
+                    @endforeach
                 </div>
             </div>
             @endif
@@ -410,12 +461,12 @@
                     <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rumah Sakit</h3>
                 </div>
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                    <div class="text-sm font-medium text-gray-900">{{ $record->hospital->name }}</div>
-                    @if(isset($record->hospital->address))
-                    <div class="text-sm text-gray-500 mt-1">{{ $record->hospital->address }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->hospital_name ?? 'N/A' }}</div>
+                    @if(isset($record->admin->hospital_address))
+                    <div class="text-sm text-gray-500 mt-1">{{ $record->admin->hospital_address }}</div>
                     @endif
-                    @if(isset($record->hospital->phone))
-                    <div class="text-xs text-gray-400 mt-1">Tel: {{ $record->hospital->phone }}</div>
+                    @if(isset($record->admin->phone_number))
+                    <div class="text-xs text-gray-400 mt-1">Tel: {{ $record->admin->phone_number }}</div>
                     @endif
                 </div>
             </div>
@@ -428,7 +479,7 @@
             @if($record->status !== 'immutable')
             <!-- Status Update Buttons -->
             @if($record->status === 'draft')
-            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id) }}" class="inline">
+            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="inline">
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="status" value="final">
@@ -444,7 +495,7 @@
             @endif
 
             @if($record->status === 'final')
-            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id) }}" class="inline">
+            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="inline">
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="status" value="immutable">

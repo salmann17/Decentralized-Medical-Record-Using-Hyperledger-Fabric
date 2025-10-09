@@ -100,7 +100,7 @@
                             <div class="flex items-center justify-between">
                                 <div class="min-w-0 flex-1">
                                     <div class="text-sm font-medium text-gray-900 truncate">
-                                        {{ $record->hospital->name }}
+                                        {{ $record->admin->hospital_name ?? 'Hospital' }}
                                     </div>
                                     <div class="text-sm text-gray-500 mt-1">
                                         <span class="font-medium">{{ $record->doctor->user->name }}</span>

@@ -186,14 +186,14 @@
                                 {{ $record->patient->user->name ?? 'Pasien' }}
                             </p>
                             <p class="text-sm text-gray-500 truncate">
-                                {{ $record->diagnosis_desc }} - {{ $record->hospital->name ?? 'Hospital' }}
+                                {{ $record->diagnosis_desc }} - {{ $record->admin->hospital_name ?? 'Hospital' }}
                             </p>
                             <p class="text-xs text-gray-400">
                                 {{ date('d/m/Y', strtotime($record->visit_date)) }}
                             </p>
                         </div>
                         <div>
-                            <a href="{{ route('doctor.show-record', $record->medicalrecord_id) }}"
+                            <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}"
                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200">
                                 Lihat Detail
                             </a>

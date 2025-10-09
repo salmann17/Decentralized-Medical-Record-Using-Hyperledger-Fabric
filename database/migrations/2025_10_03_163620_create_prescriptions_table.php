@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id('idprescription');
             $table->unsignedBigInteger('medicalrecord_id');
             $table->enum('type', ['single', 'compound']);
-            $table->longText('instructions');
+            $table->longText('instructions')->nullable();
 
             $table->foreign('medicalrecord_id')->references('idmedicalrecord')->on('medical_records');
 

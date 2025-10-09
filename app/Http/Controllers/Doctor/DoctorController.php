@@ -13,7 +13,6 @@ use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\MedicalRecord;
 use App\Models\AccessRequest;
-use App\Models\Hospital;
 use App\Models\AuditTrail;
 use App\Models\Prescription;
 use App\Models\User;
@@ -44,7 +43,7 @@ class DoctorController extends Controller
             $totalRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)->count();
             
             $recentRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
-                ->with(['patient.user', 'hospital'])
+                ->with(['patient.user', 'admin'])
                 ->orderBy('visit_date', 'desc')
                 ->limit(5)
                 ->get();
@@ -291,8 +290,8 @@ class DoctorController extends Controller
                 'requested_at' => now()
             ]);
 
-            // Log audit trail
-            $this->logAuditTrail($doctor->iddoctor, $patientId, null, 'REQUEST_ACCESS');
+            // TIDAK perlu log audit trail untuk request access
+            // Audit trail HANYA untuk aktivitas medis (create/view medical record)
 
             // TODO: Blockchain integration - record access request on blockchain
 
@@ -350,7 +349,7 @@ class DoctorController extends Controller
 
             // Query builder for pagination
             $query = MedicalRecord::whereIn('patient_id', $approvedPatientIds)
-                ->with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
+                ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions'])
                 ->orderBy('visit_date', 'desc');
 
             // Apply status filter if requested
@@ -393,7 +392,7 @@ class DoctorController extends Controller
             $patient = Patient::with('user')->find($patientId);
             
             $records = MedicalRecord::where('patient_id', $patientId)
-                ->with(['doctor.user', 'hospital', 'prescription'])
+                ->with(['doctor.user', 'admin', 'prescriptions'])
                 ->orderBy('visit_date', 'asc') // Ubah ke ASC agar rekam medis terlama tampil pertama
                 ->get();
 
@@ -458,16 +457,20 @@ class DoctorController extends Controller
             'physical_examination' => 'nullable|string',
             // Assessment (required)
             'diagnosis_code' => 'required|string|max:45',
-            'diagnosis_desc' => 'required|string|max:135',
+            'diagnosis_desc' => 'required|string',
             'treatment' => 'required|string',
             'notes' => 'nullable|string',
             'status' => 'required|in:draft,final,immutable',
-            // Prescription fields (multiple items)
+            // Prescription fields (multiple prescriptions support)
             'prescriptions' => 'required|array|min:1',
-            'prescriptions.*.item' => 'required|string|max:135',
-            'prescriptions.*.dosage' => 'required|string|max:45',
-            'prescriptions.*.frequency' => 'required|string|max:45',
-            'prescriptions.*.duration' => 'required|string|max:45'
+            'prescriptions.*.type' => 'required|in:single,compound',
+            'prescriptions.*.instructions' => 'nullable|string',
+            'prescriptions.*.items' => 'required|array|min:1',
+            'prescriptions.*.items.*.name' => 'required|string|max:135',
+            'prescriptions.*.items.*.dosage' => 'required|string|max:45',
+            'prescriptions.*.items.*.frequency' => 'required|string|max:45',
+            'prescriptions.*.items.*.duration' => 'required|string|max:45',
+            'prescriptions.*.items.*.notes' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -497,27 +500,17 @@ class DoctorController extends Controller
             DB::beginTransaction();
 
             try {
-                // 1. Buat prescription dengan multiple items
-                // Untuk sementara gunakan item pertama, nanti bisa diperluas ke multiple prescriptions
-                $firstPrescription = $request->prescriptions[0];
-                $prescription = Prescription::create([
-                    'item' => $firstPrescription['item'],
-                    'dosage' => $firstPrescription['dosage'],
-                    'frequency' => $firstPrescription['frequency'],
-                    'duration' => $firstPrescription['duration']
-                ]);
-
-                // 2. Buat medical record dengan prescription_id
+                // 1. Buat medical record terlebih dahulu
                 $medicalRecord = MedicalRecord::create([
                     'patient_id' => $patientId,
                     'admin_id' => $request->admin_id,
                     'doctor_id' => $doctor->iddoctor,
                     'visit_date' => $request->visit_date,
                     // Vital signs
-                    'blood_pressure' => $request->blood_pressure,
-                    'heart_rate' => $request->heart_rate,
-                    'temperature' => $request->temperature,
-                    'respiratory_rate' => $request->respiratory_rate,
+                    'blood_pressure' => $request->blood_pressure ?? '',
+                    'heart_rate' => $request->heart_rate ?? 0,
+                    'temperature' => $request->temperature ?? 0,
+                    'respiratory_rate' => $request->respiratory_rate ?? 0,
                     // Clinical narrative
                     'chief_complaint' => $request->chief_complaint,
                     'history_present_illness' => $request->history_present_illness,
@@ -528,14 +521,36 @@ class DoctorController extends Controller
                     'treatment' => $request->treatment,
                     'notes' => $request->notes ?? '',
                     'status' => $request->status,
-                    'prescription_id' => $prescription->prescription_id
+                    'version' => 1
                 ]);
 
+                // 2. Buat prescriptions dengan items
+                foreach ($request->prescriptions as $prescriptionData) {
+                    // Buat prescription header
+                    $prescription = Prescription::create([
+                        'medicalrecord_id' => $medicalRecord->idmedicalrecord,
+                        'type' => $prescriptionData['type'],
+                        'instructions' => $prescriptionData['instructions'] ?? null
+                    ]);
+
+                    // Buat prescription items
+                    foreach ($prescriptionData['items'] as $itemData) {
+                        $prescription->prescriptionItems()->create([
+                            'name' => $itemData['name'],
+                            'dosage' => $itemData['dosage'],
+                            'frequency' => $itemData['frequency'],
+                            'duration' => $itemData['duration'],
+                            'notes' => $itemData['notes'] ?? null
+                        ]);
+                    }
+                }
+
                 // 3. Log audit trail untuk CREATE medical record
+                // Audit trail HANYA untuk aktivitas dokter, bukan pasien
                 AuditTrail::create([
-                    'doctor_id' => $doctor->iddoctor,
+                    'doctor_id' => $doctor->iddoctor,  // Menggunakan doctor_id, bukan users_id
                     'patient_id' => $patientId,
-                    'medicalrecord_id' => $medicalRecord->medicalrecord_id,
+                    'medicalrecord_id' => $medicalRecord->idmedicalrecord,
                     'action' => 'create',
                     'timestamp' => now(),
                     'blockchain_hash' => 'record_created_' . uniqid()
@@ -557,6 +572,7 @@ class DoctorController extends Controller
                 
         } catch (\Exception $e) {
             Log::error('Error creating medical record: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
@@ -573,8 +589,12 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
-                ->find($recordId);
+            $record = MedicalRecord::with([
+                'patient.user', 
+                'doctor.user', 
+                'admin',  // Ganti dari 'hospital' ke 'admin'
+                'prescriptions.prescriptionItems'  // Load prescriptions dengan items
+            ])->find($recordId);
 
             if (!$record) {
                 return redirect()->back()->with('error', 'Rekam medis tidak ditemukan');
@@ -590,23 +610,25 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses ke rekam medis ini');
             }
 
-            // Update audit trail yang existing dengan medicalrecord_id
-            // Cari audit trail yang sudah ada (saat pasien approve) dan update dengan record ID
-            $existingAudit = AuditTrail::where('doctor_id', $doctor->iddoctor)
-                ->where('patient_id', $record->patient_id)
-                ->whereNull('medicalrecord_id') // Audit trail saat approve (medicalrecord_id = NULL)
+            // Audit Trail untuk VIEW - hanya mencatat aktivitas DOKTER
+            // Cek apakah dokter sudah pernah VIEW record ini sebelumnya
+            $existingViewAudit = AuditTrail::where('doctor_id', $doctor->iddoctor)
+                ->where('medicalrecord_id', $recordId)
                 ->where('action', 'view')
                 ->first();
 
-            if ($existingAudit) {
-                // Update audit trail existing dengan medicalrecord_id
-                $existingAudit->update([
+            if ($existingViewAudit) {
+                // Jika sudah pernah view, hanya update timestamp (tidak buat record baru)
+                $existingViewAudit->update([
+                    'timestamp' => now()
+                ]);
+                Log::info('Updated existing view audit trail', [
+                    'doctor_id' => $doctor->iddoctor,
                     'medicalrecord_id' => $recordId,
-                    'timestamp' => now(), // Update timestamp ke waktu view
-                    'blockchain_hash' => 'record_viewed_' . uniqid()
+                    'audit_id' => $existingViewAudit->idaudit
                 ]);
             } else {
-                // Jika tidak ada audit trail existing, buat baru
+                // Jika belum pernah view, buat audit trail baru
                 AuditTrail::create([
                     'doctor_id' => $doctor->iddoctor,
                     'patient_id' => $record->patient_id,
@@ -614,6 +636,10 @@ class DoctorController extends Controller
                     'action' => 'view',
                     'timestamp' => now(),
                     'blockchain_hash' => 'record_viewed_' . uniqid()
+                ]);
+                Log::info('Created new view audit trail', [
+                    'doctor_id' => $doctor->iddoctor,
+                    'medicalrecord_id' => $recordId
                 ]);
             }
 
@@ -647,7 +673,7 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'hospital', 'prescription'])
+            $record = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions'])
                 ->find($recordId);
 
             if (!$record) {
@@ -788,8 +814,8 @@ class DoctorController extends Controller
                 'license_number' => $request->license_number
             ]);
 
-            // Log audit trail
-            $this->logAuditTrail($doctor->iddoctor, null, null, 'UPDATE_PROFILE');
+            // TIDAK perlu log audit trail untuk update profile
+            // Audit trail HANYA untuk aktivitas medis (create/view medical record)
 
             // TODO: Blockchain integration - record profile update on blockchain
 

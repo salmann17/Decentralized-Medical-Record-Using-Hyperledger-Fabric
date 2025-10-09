@@ -46,17 +46,5 @@ class MedicalRecord extends Model
     {
         return $this->hasMany(AuditTrail::class, 'medicalrecord_id', 'idmedicalrecord');
     }
-
-    // Legacy - for backward compatibility
-    public function hospital()
-    {
-        return $this->belongsTo(Hospital::class, 'hospital_id', 'hospital_id');
-    }
-
-    // Legacy - for backward compatibility  
-    public function prescription()
-    {
-        return $this->belongsTo(Prescription::class, 'prescription_id', 'prescription_id');
-    }
 }
 

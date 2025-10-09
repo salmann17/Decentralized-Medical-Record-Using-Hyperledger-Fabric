@@ -142,7 +142,7 @@
                         
                         @if($request->status === 'pending')
                         <div class="flex space-x-2">
-                            <form method="POST" action="{{ route('patient.access-requests.approve', $request->request_id) }}" class="inline">
+                            <form method="POST" action="{{ route('patient.access-requests.approve', $request->idrequest) }}" class="inline">
                                 @csrf
                                 <button type="submit" 
                                         onclick="return confirm('Apakah Anda yakin ingin menyetujui permintaan akses ini?')"
@@ -153,7 +153,7 @@
                                     Setujui
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('patient.access-requests.reject', $request->request_id) }}" class="inline">
+                            <form method="POST" action="{{ route('patient.access-requests.reject', $request->idrequest) }}" class="inline">
                                 @csrf
                                 <button type="submit" 
                                         onclick="return confirm('Apakah Anda yakin ingin menolak permintaan akses ini?')"

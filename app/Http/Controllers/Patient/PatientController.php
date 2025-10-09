@@ -22,26 +22,27 @@ class PatientController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        // PK di patients table adalah idpatient
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        // Get statistics
-        $totalRecords = MedicalRecord::where('patient_id', $patient->patient_id)->count();
-        $pendingRequests = AccessRequest::where('patient_id', $patient->patient_id)
+        // Get statistics - FK di table lain adalah patient_id
+        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
+        $pendingRequests = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'pending')->count();
-        $activeDoctors = AccessRequest::where('patient_id', $patient->patient_id)
+        $activeDoctors = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'approved')->distinct('doctor_id')->count();
         
         // Get recent access requests (pending)
-        $recentRequests = AccessRequest::where('patient_id', $patient->patient_id)
+        $recentRequests = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'pending')
-            ->with(['doctor.user', 'doctor.hospitals'])
+            ->with(['doctor.user', 'doctor.admins'])
             ->orderBy('requested_at', 'desc')
             ->take(5)
             ->get();
         
         // Get recent medical records
-        $recentRecords = MedicalRecord::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital', 'prescription'])
+        $recentRecords = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->with(['doctor.user', 'admin', 'prescription'])
             ->orderBy('visit_date', 'desc')
             ->take(5)
             ->get();
@@ -62,17 +63,17 @@ class PatientController extends Controller
     public function records(Request $request)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $query = MedicalRecord::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital', 'prescription']);
+        $query = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->with(['doctor.user', 'admin', 'prescription']);
 
         // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->whereHas('hospital', function($hospitalQuery) use ($search) {
-                    $hospitalQuery->where('name', 'like', '%' . $search . '%');
+                $q->whereHas('admin', function($adminQuery) use ($search) {
+                    $adminQuery->where('name', 'like', '%' . $search . '%');
                 })
                 ->orWhereHas('doctor.user', function($doctorQuery) use ($search) {
                     $doctorQuery->where('name', 'like', '%' . $search . '%');
@@ -117,22 +118,15 @@ class PatientController extends Controller
     public function recordDetail($id)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
         $record = MedicalRecord::where('medicalrecord_id', $id)
-            ->where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'hospital', 'prescription'])
+            ->where('patient_id', $patient->idpatient)
+            ->with(['doctor.user', 'admin', 'prescription'])
             ->firstOrFail();
 
-        // Log access for audit trail
-        AuditTrail::create([
-            'users_id' => $user->idusers,
-            'patient_id' => $patient->patient_id,
-            'medicalrecord_id' => $record->medicalrecord_id,
-            'action' => 'view',
-            'timestamp' => now(),
-            'blockchain_hash' => 'dummy_hash_' . uniqid() // Placeholder for blockchain
-        ]);
+        // TIDAK perlu log audit trail untuk pasien yang melihat rekam medisnya sendiri
+        // Audit trail HANYA untuk aktivitas DOKTER
 
         return view('patient.records.detail', compact('patient', 'record'));
     }
@@ -143,11 +137,11 @@ class PatientController extends Controller
     public function accessRequests(Request $request)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         $currentStatus = $request->status;
         
-        $query = AccessRequest::where('patient_id', $patient->patient_id)
-            ->with(['doctor.user', 'doctor.hospitals']);
+        $query = AccessRequest::where('patient_id', $patient->idpatient)
+            ->with(['doctor.user', 'doctor.admins']);
 
         // Filter berdasarkan status jika ada
         if ($request->has('status') && $request->status) {
@@ -157,7 +151,7 @@ class PatientController extends Controller
         $requests = $query->orderBy('requested_at', 'desc')->paginate(15);
         
         // Get all requests for count calculations (unfiltered)
-        $allRequests = AccessRequest::where('patient_id', $patient->patient_id)->get();
+        $allRequests = AccessRequest::where('patient_id', $patient->idpatient)->get();
         $pendingCount = $allRequests->where('status', 'pending')->count();
         $approvedCount = $allRequests->where('status', 'approved')->count();
         $rejectedCount = $allRequests->where('status', 'rejected')->count();
@@ -178,10 +172,10 @@ class PatientController extends Controller
     public function approveAccess($id)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $request = AccessRequest::where('request_id', $id)
-            ->where('patient_id', $patient->patient_id)
+        $request = AccessRequest::where('idrequest', $id)
+            ->where('patient_id', $patient->idpatient)
             ->where('status', 'pending')
             ->firstOrFail();
 
@@ -190,16 +184,9 @@ class PatientController extends Controller
             'responded_at' => now()
         ]);
 
-        // Insert audit trail saat pasien approve access request
-        // medicalrecord_id = NULL karena dokter belum melakukan aktivitas apapun
-        AuditTrail::create([
-            'users_id' => $request->doctor_id, // ID dokter yang mendapat akses
-            'patient_id' => $patient->patient_id,
-            'medicalrecord_id' => null, // NULL karena belum ada record yang diakses
-            'action' => 'view', // Action view untuk menandakan dokter sudah bisa "view"
-            'timestamp' => now(),
-            'blockchain_hash' => 'access_granted_' . uniqid()
-        ]);
+        // TIDAK perlu insert audit trail saat pasien approve access request
+        // Audit trail HANYA untuk aktivitas DOKTER (create/view medical record)
+        // Saat dokter pertama kali VIEW medical record, baru dicatat audit trail
 
         // TODO: Add blockchain transaction here
         // BlockchainService::approveAccess($request);
@@ -213,10 +200,10 @@ class PatientController extends Controller
     public function rejectAccess($id)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $request = AccessRequest::where('request_id', $id)
-            ->where('patient_id', $patient->patient_id)
+        $request = AccessRequest::where('idrequest', $id)
+            ->where('patient_id', $patient->idpatient)
             ->where('status', 'pending')
             ->firstOrFail();
 
@@ -237,19 +224,19 @@ class PatientController extends Controller
     public function activeDoctors(Request $request)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
         // Get approved access requests with doctor information
-        $query = AccessRequest::where('patient_id', $patient->patient_id)
+        $query = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'approved')
-            ->with(['doctor.user', 'doctor.hospitals']);
+            ->with(['doctor.user', 'doctor.admins']);
 
         // Apply search filter if provided
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('doctor.user', function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
-            })->orWhereHas('doctor.hospitals', function($q) use ($search) {
+            })->orWhereHas('doctor.admins', function($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
             });
         }
@@ -273,7 +260,7 @@ class PatientController extends Controller
         );
 
         // Calculate total medical records for this patient
-        $totalRecords = MedicalRecord::where('patient_id', $patient->patient_id)->count();
+        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
 
         return view('patient.active-doctors.index', compact('patient', 'doctors', 'totalRecords'));
     }
@@ -284,16 +271,16 @@ class PatientController extends Controller
     public function revokeAccess($id)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $request = AccessRequest::where('request_id', $id)
-            ->where('patient_id', $patient->patient_id)
+        $request = AccessRequest::where('idrequest', $id)
+            ->where('patient_id', $patient->idpatient)
             ->where('status', 'approved')
             ->firstOrFail();
 
         $request->update([
             'status' => 'revoked',
-            'revoked_at' => now()
+            'responded_at' => now() // Use responded_at instead of revoked_at
         ]);
 
         // TODO: Add blockchain transaction here
@@ -308,10 +295,10 @@ class PatientController extends Controller
     public function auditTrail(Request $request)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $query = AuditTrail::where('patient_id', $patient->patient_id)
-            ->with(['medicalRecord.doctor.user', 'medicalRecord.hospital']);
+        $query = AuditTrail::where('patient_id', $patient->idpatient)
+            ->with(['medicalRecord.doctor.user', 'medicalRecord.admin']);
 
         // Apply search filter
         if ($request->filled('search')) {
@@ -350,7 +337,7 @@ class PatientController extends Controller
     public function settings()
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
 
         return view('patient.settings.index', compact('patient', 'user'));
     }
@@ -361,7 +348,7 @@ class PatientController extends Controller
     public function updateSettings(Request $request)
     {
         $user = Auth::user();
-        $patient = Patient::where('patient_id', $user->idusers)->first();
+        $patient = Patient::where('idpatient', $user->idusers)->first();
 
         // Handle different actions based on form submission
         $action = $request->input('action', 'profile');

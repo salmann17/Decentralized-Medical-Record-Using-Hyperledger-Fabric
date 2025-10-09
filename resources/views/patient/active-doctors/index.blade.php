@@ -152,7 +152,7 @@
                         </span>
                         
                         <!-- Revoke Access Button -->
-                        <form method="POST" action="{{ route('patient.active-doctors.revoke', $doctor->accessRequest->request_id) }}" class="inline">
+                        <form method="POST" action="{{ route('patient.active-doctors.revoke', $doctor->accessRequest->idrequest) }}" class="inline">
                             @csrf
                             @method('DELETE')
                             <button type="submit" 

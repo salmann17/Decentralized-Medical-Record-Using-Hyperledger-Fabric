@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('prescription_items', function (Blueprint $table) {
             $table->id('iditem');
             $table->unsignedBigInteger('prescription_id');
-            $table->string('name', 135);
-            $table->string('dosage', 45);
-            $table->string('frequency', 45);
-            $table->string('duration', 45);
-            $table->longText('notes');
+            $table->string('name', 135); // Nama obat
+            $table->string('dosage', 45); // Dosis (misal: 125mg, 500mg)
+            $table->string('frequency', 45); // Frekuensi (misal: 3x sehari)
+            $table->string('duration', 45); // Durasi (misal: 5 hari)
+            $table->longText('notes')->nullable(); // Catatan tambahan (nullable)
 
             $table->foreign('prescription_id')->references('idprescription')->on('prescriptions');
 

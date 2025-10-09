@@ -99,19 +99,19 @@
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">{{ $request->doctor->user->name }}</div>
                                 <div class="text-sm text-gray-500">
-                                    {{ $request->doctor->specialization ?? 'Dokter Umum' }} • 
+                                    {{ $request->doctor->spesialization ?? 'Dokter Umum' }} • 
                                     {{ \Carbon\Carbon::parse($request->requested_at)->diffForHumans() }}
                                 </div>
                             </div>
                         </div>
                         <div class="flex space-x-2">
-                            <form method="POST" action="{{ route('patient.access-requests.approve', $request->request_id) }}" class="inline">
+                            <form method="POST" action="{{ route('patient.access-requests.approve', $request->idrequest) }}" class="inline">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center rounded-md bg-green-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-green-500">
                                     Setujui
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('patient.access-requests.reject', $request->request_id) }}" class="inline">
+                            <form method="POST" action="{{ route('patient.access-requests.reject', $request->idrequest) }}" class="inline">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center rounded-md bg-red-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500">
                                     Tolak
@@ -154,7 +154,7 @@
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">
-                                    {{ $record->hospital->name }}
+                                    {{ $record->admin->name ?? 'Admin' }}
                                 </div>
                                 <div class="text-sm text-gray-500">
                                     {{ $record->doctor->user->name }} • {{ \Carbon\Carbon::parse($record->visit_date)->format('d M Y') }}

@@ -107,6 +107,7 @@
                         </span>
                     </a>
                     
+                    
                 </nav>
             </div>
         </div>
@@ -145,15 +146,15 @@
                                     </svg>
                                     Draft
                                 </span>
-                            @else
+                            @elseif($record->status === 'final')
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                                         <circle cx="4" cy="4" r="3" />
                                     </svg>
                                     Final
                                 </span>
-                        </div>
                             @endif
+                        </div>
                     </div>
 
                     <!-- Record Content -->
@@ -186,12 +187,12 @@
 
                     <!-- Action Buttons -->
                     <div class="mt-6 flex space-x-2">
-                        <a href="{{ route('doctor.show-record', $record->medicalrecord_id ?? $record->id ?? 1) }}" 
+                        <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}" 
                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 text-xs font-medium rounded-md">
                             Lihat Detail
                         </a>
                         @if($record->status === 'draft')
-                            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id ?? $record->id ?? 1) }}" class="flex-1">
+                            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="flex-1">
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="final">
@@ -202,7 +203,7 @@
                                 </button>
                             </form>
                         @elseif($record->status === 'final')
-                            <form method="POST" action="{{ route('doctor.update-record-status', $record->medicalrecord_id ?? $record->id ?? 1) }}" class="flex-1">
+                            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="flex-1">
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="immutable">
@@ -265,8 +266,8 @@
                 <h3 class="text-sm font-medium text-blue-800">Tentang Status Rekam Medis</h3>
                 <div class="mt-2 text-sm text-blue-700">
                     <ul class="list-disc list-inside space-y-1">
-                        <li><strong>Draft</strong>: Rekam medis masih dapat diedit</li>
-                        <li><strong>Final</strong>: Rekam medis sudah final</li>
+                        <li><strong>Draft</strong>: Rekam medis masih dapat diedit dan diubah</li>
+                        <li><strong>Final</strong>: Rekam medis sudah lengkap</li>
                     </ul>
                 </div>
             </div>
