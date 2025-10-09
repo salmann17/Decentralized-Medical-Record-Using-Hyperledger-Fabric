@@ -326,10 +326,9 @@
             <h3 class="text-sm font-medium text-purple-800">Tentang Audit Trail Blockchain</h3>
             <div class="mt-2 text-sm text-purple-700">
                 <ul class="list-disc list-inside space-y-1">
-                    <li>Semua aktivitas akan dicatat secara immutable setelah blockchain terintegrasi</li>
                     <li>Hash blockchain akan memastikan integritas data audit trail</li>
                     <li>Akses audit trail dapat diverifikasi secara independen</li>
-                    <li>Sistem saat ini mencatat semua aktivitas untuk persiapan blockchain</li>
+                    <li>Sistem saat ini mencatat semua aktivitas</li>
                 </ul>
             </div>
         </div>

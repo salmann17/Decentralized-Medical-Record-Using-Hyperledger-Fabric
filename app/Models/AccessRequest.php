@@ -12,13 +12,18 @@ class AccessRequest extends Model
     protected $table = 'access_request';
     protected $primaryKey = 'idrequest';
 
-    protected $fillable = ['patient_id','admin_id','status','requested_at','responded_at'];
+    protected $fillable = ['patient_id','doctor_id','status','requested_at','responded_at'];
 
     protected $dates = ['deleted_at'];
 
     public function patient()
     {
         return $this->belongsTo(Patient::class, 'patient_id', 'idpatient');
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'iddoctor');
     }
 
     public function admin()

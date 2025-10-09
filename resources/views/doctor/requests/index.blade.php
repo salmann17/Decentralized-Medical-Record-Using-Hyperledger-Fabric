@@ -31,7 +31,7 @@
             <div class="border-b border-gray-200">
                 @php
                     // Get all requests for counting (tidak difilter)
-                    $allRequests = App\Models\AccessRequest::where('admin_id', $admin->idadmin)->get();
+                    $allRequests = App\Models\AccessRequest::where('doctor_id', $doctor->iddoctor)->get();
                     $currentStatus = request('status');
                 @endphp
                 
@@ -94,9 +94,6 @@
                                         <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                             Tanggal Respons
                                         </th>
-                                        <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                            Blockchain Hash
-                                        </th>
                                         <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                             <span class="sr-only">Actions</span>
                                         </th>
@@ -153,10 +150,6 @@
                                         </td>
                                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                             {{ $request->responded_at ? date('d/m/Y H:i', strtotime($request->responded_at)) : '-' }}
-                                        </td>
-                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            <!-- TODO: blockchain integration - show actual blockchain hash -->
-                                            <span class="text-gray-400">Akan tersedia</span>
                                         </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                             @if($request->status === 'approved')
@@ -215,7 +208,6 @@
                         <li>Status <strong>pending</strong> berarti menunggu persetujuan pasien</li>
                         <li>Status <strong>approved</strong> berarti Anda dapat mengakses data pasien</li>
                         <li>Status <strong>rejected</strong> berarti permintaan ditolak oleh pasien</li>
-                        <li>Blockchain hash akan dibuat otomatis setelah integrasi blockchain aktif</li>
                     </ul>
                 </div>
             </div>

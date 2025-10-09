@@ -21,45 +21,29 @@ use App\Models\User;
 class DoctorController extends Controller
 {
     /**
-     * Dashboar    public function settings()
-    {
-        try {
-            $doctor = Doctor::where('doctor_id', Auth::id())
-                ->with(['user', 'hospitals'])
-                ->first();
-            
-            if (!$doctor) {
-                return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
-            }
-
-            return view('doctor.settings.index', compact('doctor'));
-            
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
-    }k untuk dokter
+     * Dashboard untuk dokter
      */
     public function dashboard()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Ambil statistik
-            $totalPatients = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $totalPatients = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'approved')
                 ->count();
                 
-            $pendingRequests = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $pendingRequests = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'pending')
                 ->count();
                 
-            $totalRecords = MedicalRecord::where('doctor_id', $doctor->doctor_id)->count();
+            $totalRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)->count();
             
-            $recentRecords = MedicalRecord::where('doctor_id', $doctor->doctor_id)
+            $recentRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
                 ->with(['patient.user', 'hospital'])
                 ->orderBy('visit_date', 'desc')
                 ->limit(5)
@@ -95,13 +79,13 @@ class DoctorController extends Controller
     public function hospitals()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $hospitals = $doctor->hospitals()->get();
+            $hospitals = $doctor->admins()->get();
 
             return view('doctor.hospitals', compact('hospitals', 'doctor'));
             
@@ -116,13 +100,13 @@ class DoctorController extends Controller
     public function accessRequests(Request $request)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $query = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $query = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->with(['patient.user']);
 
             // Filter berdasarkan status jika ada
@@ -145,19 +129,19 @@ class DoctorController extends Controller
     public function createAccessRequest()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Ambil daftar pasien yang belum pernah diminta akses
-            $existingRequests = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $existingRequests = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->pluck('patient_id')
                 ->toArray();
 
             $patients = Patient::with('user')
-                ->whereNotIn('patient_id', $existingRequests)
+                ->whereNotIn('idpatient', $existingRequests)
                 ->get();
 
             return view('doctor.requests.create', compact('patients', 'doctor'));
@@ -173,7 +157,7 @@ class DoctorController extends Controller
     public function searchPatients(Request $request)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return response()->json(['error' => 'Data dokter tidak ditemukan'], 404);
@@ -186,12 +170,12 @@ class DoctorController extends Controller
             }
 
             // Ambil daftar pasien yang belum pernah diminta akses
-            $existingRequests = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $existingRequests = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->pluck('patient_id')
                 ->toArray();
 
             $patients = Patient::with('user')
-                ->whereNotIn('patient_id', $existingRequests)
+                ->whereNotIn('idpatient', $existingRequests)
                 ->whereHas('user', function($userQuery) use ($query) {
                     $userQuery->where('name', 'like', '%' . $query . '%')
                              ->orWhere('email', 'like', '%' . $query . '%');
@@ -199,11 +183,11 @@ class DoctorController extends Controller
                 ->get()
                 ->map(function($patient) {
                     return [
-                        'patient_id' => $patient->patient_id,
+                        'patient_id' => $patient->idpatient,
                         'name' => $patient->user->name,
                         'email' => $patient->user->email,
                         'gender' => $patient->gender ?? 'unknown',
-                        'blood' => $patient->blood_type ?? 'Unknown'
+                        'blood' => $patient->blood ?? 'Unknown'
                     ];
                 });
 
@@ -219,50 +203,55 @@ class DoctorController extends Controller
      */
     public function storeAccessRequest(Request $request)
     {
+        // Debug: Log all request data
+        Log::info('Access Request Data:', $request->all());
+        
         $validator = Validator::make($request->all(), [
-            'patient_id' => 'required|exists:patients,patient_id'
+            'patient_id' => 'required|exists:patients,idpatient'
         ]);
 
         if ($validator->fails()) {
+            Log::error('Validation failed:', $validator->errors()->toArray());
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
+            Log::info('Doctor data:', ['doctor_id' => $doctor->iddoctor, 'patient_id' => $request->patient_id]);
+
             // Cek apakah permintaan sudah ada
-            $existingRequest = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $existingRequest = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $request->patient_id)
                 ->first();
 
             if ($existingRequest) {
+                Log::info('Existing request found:', $existingRequest->toArray());
                 return redirect()->back()->with('error', 'Permintaan akses untuk pasien ini sudah ada');
             }
 
             // Simpan permintaan akses - TIDAK perlu audit trail
             $accessRequest = AccessRequest::create([
-                'doctor_id' => $doctor->doctor_id,
+                'doctor_id' => $doctor->iddoctor,
                 'patient_id' => $request->patient_id,
                 'status' => 'pending',
                 'requested_at' => now()
             ]);
 
-            // TIDAK ada log audit trail disini karena:
-            // - Access request hanya permintaan, bukan aktivitas medis
-            // - Audit trail untuk aktivitas VIEW/CREATE medical records
-            // - Pasien belum approve, jadi belum ada akses yang terjadi
+            Log::info('Access request created:', $accessRequest->toArray());
 
             return redirect()->route('doctor.access-requests')
                 ->with('success', 'Permintaan akses berhasil dikirim');
                 
         } catch (\Exception $e) {
             Log::error('Error creating access request: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -273,7 +262,7 @@ class DoctorController extends Controller
     public function requestAccess($patientId)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
@@ -286,7 +275,7 @@ class DoctorController extends Controller
             }
 
             // Cek apakah permintaan sudah ada
-            $existingRequest = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $existingRequest = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $patientId)
                 ->first();
 
@@ -296,14 +285,14 @@ class DoctorController extends Controller
 
             // Simpan permintaan akses
             AccessRequest::create([
-                'doctor_id' => $doctor->doctor_id,
+                'doctor_id' => $doctor->iddoctor,
                 'patient_id' => $patientId,
                 'status' => 'pending',
                 'requested_at' => now()
             ]);
 
             // Log audit trail
-            $this->logAuditTrail(Auth::id(), $patientId, null, 'REQUEST_ACCESS');
+            $this->logAuditTrail($doctor->iddoctor, $patientId, null, 'REQUEST_ACCESS');
 
             // TODO: Blockchain integration - record access request on blockchain
 
@@ -320,17 +309,17 @@ class DoctorController extends Controller
     public function myPatients()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             $patients = Patient::whereHas('accessRequests', function($query) use ($doctor) {
-                $query->where('doctor_id', $doctor->doctor_id)
+                $query->where('doctor_id', $doctor->iddoctor)
                     ->where('status', 'approved');
             })->with(['user', 'accessRequests' => function($query) use ($doctor) {
-                $query->where('doctor_id', $doctor->doctor_id)
+                $query->where('doctor_id', $doctor->iddoctor)
                     ->where('status', 'approved');
             }])->paginate(12);
 
@@ -347,14 +336,14 @@ class DoctorController extends Controller
     public function records()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Ambil ID pasien yang memberikan akses
-            $approvedPatientIds = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $approvedPatientIds = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'approved')
                 ->pluck('patient_id')
                 ->toArray();
@@ -385,14 +374,14 @@ class DoctorController extends Controller
     public function patientRecords($patientId)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Cek akses ke pasien
-            $hasAccess = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $patientId)
                 ->where('status', 'approved')
                 ->exists();
@@ -424,14 +413,14 @@ class DoctorController extends Controller
     public function createRecord($patientId)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Cek akses ke pasien
-            $hasAccess = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $patientId)
                 ->where('status', 'approved')
                 ->exists();
@@ -441,7 +430,7 @@ class DoctorController extends Controller
             }
 
             $patient = Patient::with('user')->find($patientId);
-            $hospitals = $doctor->hospitals;
+            $hospitals = $doctor->admins;
 
             return view('doctor.records.create', compact('patient', 'doctor', 'hospitals'));
             
@@ -456,7 +445,7 @@ class DoctorController extends Controller
     public function storeRecord(Request $request, $patientId)
     {
         $validator = Validator::make($request->all(), [
-            'hospital_id' => 'required|exists:hospitals,hospital_id',
+            'admin_id' => 'required|exists:admins,idadmin',
             'visit_date' => 'required|date',
             // Vital signs (optional)
             'blood_pressure' => 'nullable|string|max:45',
@@ -488,14 +477,14 @@ class DoctorController extends Controller
         }
 
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
             // Cek akses ke pasien
-            $hasAccess = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $patientId)
                 ->where('status', 'approved')
                 ->exists();
@@ -521,8 +510,8 @@ class DoctorController extends Controller
                 // 2. Buat medical record dengan prescription_id
                 $medicalRecord = MedicalRecord::create([
                     'patient_id' => $patientId,
-                    'hospital_id' => $request->hospital_id,
-                    'doctor_id' => $doctor->doctor_id,
+                    'admin_id' => $request->admin_id,
+                    'doctor_id' => $doctor->iddoctor,
                     'visit_date' => $request->visit_date,
                     // Vital signs
                     'blood_pressure' => $request->blood_pressure,
@@ -544,7 +533,7 @@ class DoctorController extends Controller
 
                 // 3. Log audit trail untuk CREATE medical record
                 AuditTrail::create([
-                    'users_id' => Auth::id(),
+                    'doctor_id' => $doctor->iddoctor,
                     'patient_id' => $patientId,
                     'medicalrecord_id' => $medicalRecord->medicalrecord_id,
                     'action' => 'create',
@@ -578,7 +567,7 @@ class DoctorController extends Controller
     public function showRecord($recordId)
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
@@ -592,7 +581,7 @@ class DoctorController extends Controller
             }
 
             // Cek akses ke pasien
-            $hasAccess = AccessRequest::where('doctor_id', $doctor->doctor_id)
+            $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $record->patient_id)
                 ->where('status', 'approved')
                 ->exists();
@@ -603,7 +592,7 @@ class DoctorController extends Controller
 
             // Update audit trail yang existing dengan medicalrecord_id
             // Cari audit trail yang sudah ada (saat pasien approve) dan update dengan record ID
-            $existingAudit = AuditTrail::where('users_id', Auth::id())
+            $existingAudit = AuditTrail::where('doctor_id', $doctor->iddoctor)
                 ->where('patient_id', $record->patient_id)
                 ->whereNull('medicalrecord_id') // Audit trail saat approve (medicalrecord_id = NULL)
                 ->where('action', 'view')
@@ -619,7 +608,7 @@ class DoctorController extends Controller
             } else {
                 // Jika tidak ada audit trail existing, buat baru
                 AuditTrail::create([
-                    'users_id' => Auth::id(),
+                    'doctor_id' => $doctor->iddoctor,
                     'patient_id' => $record->patient_id,
                     'medicalrecord_id' => $recordId,
                     'action' => 'view',
@@ -652,7 +641,7 @@ class DoctorController extends Controller
         }
 
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
@@ -666,7 +655,7 @@ class DoctorController extends Controller
             }
 
             // Cek apakah dokter adalah pemilik record
-            if ($record->doctor_id !== $doctor->doctor_id) {
+            if ($record->doctor_id !== $doctor->iddoctor) {
                 return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
             }
 
@@ -718,13 +707,13 @@ class DoctorController extends Controller
     public function auditTrail()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            $auditTrails = AuditTrail::where('users_id', Auth::id())
+            $auditTrails = AuditTrail::where('doctor_id', $doctor->iddoctor)
                 ->with(['patient.user', 'medicalRecord'])
                 ->orderBy('timestamp', 'desc')
                 ->get();
@@ -742,16 +731,17 @@ class DoctorController extends Controller
     public function settings()
     {
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())
-                ->with(['user', 'hospitals'])
-                ->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
+            // Load relationships
+            $doctor->load(['user', 'admins']);
+
             // Debug: Log current specialization value
-            Log::info('Doctor specialization: ' . ($doctor->specialization ?? 'NULL'));
+            Log::info('Doctor spesialization: ' . ($doctor->spesialization ?? 'NULL'));
 
             return view('doctor.settings.index', compact('doctor'));
             
@@ -768,7 +758,7 @@ class DoctorController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:135',
             'email' => 'required|email|max:135|unique:users,email,' . Auth::id() . ',idusers',
-            'specialization' => 'required|string|in:Umum,Kardiologi,Neurologi,Orthopedi,Pediatri,Kandungan,Bedah,Mata,THT,Kulit,Jiwa,Radiologi,Anestesi,Patologi,Rehabilitasi',
+            'spesialization' => 'required|string|in:Umum,Kardiologi,Neurologi,Orthopedi,Pediatri,Kandungan,Bedah,Mata,THT,Kulit,Jiwa,Radiologi,Anestesi,Patologi,Rehabilitasi',
             'license_number' => 'required|numeric'
         ]);
 
@@ -779,7 +769,7 @@ class DoctorController extends Controller
         }
 
         try {
-            $doctor = Doctor::where('doctor_id', Auth::id())->first();
+            $doctor = Auth::user()->doctor;
             
             if (!$doctor) {
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
@@ -794,12 +784,12 @@ class DoctorController extends Controller
 
             // Update data dokter
             $doctor->update([
-                'specialization' => $request->specialization,
+                'spesialization' => $request->spesialization,
                 'license_number' => $request->license_number
             ]);
 
             // Log audit trail
-            $this->logAuditTrail(Auth::id(), null, null, 'UPDATE_PROFILE');
+            $this->logAuditTrail($doctor->iddoctor, null, null, 'UPDATE_PROFILE');
 
             // TODO: Blockchain integration - record profile update on blockchain
 
@@ -851,11 +841,11 @@ class DoctorController extends Controller
     /**
      * Helper method untuk logging audit trail
      */
-    private function logAuditTrail($userId, $patientId, $medicalRecordId, $action)
+    private function logAuditTrail($doctorId, $patientId, $medicalRecordId, $action)
     {
         try {
             AuditTrail::create([
-                'users_id' => $userId,
+                'doctor_id' => $doctorId,
                 'patient_id' => $patientId,
                 'medicalrecord_id' => $medicalRecordId,
                 'action' => $action,
@@ -868,3 +858,10 @@ class DoctorController extends Controller
         }
     }
 }
+
+
+
+
+
+
+

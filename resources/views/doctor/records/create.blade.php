@@ -88,10 +88,10 @@
                                             class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md @error('admin_id') border-red-300 @enderror"
                                             required>
                                         <option value="">Pilih Rumah Sakit</option>
-                                        @if(isset($admins) && $admins->count() > 0)
-                                            @foreach($admins as $admin)
-                                                <option value="{{ $admin->idadmin }}" {{ old('admin_id') == $admin->idadmin ? 'selected' : '' }}>
-                                                    {{ $admin->name }}
+                                        @if(isset($hospitals) && $hospitals->count() > 0)
+                                            @foreach($hospitals as $hospital)
+                                                <option value="{{ $hospital->idadmin }}" {{ old('admin_id') == $hospital->idadmin ? 'selected' : '' }}>
+                                                    {{ $hospital->name }}
                                                 </option>
                                             @endforeach
                                         @endif

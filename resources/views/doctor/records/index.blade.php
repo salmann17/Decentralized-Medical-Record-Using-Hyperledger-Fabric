@@ -107,13 +107,6 @@
                         </span>
                     </a>
                     
-                    <a href="{{ route('doctor.records', ['status' => 'immutable']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'immutable' ? 'border-purple-500 text-purple-600' : '' }}">
-                        Immutable
-                        <span class="ml-2 bg-purple-100 text-purple-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($records) ? $records->where('status', 'immutable')->count() : 0 }}
-                        </span>
-                    </a>
                 </nav>
             </div>
         </div>
@@ -152,22 +145,15 @@
                                     </svg>
                                     Draft
                                 </span>
-                            @elseif($record->status === 'final')
+                            @else
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
                                         <circle cx="4" cy="4" r="3" />
                                     </svg>
                                     Final
                                 </span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-purple-400" fill="currentColor" viewBox="0 0 8 8">
-                                        <circle cx="4" cy="4" r="3" />
-                                    </svg>
-                                    Immutable
-                                </span>
-                            @endif
                         </div>
+                            @endif
                     </div>
 
                     <!-- Record Content -->
@@ -280,9 +266,7 @@
                 <div class="mt-2 text-sm text-blue-700">
                     <ul class="list-disc list-inside space-y-1">
                         <li><strong>Draft</strong>: Rekam medis masih dapat diedit</li>
-                        <li><strong>Final</strong>: Rekam medis sudah final tetapi masih dapat diubah</li>
-                        <li><strong>Immutable</strong>: Rekam medis tidak dapat diubah lagi (aktif setelah blockchain terintegrasi)</li>
-                        <li>Blockchain verification akan otomatis setelah sistem blockchain aktif</li>
+                        <li><strong>Final</strong>: Rekam medis sudah final</li>
                     </ul>
                 </div>
             </div>

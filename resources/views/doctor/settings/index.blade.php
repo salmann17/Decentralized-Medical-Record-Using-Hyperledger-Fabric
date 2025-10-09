@@ -70,7 +70,6 @@
         <select id="tabs" name="tabs" class="block w-full focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md">
             <option selected>Profil Dokter</option>
             <option>Keamanan</option>
-            <option>Export Data</option>
         </select>
     </div>
     
@@ -81,9 +80,6 @@
             </a>
             <a href="#security" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
                 Keamanan
-            </a>
-            <a href="#export" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                Export Data
             </a>
         </nav>
     </div>
@@ -231,100 +227,6 @@
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Export Data Tab -->
-    <div id="export-tab" class="tab-content hidden">
-        <div class="bg-white shadow sm:rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Export Data</h3>
-                
-                <div class="space-y-6">
-                    <!-- Data Export Options -->
-                    <div>
-                        <h4 class="text-base font-medium text-gray-900">Export Data Dokter</h4>
-                        <p class="mt-1 text-sm text-gray-500">Download data Anda dalam berbagai format.</p>
-                        
-                        <div class="mt-4 space-y-4">
-                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                <div>
-                                    <h5 class="text-sm font-medium text-gray-900">Profil dan Pengaturan</h5>
-                                    <p class="text-sm text-gray-500">Data profil dokter, pengaturan akun, dan preferensi</p>
-                                </div>
-                                <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Export JSON
-                                </button>
-                            </div>
-
-                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                <div>
-                                    <h5 class="text-sm font-medium text-gray-900">Rekam Medis</h5>
-                                    <p class="text-sm text-gray-500">Semua rekam medis yang telah Anda buat</p>
-                                </div>
-                                <div class="flex space-x-2">
-                                    <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                        Export PDF
-                                    </button>
-                                    <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                        Export Excel
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                <div>
-                                    <h5 class="text-sm font-medium text-gray-900">Audit Trail</h5>
-                                    <p class="text-sm text-gray-500">Riwayat aktivitas dan log sistem</p>
-                                </div>
-                                <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                    Export CSV
-                                </button>
-                            </div>
-
-                            <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                                <div>
-                                    <h5 class="text-sm font-medium text-gray-900">Data Lengkap</h5>
-                                    <p class="text-sm text-gray-500">Semua data dalam satu file archive</p>
-                                </div>
-                                <button type="button" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50">
-                                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                                    </svg>
-                                    Export ZIP
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Account Deletion -->
-                    <div class="border-t border-gray-200 pt-6">
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-red-800">Hapus Akun</h3>
-                                    <div class="mt-2 text-sm text-red-700">
-                                        <p>Tindakan ini akan menghapus akun Anda secara permanen dan tidak dapat dibatalkan. Semua data akan dihapus dari sistem.</p>
-                                    </div>
-                                    <div class="mt-4">
-                                        <button type="button" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200">
-                                            Hapus Akun Saya
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
