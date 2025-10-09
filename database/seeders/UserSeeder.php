@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Patient;
 use App\Models\Doctor;
-use App\Models\Hospital;
+use App\Models\Admin;
 
 class UserSeeder extends Seeder
 {
@@ -22,20 +22,18 @@ class UserSeeder extends Seeder
         $hospitalModels = [];
         foreach ($hospitals as $i => $h) {
             $user = User::create([
-                'name' => $h['name'],
-                'email' => 'admin' . ($i + 1) . '@hospital.com',
+                'name'     => $h['name'],
+                'email'    => 'admin' . ($i + 1) . '@hospital.com',
                 'password' => Hash::make('password123'),
-                'role' => 'admin'
             ]);
 
-            $hospital = Hospital::create([
-                'hospital_id' => $user->idusers,
-                'name' => $h['name'],
+            $admin = $user->admin()->create([
+                'name'    => $h['name'],
                 'address' => $h['address'],
-                'type' => $h['type']
+                'type'    => $h['type'],
             ]);
 
-            $hospitalModels[] = $hospital;
+            $hospitalModels[] = $admin;
         }
 
         $doctors = [
@@ -47,30 +45,28 @@ class UserSeeder extends Seeder
 
         foreach ($doctors as $i => $d) {
             $user = User::create([
-                'name' => $d['name'],
-                'email' => $d['email'],
+                'name'     => $d['name'],
+                'email'    => $d['email'],
                 'password' => Hash::make('password123'),
-                'role' => 'dokter'
             ]);
 
-            $doctor = Doctor::create([
-                'doctor_id' => $user->idusers,
+            $doctor = $user->doctor()->create([
                 'license_number' => $d['license_number'],
-                'specialization' => $d['specialization']
+                'spesialization' => $d['specialization'],
             ]);
 
             if ($i == 0) {
-                $doctor->hospitals()->attach([$hospitalModels[0]->hospital_id, $hospitalModels[1]->hospital_id]);
+                $doctor->admins()->attach([$hospitalModels[0]->idadmin, $hospitalModels[1]->idadmin]);
             } elseif ($i == 1) {
-                $doctor->hospitals()->attach([$hospitalModels[0]->hospital_id, $hospitalModels[2]->hospital_id]);
+                $doctor->admins()->attach([$hospitalModels[0]->idadmin, $hospitalModels[2]->idadmin]);
             } elseif ($i == 2) {
-                $doctor->hospitals()->attach([
-                    $hospitalModels[0]->hospital_id, 
-                    $hospitalModels[1]->hospital_id, 
-                    $hospitalModels[2]->hospital_id
+                $doctor->admins()->attach([
+                    $hospitalModels[0]->idadmin, 
+                    $hospitalModels[1]->idadmin, 
+                    $hospitalModels[2]->idadmin
                 ]);
             } else {
-                $doctor->hospitals()->attach([$hospitalModels[1]->hospital_id]);
+                $doctor->admins()->attach([$hospitalModels[1]->idadmin]);
             }
         }
 
@@ -82,19 +78,17 @@ class UserSeeder extends Seeder
 
         foreach ($patients as $i => $p) {
             $user = User::create([
-                'name' => $p['name'],
-                'email' => $p['email'],
+                'name'     => $p['name'],
+                'email'    => $p['email'],
                 'password' => Hash::make('password123'),
-                'role' => 'pasien'
             ]);
 
-            Patient::create([
-                'patient_id' => $user->idusers,
-                'nik' => $p['nik'],
+            $user->patient()->create([
+                'nik'       => $p['nik'],
                 'birthdate' => $p['birthdate'],
-                'gender' => $p['gender'],
-                'blood' => $p['blood'],
-                'address' => $p['address']
+                'gender'    => $p['gender'],
+                'blood'     => $p['blood'],
+                'address'   => $p['address'],
             ]);
         }
     }
