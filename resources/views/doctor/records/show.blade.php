@@ -469,12 +469,9 @@
                     <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rumah Sakit</h3>
                 </div>
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->hospital_name ?? 'N/A' }}</div>
-                    @if(isset($record->admin->hospital_address))
-                    <div class="text-sm text-gray-500 mt-1">{{ $record->admin->hospital_address }}</div>
-                    @endif
-                    @if(isset($record->admin->phone_number))
-                    <div class="text-xs text-gray-400 mt-1">Tel: {{ $record->admin->phone_number }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->name ?? 'N/A' }}</div>
+                    @if(isset($record->admin->address))
+                    <div class="text-sm text-gray-500 mt-1">{{ $record->admin->address }}</div>
                     @endif
                 </div>
             </div>
@@ -510,17 +507,6 @@
             </form>
             @endif
 
-            <!-- Delete Button - Only for draft and final (not immutable) -->
-            @if($record->status === 'draft' || $record->status === 'final')
-            <button type="button" 
-                    onclick="return confirm('Apakah Anda yakin ingin menghapus rekam medis ini?')"
-                    class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Hapus
-            </button>
-            @endif
         </div>
         <div class="flex space-x-3">
             <button type="button" onclick="window.print()" 

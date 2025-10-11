@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('medicalrecord_id')->nullable();
             $table->enum('action', ['view', 'create', 'update']);
             $table->timestamp('timestamp')->useCurrent();
-            $table->longText('blockchain_hash');
+            $table->longText('blockchain_hash')->nullable();
 
             $table->foreign('patient_id')->references('idpatient')->on('patients');
             $table->foreign('doctor_id')->references('iddoctor')->on('doctors');

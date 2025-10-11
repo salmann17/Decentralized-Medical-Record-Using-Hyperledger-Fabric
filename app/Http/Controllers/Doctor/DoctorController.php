@@ -40,9 +40,24 @@ class DoctorController extends Controller
                 ->where('status', 'pending')
                 ->count();
                 
-            $totalRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)->count();
+            // PENTING: Hitung hanya rekam medis versi terbaru (bukan semua versi)
+            // Gunakan whereNotExists untuk memastikan tidak ada versi lebih baru
+            $totalRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                        ->from('medical_records as mr2')
+                        ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+                })
+                ->count();
             
+            // PENTING: Ambil hanya rekam medis versi terbaru untuk recent records
+            // Tidak menampilkan versi lama (v1, v2, dst.)
             $recentRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                        ->from('medical_records as mr2')
+                        ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+                })
                 ->with(['patient.user', 'admin'])
                 ->orderBy('visit_date', 'desc')
                 ->limit(5)
@@ -568,7 +583,7 @@ class DoctorController extends Controller
                     'medicalrecord_id' => $medicalRecord->idmedicalrecord,
                     'action' => 'create',
                     'timestamp' => now(),
-                    'blockchain_hash' => 'record_created_' . uniqid()
+                    'blockchain_hash' => 'sementara null karena belum nyambung blockchain'
                 ]);
 
                 // Commit transaction
@@ -650,7 +665,6 @@ class DoctorController extends Controller
                     'medicalrecord_id' => $recordId,
                     'action' => 'view',
                     'timestamp' => now(),
-                    'blockchain_hash' => 'record_viewed_' . uniqid()
                 ]);
                 Log::info('Created new view audit trail', [
                     'doctor_id' => $doctor->iddoctor,
@@ -667,6 +681,14 @@ class DoctorController extends Controller
 
     /**
      * Tampilkan form edit rekam medis
+     * 
+     * LOGIKA VERSIONING:
+     * - Jika status = draft: Edit langsung (in-place update)
+     * - Jika status = final: Buat versi baru (duplikasi data, version+1, status=draft)
+     * 
+     * AUDIT TRAIL:
+     * - TIDAK dicatat saat klik tombol "Edit" (hanya duplikasi data)
+     * - Audit trail HANYA dicatat saat dokter menekan "Simpan" (di updateRecord)
      */
     public function editRecord($recordId)
     {
@@ -697,7 +719,7 @@ class DoctorController extends Controller
 
             // Jika status = final, buat versi baru
             if ($record->status === 'final') {
-                // Duplikasi record untuk versioning
+                // Duplikasi record untuk versioning (TANPA audit trail)
                 DB::beginTransaction();
                 
                 try {
@@ -753,6 +775,18 @@ class DoctorController extends Controller
 
     /**
      * Update rekam medis
+     * 
+     * LOGIKA PENYIMPANAN:
+     * - Hanya update record yang sudah ada (TIDAK insert baru)
+     * - Status ditentukan dari save_action (draft atau final)
+     * 
+     * AUDIT TRAIL:
+     * - SELALU dicatat setiap kali menyimpan (draft atau final)
+     * - Timestamp audit trail = waktu klik tombol "Simpan", BUKAN waktu klik "Edit"
+     * 
+     * PROTEKSI DUPLIKASI:
+     * - Hanya ada 1 transaksi DB per request
+     * - Form memiliki proteksi double-click
      */
     public function updateRecord(Request $request, $recordId)
     {
@@ -865,17 +899,16 @@ class DoctorController extends Controller
                     }
                 }
 
-                // Log audit trail jika status berubah ke final
-                if ($request->save_action === 'final') {
-                    AuditTrail::create([
-                        'doctor_id' => $doctor->iddoctor,
-                        'patient_id' => $record->patient_id,
-                        'medicalrecord_id' => $record->idmedicalrecord,
-                        'action' => 'update',
-                        'timestamp' => now(),
-                        'blockchain_hash' => 'record_finalized_' . uniqid()
-                    ]);
-                }
+                // PENTING: Audit trail dicatat SETIAP KALI menyimpan (draft atau final)
+                // Bukan saat klik Edit, tetapi saat klik Simpan
+                AuditTrail::create([
+                    'doctor_id' => $doctor->iddoctor,
+                    'patient_id' => $record->patient_id,
+                    'medicalrecord_id' => $record->idmedicalrecord,
+                    'action' => 'update',
+                    'timestamp' => now(),
+                    'blockchain_hash' => null // Akan diisi setelah blockchain integration
+                ]);
 
                 DB::commit();
 
@@ -901,6 +934,7 @@ class DoctorController extends Controller
 
     /**
      * Finalisasi rekam medis (ubah status dari draft ke final)
+     * Digunakan dari tombol "Finalisasi" di halaman show/index
      */
     public function finalizeRecord($recordId)
     {
@@ -933,14 +967,14 @@ class DoctorController extends Controller
                 'updated_at' => now()
             ]);
 
-            // Log audit trail
+            // PENTING: Audit trail dicatat saat finalisasi (bukan saat klik Edit)
             AuditTrail::create([
                 'doctor_id' => $doctor->iddoctor,
                 'patient_id' => $record->patient_id,
                 'medicalrecord_id' => $record->idmedicalrecord,
                 'action' => 'update',
                 'timestamp' => now(),
-                'blockchain_hash' => 'record_finalized_' . uniqid()
+                'blockchain_hash' => null // Akan diisi setelah blockchain integration
             ]);
 
             return redirect()->back()->with('success', 'Rekam medis berhasil difinalisasi');
