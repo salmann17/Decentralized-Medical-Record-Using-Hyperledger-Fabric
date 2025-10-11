@@ -123,14 +123,6 @@
                             Tambah Record
                         </a>
                     </div>
-
-                    <!-- Last Access Info -->
-                    <div class="mt-4 text-center">
-                        <p class="text-xs text-gray-500">
-                            <!-- TODO: blockchain integration - show blockchain verification status -->
-                            Akses diverifikasi blockchain: <span class="text-blue-600">Belum tersedia</span>
-                        </p>
-                    </div>
                 </div>
             </div>
             @endforeach

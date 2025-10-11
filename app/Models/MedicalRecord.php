@@ -17,7 +17,7 @@ class MedicalRecord extends Model
         'blood_pressure','heart_rate','temperature','respiratory_rate',
         'chief_complaint','history_present_illness','physical_examination',
         'diagnosis_code','diagnosis_desc','treatment','notes',
-        'status','version'
+        'status','version', 'previous_id'
     ];
 
     protected $dates = ['deleted_at'];

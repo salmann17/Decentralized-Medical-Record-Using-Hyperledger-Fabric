@@ -66,6 +66,14 @@
                 </svg>
                 Kembali ke Rekam Medis
             </a>
+            @if($record->version > 1)
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <svg class="-ml-0.5 mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z" clip-rule="evenodd" />
+                    </svg>
+                    Versi {{ $record->version }}
+                </span>
+            @endif
         </div>
         <div class="flex items-center space-x-3">
             <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium
@@ -476,16 +484,24 @@
     <!-- Action Buttons -->
     <div class="flex justify-between">
         <div class="flex space-x-3">
-            @if($record->status !== 'immutable')
-            <!-- Status Update Buttons -->
+            <!-- Edit Button - Only for draft and final (not immutable) -->
+            @if($record->status === 'draft' || $record->status === 'final')
+            <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
+               class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit
+            </a>
+            @endif
+
+            <!-- Finalisasi Button - Only for draft -->
             @if($record->status === 'draft')
-            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="inline">
+            <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="inline">
                 @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="final">
                 <button type="submit" 
                         class="inline-flex items-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500"
-                        onclick="return confirm('Apakah Anda yakin ingin menfinalisasi rekam medis ini? Status final masih bisa diubah ke immutable.')">
+                        onclick="return confirm('Apakah Anda yakin ingin menfinalisasi rekam medis ini? Status akan berubah menjadi final.')">
                     <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -494,34 +510,16 @@
             </form>
             @endif
 
-            @if($record->status === 'final')
-            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="inline">
-                @csrf
-                @method('PATCH')
-                <input type="hidden" name="status" value="immutable">
-                <button type="submit" 
-                        class="inline-flex items-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500"
-                        onclick="return confirm('PERINGATAN: Setelah menjadi immutable, rekam medis ini TIDAK DAPAT DIUBAH LAGI. Apakah Anda yakin?')">
-                    <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Buat Immutable
-                </button>
-            </form>
-            @endif
-
-            <button type="button" class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+            <!-- Delete Button - Only for draft and final (not immutable) -->
+            @if($record->status === 'draft' || $record->status === 'final')
+            <button type="button" 
+                    onclick="return confirm('Apakah Anda yakin ingin menghapus rekam medis ini?')"
+                    class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
                 <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 Hapus
             </button>
-            <a href="#" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                Edit
-            </a>
             @endif
         </div>
         <div class="flex space-x-3">

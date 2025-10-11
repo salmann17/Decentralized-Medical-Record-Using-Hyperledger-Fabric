@@ -154,6 +154,11 @@
                                     Final
                                 </span>
                             @endif
+                            @if($record->version > 1)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    v{{ $record->version }}
+                                </span>
+                            @endif
                         </div>
                     </div>
 
@@ -192,30 +197,17 @@
                             Lihat Detail
                         </a>
                         @if($record->status === 'draft')
-                            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="flex-1">
+                            <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="flex-1">
                                 @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="final">
                                 <button type="submit" 
                                         class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium rounded-md"
                                         onclick="return confirm('Finalisasi rekam medis ini?')">
                                     Finalisasi
                                 </button>
                             </form>
-                        @elseif($record->status === 'final')
-                            <form method="POST" action="{{ route('doctor.update-record-status', $record->idmedicalrecord) }}" class="flex-1">
-                                @csrf
-                                @method('PATCH')
-                                <input type="hidden" name="status" value="immutable">
-                                <button type="submit" 
-                                        class="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 text-xs font-medium rounded-md"
-                                        onclick="return confirm('PERINGATAN: Rekam medis akan menjadi immutable dan tidak dapat diubah lagi!')">
-                                    Immutable
-                                </button>
-                            </form>
                         @endif
-                        @if($record->status !== 'immutable')
-                            <a href="#" 
+                        @if($record->status === 'draft' || $record->status === 'final')
+                            <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
                                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
                                 Edit
                             </a>

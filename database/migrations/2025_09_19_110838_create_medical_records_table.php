@@ -30,8 +30,9 @@ return new class extends Migration
             $table->longText('diagnosis_desc');
             $table->longText('treatment');
             $table->longText('notes')->nullable();
-            $table->enum('status', ['draft', 'final', 'immutable']);
+            $table->enum('status', ['draft', 'final']);
             $table->integer('version');
+            $table->integer('previous_id')->nullable();
 
             $table->foreign('patient_id')->references('idpatient')->on('patients');
             $table->foreign('doctor_id')->references('iddoctor')->on('doctors');
