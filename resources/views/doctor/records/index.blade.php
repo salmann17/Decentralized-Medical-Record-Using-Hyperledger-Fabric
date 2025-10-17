@@ -87,7 +87,7 @@
                        class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Semua
                         <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($records) ? (method_exists($records, 'total') ? $records->total() : $records->count()) : 0 }}
+                            {{ $totalAll ?? 0 }}
                         </span>
                     </a>
                     
@@ -95,7 +95,7 @@
                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'draft' ? 'border-yellow-500 text-yellow-600' : '' }}">
                         Draft
                         <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($records) ? $records->where('status', 'draft')->count() : 0 }}
+                            {{ $totalDraft ?? 0 }}
                         </span>
                     </a>
                     
@@ -103,7 +103,7 @@
                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'final' ? 'border-green-500 text-green-600' : '' }}">
                         Final
                         <span class="ml-2 bg-green-100 text-green-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                            {{ isset($records) ? $records->where('status', 'final')->count() : 0 }}
+                            {{ $totalFinal ?? 0 }}
                         </span>
                     </a>
                     

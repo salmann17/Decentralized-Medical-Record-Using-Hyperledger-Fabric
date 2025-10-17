@@ -481,16 +481,6 @@
     <!-- Action Buttons -->
     <div class="flex justify-between">
         <div class="flex space-x-3">
-            <!-- Edit Button - Only for draft and final (not immutable) -->
-            @if($record->status === 'draft' || $record->status === 'final')
-            <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
-               class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
-                Edit
-            </a>
-            @endif
 
             <!-- Finalisasi Button - Only for draft -->
             @if($record->status === 'draft')
@@ -509,13 +499,6 @@
 
         </div>
         <div class="flex space-x-3">
-            <button type="button" onclick="window.print()" 
-                    class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Cetak
-            </button>
             <a href="{{ route('doctor.records') }}" 
                class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
                 Kembali ke Daftar
@@ -524,22 +507,4 @@
     </div>
 </div>
 
-<!-- Print Styles -->
-<style>
-@media print {
-    .no-print, .no-print * {
-        display: none !important;
-    }
-    body {
-        background: white;
-    }
-    .shadow, .border {
-        box-shadow: none !important;
-        border: 1px solid #e5e7eb !important;
-    }
-    .bg-red-50, .bg-pink-50, .bg-orange-50, .bg-blue-50 {
-        background-color: #f9fafb !important;
-    }
-}
-</style>
 @endsection

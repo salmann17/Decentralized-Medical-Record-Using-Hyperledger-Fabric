@@ -199,10 +199,9 @@
                             <label for="status" class="block text-sm font-medium text-gray-700">Status Rekam Medis <span class="text-red-500">*</span></label>
                             <select id="status" name="status" required
                                     class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
-                                <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft (Dapat diedit)</option>
-                                <option value="final" {{ old('status') == 'final' ? 'selected' : '' }}>Final (Tidak dapat diedit)</option>
+                                <option value="draft" {{ old('status') == 'draft' ? 'selected' : '' }}>Draft </option>
+                                <option value="final" {{ old('status') == 'final' ? 'selected' : '' }}>Final </option>
                             </select>
-                            <p class="mt-2 text-sm text-gray-500">Draft dapat diedit, Final akan dicatat ke blockchain dan tidak dapat diubah.</p>
                         </div>
                     </div>
                 </div>

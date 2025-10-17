@@ -346,6 +346,12 @@ class DoctorController extends Controller
 
     /**
      * Tampilkan semua rekam medis yang dapat diakses dokter
+     * 
+     * LOGIKA FILTER VERSI TERBARU:
+     * - Ambil semua rekam medis yang TIDAK memiliki versi lebih baru
+     * - Check: Tidak ada record lain dengan previous_id = idmedicalrecord record ini
+     * - Ini memastikan setiap "chain" rekam medis hanya menampilkan versi terbaru
+     * - Draft tanpa previous_id (record baru) juga ditampilkan
      */
     public function records()
     {
@@ -362,28 +368,36 @@ class DoctorController extends Controller
                 ->pluck('patient_id')
                 ->toArray();
 
-            // Query untuk mendapatkan HANYA versi terbaru dari setiap patient
-            // Menggunakan subquery untuk mendapatkan version terbesar per patient
-            $latestVersionsSubquery = MedicalRecord::select('patient_id', DB::raw('MAX(version) as max_version'))
+            // PENTING: Filter hanya versi terbaru menggunakan whereNotExists
+            // Logic: Tampilkan record JIKA tidak ada record lain yang previous_id-nya menunjuk ke record ini
+            // Artinya: Jika ada v2 dari v1, maka v1 tidak ditampilkan (karena ada v2 dengan previous_id=v1.id)
+            $baseQuery = MedicalRecord::where('doctor_id', $doctor->iddoctor)
                 ->whereIn('patient_id', $approvedPatientIds)
-                ->groupBy('patient_id');
+                ->whereNotExists(function($query) {
+                    $query->select(DB::raw(1))
+                        ->from('medical_records as mr2')
+                        ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+                });
 
-            $query = MedicalRecord::joinSub($latestVersionsSubquery, 'latest', function ($join) {
-                    $join->on('medical_records.patient_id', '=', 'latest.patient_id')
-                         ->on('medical_records.version', '=', 'latest.max_version');
-                })
+            // Hitung total untuk setiap status (untuk badge count di tabs)
+            $totalAll = (clone $baseQuery)->count();
+            $totalDraft = (clone $baseQuery)->where('status', 'draft')->count();
+            $totalFinal = (clone $baseQuery)->where('status', 'final')->count();
+
+            // Query untuk pagination dengan filter status
+            $query = (clone $baseQuery)
                 ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions'])
                 ->orderBy('visit_date', 'desc');
 
             // Apply status filter if requested
             if (request('status') && request('status') !== 'all') {
-                $query->where('status', request('status'));
+                $query->where('medical_records.status', request('status'));
             }
 
             // Paginate results
             $records = $query->paginate(10);
 
-            return view('doctor.records.index', compact('records', 'doctor'));
+            return view('doctor.records.index', compact('records', 'doctor', 'totalAll', 'totalDraft', 'totalFinal'));
             
         } catch (\Exception $e) {
             Log::error('Error in records: ' . $e->getMessage());
@@ -1098,10 +1112,8 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            // Load relationships
             $doctor->load(['user', 'admins']);
 
-            // Debug: Log current specialization value
             Log::info('Doctor spesialization: ' . ($doctor->spesialization ?? 'NULL'));
 
             return view('doctor.settings.index', compact('doctor'));
@@ -1136,23 +1148,16 @@ class DoctorController extends Controller
                 return redirect()->back()->with('error', 'Data dokter tidak ditemukan');
             }
 
-            // Update data user
             $user = User::find(Auth::id());
             $user->update([
                 'name' => $request->name,
                 'email' => $request->email
             ]);
 
-            // Update data dokter
             $doctor->update([
                 'spesialization' => $request->spesialization,
                 'license_number' => $request->license_number
             ]);
-
-            // TIDAK perlu log audit trail untuk update profile
-            // Audit trail HANYA untuk aktivitas medis (create/view medical record)
-
-            // TODO: Blockchain integration - record profile update on blockchain
 
             return redirect()->back()->with('success', 'Profil dokter berhasil diperbarui');
             
