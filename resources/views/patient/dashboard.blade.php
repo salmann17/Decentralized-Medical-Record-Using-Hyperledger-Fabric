@@ -168,7 +168,7 @@
                                 {{ $record->status === 'immutable' ? 'bg-green-100 text-green-800' : '' }}">
                                 {{ ucfirst($record->status) }}
                             </span>
-                            <a href="{{ route('patient.records.detail', $record->medicalrecord_id) }}" 
+                            <a href="{{ route('patient.records.detail', $record->idmedicalrecord) }}" 
                                class="ml-3 text-sm font-medium text-blue-600 hover:text-blue-500">
                                 Lihat Detail
                             </a>

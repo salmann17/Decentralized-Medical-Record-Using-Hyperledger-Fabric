@@ -137,7 +137,7 @@
                             </span>
                             @endif
                         </div>
-                        <a href="{{ route('patient.records.detail', $record->medicalrecord_id) }}" 
+                        <a href="{{ route('patient.records.detail', $record->idmedicalrecord) }}" 
                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
                             Lihat Detail
                         </a>

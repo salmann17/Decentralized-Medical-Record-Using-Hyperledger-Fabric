@@ -22,17 +22,14 @@ class PatientController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        // PK di patients table adalah idpatient
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        // Get statistics - FK di table lain adalah patient_id
         $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
         $pendingRequests = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'pending')->count();
         $activeDoctors = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'approved')->distinct('doctor_id')->count();
         
-        // Get recent access requests (pending)
         $recentRequests = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'pending')
             ->with(['doctor.user', 'doctor.admins'])
@@ -40,7 +37,6 @@ class PatientController extends Controller
             ->take(5)
             ->get();
         
-        // Get recent medical records
         $recentRecords = MedicalRecord::where('patient_id', $patient->idpatient)
             ->with(['doctor.user', 'admin', 'prescription'])
             ->orderBy('visit_date', 'desc')
@@ -68,7 +64,6 @@ class PatientController extends Controller
         $query = MedicalRecord::where('patient_id', $patient->idpatient)
             ->with(['doctor.user', 'admin', 'prescription']);
 
-        // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -83,12 +78,10 @@ class PatientController extends Controller
             });
         }
 
-        // Apply status filter
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Apply period filter
         if ($request->filled('period')) {
             $period = $request->period;
             switch ($period) {
@@ -120,13 +113,10 @@ class PatientController extends Controller
         $user = Auth::user();
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $record = MedicalRecord::where('medicalrecord_id', $id)
+        $record = MedicalRecord::where('idmedicalrecord', $id)
             ->where('patient_id', $patient->idpatient)
             ->with(['doctor.user', 'admin', 'prescription'])
             ->firstOrFail();
-
-        // TIDAK perlu log audit trail untuk pasien yang melihat rekam medisnya sendiri
-        // Audit trail HANYA untuk aktivitas DOKTER
 
         return view('patient.records.detail', compact('patient', 'record'));
     }
@@ -143,14 +133,12 @@ class PatientController extends Controller
         $query = AccessRequest::where('patient_id', $patient->idpatient)
             ->with(['doctor.user', 'doctor.admins']);
 
-        // Filter berdasarkan status jika ada
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);
         }
 
         $requests = $query->orderBy('requested_at', 'desc')->paginate(15);
         
-        // Get all requests for count calculations (unfiltered)
         $allRequests = AccessRequest::where('patient_id', $patient->idpatient)->get();
         $pendingCount = $allRequests->where('status', 'pending')->count();
         $approvedCount = $allRequests->where('status', 'approved')->count();
@@ -184,13 +172,6 @@ class PatientController extends Controller
             'responded_at' => now()
         ]);
 
-        // TIDAK perlu insert audit trail saat pasien approve access request
-        // Audit trail HANYA untuk aktivitas DOKTER (create/view medical record)
-        // Saat dokter pertama kali VIEW medical record, baru dicatat audit trail
-
-        // TODO: Add blockchain transaction here
-        // BlockchainService::approveAccess($request);
-
         return redirect()->back()->with('success', 'Akses dokter berhasil disetujui.');
     }
 
@@ -212,9 +193,6 @@ class PatientController extends Controller
             'responded_at' => now()
         ]);
 
-        // TODO: Add blockchain transaction here
-        // BlockchainService::rejectAccess($request);
-
         return redirect()->back()->with('success', 'Akses dokter berhasil ditolak.');
     }
 
@@ -226,12 +204,10 @@ class PatientController extends Controller
         $user = Auth::user();
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        // Get approved access requests with doctor information
         $query = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'approved')
             ->with(['doctor.user', 'doctor.admins']);
 
-        // Apply search filter if provided
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('doctor.user', function($q) use ($search) {
@@ -243,15 +219,13 @@ class PatientController extends Controller
 
         $accessRequests = $query->orderBy('responded_at', 'desc')->paginate(10);
         
-        // Extract doctors from access requests for easier view handling
         $doctors = $accessRequests->map(function($accessRequest) {
             $doctor = $accessRequest->doctor;
-            $doctor->accessRequest = $accessRequest; // Attach access request data
+            $doctor->accessRequest = $accessRequest;
             return $doctor;
         });
         
-        // Create a new paginator with doctor data but preserve pagination
-        $doctors = new \Illuminate\Pagination\LengthAwarePaginator(
+        $doctors = new LengthAwarePaginator(
             $doctors,
             $accessRequests->total(),
             $accessRequests->perPage(),
@@ -259,7 +233,6 @@ class PatientController extends Controller
             ['path' => $request->url(), 'pageName' => 'page']
         );
 
-        // Calculate total medical records for this patient
         $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
 
         return view('patient.active-doctors.index', compact('patient', 'doctors', 'totalRecords'));
@@ -280,11 +253,8 @@ class PatientController extends Controller
 
         $request->update([
             'status' => 'revoked',
-            'responded_at' => now() // Use responded_at instead of revoked_at
+            'responded_at' => now()
         ]);
-
-        // TODO: Add blockchain transaction here
-        // BlockchainService::revokeAccess($request);
 
         return redirect()->back()->with('success', 'Akses dokter berhasil dicabut.');
     }
@@ -300,7 +270,6 @@ class PatientController extends Controller
         $query = AuditTrail::where('patient_id', $patient->idpatient)
             ->with(['medicalRecord.doctor.user', 'medicalRecord.admin']);
 
-        // Apply search filter
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -312,12 +281,10 @@ class PatientController extends Controller
             });
         }
 
-        // Apply action filter
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
 
-        // Apply date range filter
         if ($request->filled('date_from')) {
             $query->whereDate('timestamp', '>=', $request->date_from);
         }
@@ -350,7 +317,6 @@ class PatientController extends Controller
         $user = Auth::user();
         $patient = Patient::where('idpatient', $user->idusers)->first();
 
-        // Handle different actions based on form submission
         $action = $request->input('action', 'profile');
 
         switch ($action) {
@@ -375,12 +341,10 @@ class PatientController extends Controller
             'new_password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Check current password
         if (!Hash::check($request->current_password, $user->password)) {
             return redirect()->back()->with('error', 'Password saat ini tidak sesuai');
         }
 
-        // Update password
         $user->update([
             'password' => Hash::make($request->new_password),
         ]);
@@ -403,13 +367,11 @@ class PatientController extends Controller
             'address' => 'nullable|string|max:135',
         ]);
 
-        // Update user data
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
         ]);
 
-        // Update patient data - only update fields that exist in database
         $patientData = [];
         if ($request->filled('nik')) $patientData['nik'] = $request->nik;
         if ($request->filled('birthdate')) $patientData['birthdate'] = $request->birthdate;
@@ -424,37 +386,8 @@ class PatientController extends Controller
         return redirect()->back()->with('success', 'Profil berhasil diperbarui.');
     }
 
-    /**
-     * Change password
-     */
-    private function changePassword(Request $request, $user)
-    {
-        $request->validate([
-            'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
-        ]);
-
-        // Check current password
-        if (!Hash::check($request->current_password, $user->password)) {
-            return redirect()->back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
-        }
-
-        // Update password
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
-
-        return redirect()->back()->with('success', 'Password berhasil diubah.');
-    }
-
-    /**
-     * Update privacy settings
-     */
     private function updatePrivacy(Request $request, $patient)
     {
-        // Since privacy settings are not in the database, we'll just return success for now
-        // In the future, you could add a separate privacy_settings table or add columns to patients table
-        
         return redirect()->back()->with('success', 'Pengaturan privasi berhasil diperbarui.');
     }
 }

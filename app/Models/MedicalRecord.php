@@ -37,6 +37,12 @@ class MedicalRecord extends Model
         return $this->belongsTo(Admin::class, 'admin_id', 'idadmin');
     }
 
+    public function prescription()
+    {
+        return $this->hasOne(Prescription::class, 'medicalrecord_id', 'idmedicalrecord')
+            ->latestOfMany('idprescription');
+    }
+
     public function prescriptions()
     {
         return $this->hasMany(Prescription::class, 'medicalrecord_id', 'idmedicalrecord');
