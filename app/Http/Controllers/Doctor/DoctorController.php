@@ -1000,6 +1000,175 @@ class DoctorController extends Controller
     }
 
     /**
+     * Edit draft rekam medis (khusus untuk status draft)
+     * 
+     * LOGIKA:
+     * - Hanya bisa edit jika status = 'draft'
+     * - View menggunakan form edit-draft.blade.php (editable form)
+     * - Tidak ada audit trail karena masih draft
+     */
+    public function editDraft($recordId)
+    {
+        try {
+            $doctor = Auth::user()->doctor;
+
+            $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions.prescriptionItems'])
+                ->find($recordId);
+
+            // Cek apakah dokter adalah pemilik record
+            if ($record->doctor_id !== $doctor->iddoctor) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
+            }
+
+            if ($record->status !== 'draft') {
+                return redirect()->route('doctor.edit-record', $recordId)
+                    ->with('info', 'Rekam medis final akan membuat versi baru. Gunakan halaman edit biasa.');
+            }
+
+            $hospitals = $doctor->admins()->get();
+
+            return view('doctor.records.edit-draft', compact('record', 'doctor', 'hospitals'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error in editDraft: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update draft rekam medis (khusus untuk status draft)
+     * 
+     * LOGIKA:
+     * - Update langsung ke database (in-place)
+     * - Tidak membuat record baru
+     * - Tidak mengubah version atau previous_id
+     * - Status tetap 'draft'
+     * - Tidak ada audit trail (karena masih draft)
+     */
+    public function updateDraft(Request $request, $recordId)
+    {
+        $validator = Validator::make($request->all(), [
+            'visit_date' => 'required|date',
+            'admin_id' => 'required|exists:admins,idadmin',
+            'chief_complaint' => 'nullable|string',
+            'history_present_illness' => 'nullable|string',
+            'physical_examination' => 'nullable|string',
+            'diagnosis_code' => 'nullable|string|max:50',
+            'diagnosis_desc' => 'required|string',
+            'treatment' => 'required|string',
+            'notes' => 'nullable|string',
+            'blood_pressure' => 'nullable|string|max:20',
+            'heart_rate' => 'nullable|numeric',
+            'temperature' => 'nullable|numeric',
+            'respiratory_rate' => 'nullable|numeric',
+            'height' => 'nullable|numeric',
+            'weight' => 'nullable|numeric',
+            'prescriptions' => 'nullable|array',
+            'prescriptions.*.medication_name' => 'required|string|max:255',
+            'prescriptions.*.dosage' => 'required|string|max:100',
+            'prescriptions.*.frequency' => 'required|string|max:100',
+            'prescriptions.*.duration' => 'required|string|max:100',
+            'prescriptions.*.notes' => 'nullable|string',
+            'prescriptions.*.items' => 'nullable|array',
+            'prescriptions.*.items.*.item_name' => 'required|string|max:255',
+            'prescriptions.*.items.*.quantity' => 'required|integer|min:1',
+            'prescriptions.*.items.*.notes' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $doctor = Auth::user()->doctor;
+        
+            $record = MedicalRecord::find($recordId);
+
+            if ($record->doctor_id !== $doctor->iddoctor) {
+                return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
+            }
+
+            if ($record->status !== 'draft') {
+                return redirect()->back()->with('error', 'Hanya rekam medis draft yang dapat diedit dengan cara ini');
+            }
+
+            DB::beginTransaction();
+            try {
+                // Update record langsung (in-place)
+                $record->update([
+                    'visit_date' => $request->visit_date,
+                    'admin_id' => $request->admin_id,
+                    'chief_complaint' => $request->chief_complaint,
+                    'history_present_illness' => $request->history_present_illness,
+                    'physical_examination' => $request->physical_examination,
+                    'diagnosis_code' => $request->diagnosis_code,
+                    'diagnosis_desc' => $request->diagnosis_desc,
+                    'treatment' => $request->treatment,
+                    'notes' => $request->notes,
+                    'blood_pressure' => $request->blood_pressure,
+                    'heart_rate' => $request->heart_rate,
+                    'temperature' => $request->temperature,
+                    'respiratory_rate' => $request->respiratory_rate,
+                    'height' => $request->height,
+                    'weight' => $request->weight,
+                    'updated_at' => now(),
+                    // PENTING: Tidak mengubah status, version, atau previous_id
+                ]);
+
+                // Hapus prescriptions lama
+                if ($record->prescriptions) {
+                    foreach ($record->prescriptions as $prescription) {
+                        $prescription->prescriptionItems()->delete();
+                        $prescription->delete();
+                    }
+                }
+
+                // Simpan prescriptions baru jika ada
+                if ($request->has('prescriptions')) {
+                    foreach ($request->prescriptions as $prescriptionData) {
+                        $prescription = Prescription::create([
+                            'medicalrecord_id' => $record->idmedicalrecord,
+                            'medication_name' => $prescriptionData['medication_name'],
+                            'dosage' => $prescriptionData['dosage'],
+                            'frequency' => $prescriptionData['frequency'],
+                            'duration' => $prescriptionData['duration'],
+                            'notes' => $prescriptionData['notes'] ?? null,
+                        ]);
+
+                        // Simpan prescription items jika ada
+                        if (isset($prescriptionData['items']) && is_array($prescriptionData['items'])) {
+                            foreach ($prescriptionData['items'] as $item) {
+                                $prescription->prescriptionItems()->create([
+                                    'item_name' => $item['item_name'],
+                                    'quantity' => $item['quantity'],
+                                    'notes' => $item['notes'] ?? null,
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                DB::commit();
+
+                return redirect()->route('doctor.records')
+                    ->with('success', 'Draft rekam medis berhasil diperbarui');
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error updating draft: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    /**
      * Update status rekam medis
      */
     public function updateRecordStatus(Request $request, $recordId)

@@ -205,8 +205,11 @@
                                     Finalisasi
                                 </button>
                             </form>
-                        @endif
-                        @if($record->status === 'draft' || $record->status === 'final')
+                            <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}" 
+                               class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-center px-3 py-2 text-xs font-medium rounded-md">
+                                Edit Draft
+                            </a>
+                        @elseif($record->status === 'final')
                             <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
                                class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
                                 Edit
