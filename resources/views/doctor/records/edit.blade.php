@@ -18,15 +18,6 @@
                     @endif
                 </p>
             </div>
-            <div>
-                <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Kembali
-                </a>
-            </div>
         </div>
     </div>
 
@@ -210,10 +201,6 @@
 
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-3">
-                <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Batal
-                </a>
                 <button type="submit" name="save_action" value="draft" 
                         class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
