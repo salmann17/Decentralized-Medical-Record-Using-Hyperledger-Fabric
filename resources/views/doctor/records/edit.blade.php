@@ -18,6 +18,13 @@
                     @endif
                 </p>
             </div>
+             <div>
+            <a href="{{ route('doctor.records') }}" 
+               class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm 
+                      hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                ← Kembali
+            </a>
+        </div>
         </div>
     </div>
 
@@ -31,6 +38,28 @@
                 </div>
                 <div class="ml-3 flex-1">
                     <p class="text-sm text-blue-700">{{ session('info') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Terdapat kesalahan pada form:</h3>
+                    <div class="mt-2 text-sm text-red-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -194,7 +223,93 @@
                     </div>
                     
                     <div id="prescriptions-container">
-                        <!-- Prescriptions will be added here dynamically -->
+                        @if($record->prescriptions && count($record->prescriptions) > 0)
+                            @foreach($record->prescriptions as $index => $prescription)
+                                <div class="prescription-card border-2 border-gray-200 rounded-lg p-6 space-y-4 mb-4" data-prescription-index="{{ $index }}">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="text-base font-medium text-gray-900">Resep #{{ $index + 1 }}</h4>
+                                        <button type="button" onclick="removePrescription(this)" 
+                                                class="remove-prescription-btn inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 {{ count($record->prescriptions) <= 1 ? 'hidden' : '' }}">
+                                            <svg class="-ml-0.5 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            Hapus Resep
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Tipe Resep <span class="text-red-500">*</span></label>
+                                        <select name="prescriptions[{{ $index }}][type]" onchange="togglePrescriptionType(this)" required
+                                                class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                                            <option value="single" {{ $prescription->type === 'single' ? 'selected' : '' }}>Single (Obat Tunggal)</option>
+                                            <option value="compound" {{ $prescription->type === 'compound' ? 'selected' : '' }}>Compound (Racikan/Puyer)</option>
+                                        </select>
+                                        <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan/puyer dengan beberapa obat</p>
+                                    </div>
+
+                                    <div class="instructions-field">
+                                        <label class="block text-sm font-medium text-gray-700">Instruksi Khusus</label>
+                                        <textarea name="prescriptions[{{ $index }}][instructions]" rows="2" placeholder="Contoh: Diminum setelah makan, Hindari makanan pedas"
+                                                  class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $prescription->instructions }}</textarea>
+                                    </div>
+
+                                    <div class="items-container space-y-4">
+                                        @foreach($prescription->prescriptionItems as $itemIndex => $item)
+                                            <div class="item-card bg-gray-50 border border-gray-200 rounded-md p-4 space-y-3" data-item-index="{{ $itemIndex }}">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm font-medium text-gray-700">Item Obat #{{ $itemIndex + 1 }}</span>
+                                                    <button type="button" onclick="removePrescriptionItem(this)" 
+                                                            class="remove-item-btn text-xs text-red-600 hover:text-red-800 {{ count($prescription->prescriptionItems) <= 1 ? 'hidden' : '' }}">
+                                                        Hapus Item
+                                                    </button>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                                    <div class="sm:col-span-2">
+                                                        <label class="block text-xs font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
+                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][name]" value="{{ $item->name }}" required
+                                                               placeholder="Contoh: Paracetamol 500mg"
+                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
+                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][dosage]" value="{{ $item->dosage }}" required
+                                                               placeholder="Contoh: 500mg"
+                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
+                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][frequency]" value="{{ $item->frequency }}" required
+                                                               placeholder="Contoh: 3x sehari"
+                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
+                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][duration]" value="{{ $item->duration }}" required
+                                                               placeholder="Contoh: 5 hari"
+                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-gray-700">Catatan</label>
+                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][notes]" value="{{ $item->notes }}"
+                                                               placeholder="Catatan tambahan (optional)"
+                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    <button type="button" onclick="addPrescriptionItem({{ $index }})" 
+                                            class="add-item-btn inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {{ $prescription->type === 'single' ? 'hidden' : '' }}">
+                                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Tambah Item Obat
+                                    </button>
+                                </div>
+                            @endforeach
+                        @endif
                     </div>
                 </div>
             </div>
@@ -221,37 +336,7 @@
 </div>
 
 <script>
-let prescriptionIndex = 0;
-
-// Load existing prescriptions on page load
-document.addEventListener('DOMContentLoaded', function() {
-    @if($record->prescriptions && count($record->prescriptions) > 0)
-        @foreach($record->prescriptions as $prescription)
-            @php
-                $items = [];
-                if ($prescription->prescriptionItems && count($prescription->prescriptionItems) > 0) {
-                    $items = $prescription->prescriptionItems->map(function($item) {
-                        return [
-                            'name' => $item->name ?? '',
-                            'dosage' => $item->dosage ?? '',
-                            'frequency' => $item->frequency ?? '',
-                            'duration' => $item->duration ?? '',
-                            'notes' => $item->notes ?? ''
-                        ];
-                    })->toArray();
-                }
-            @endphp
-            addPrescription(
-                '{{ $prescription->type ?? "single" }}',
-                {!! json_encode($prescription->instructions ?? '') !!},
-                @json($items)
-            );
-        @endforeach
-    @else
-        // Add one empty prescription if no prescriptions exist
-        addPrescription();
-    @endif
-});
+let prescriptionIndex = {{ $record->prescriptions ? count($record->prescriptions) : 0 }};
 
 function addPrescription(type = 'single', instructions = '', items = []) {
     const container = document.getElementById('prescriptions-container');
@@ -445,46 +530,5 @@ function renumberItems(prescription) {
         item.querySelector('span').textContent = `Item Obat #${index + 1}`;
     });
 }
-
-// Form validation
-document.getElementById('medical-record-form').addEventListener('submit', function(e) {
-    const prescriptions = document.querySelectorAll('.prescription-card');
-    if (prescriptions.length === 0) {
-        e.preventDefault();
-        alert('Minimal harus ada satu resep!');
-        return false;
-    }
-    
-    let hasError = false;
-    prescriptions.forEach(prescription => {
-        const items = prescription.querySelectorAll('.item-card');
-        if (items.length === 0) {
-            hasError = true;
-        }
-    });
-    
-    if (hasError) {
-        e.preventDefault();
-        alert('Setiap resep harus memiliki minimal satu item obat!');
-        return false;
-    }
-
-    // PROTEKSI DOUBLE-SUBMIT: Disable tombol setelah klik pertama
-    const submitButtons = this.querySelectorAll('button[type="submit"]');
-    submitButtons.forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add('opacity-50', 'cursor-not-allowed');
-        
-        // Tampilkan loading indicator
-        const originalText = btn.innerHTML;
-        btn.innerHTML = `
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Menyimpan...
-        `;
-    });
-});
 </script>
 @endsection

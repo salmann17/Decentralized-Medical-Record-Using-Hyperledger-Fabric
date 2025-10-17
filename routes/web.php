@@ -58,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/patients/{patientId}/records/create', [DoctorController::class, 'createRecord'])->name('create-record');
             Route::post('/patients/{patientId}/records', [DoctorController::class, 'storeRecord'])->name('store-record');
             Route::get('/records/{recordId}', [DoctorController::class, 'showRecord'])->name('show-record');
-            Route::get('/records/{recordId}/edit', [DoctorController::class, 'editRecord'])->name('edit-record');
+            Route::get('/records/{recordId}/edit', [DoctorController::class, 'showEditForm'])->name('edit-record');
             Route::get('/records/{recordId}/edit-draft', [DoctorController::class, 'editDraft'])->name('edit-draft');
             Route::put('/records/{recordId}', [DoctorController::class, 'updateRecord'])->name('update-record');
             Route::put('/records/{recordId}/draft', [DoctorController::class, 'updateDraft'])->name('update-draft');

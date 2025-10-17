@@ -100,7 +100,7 @@
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">Rekam Medis</p>
                                     <p class="text-sm text-gray-500">
-                                        {{ isset($patient->medicalRecords) ? $patient->medicalRecords->count() : '0' }} record
+                                        {{ $patient->medicalRecords->count() }} record{{ $patient->medicalRecords->count() != 1 ? 's' : '' }}
                                     </p>
                                 </div>
                                 <div>
@@ -190,7 +190,7 @@
                                 <dl>
                                     <dt class="text-sm font-medium text-green-900 truncate">Total Rekam Medis</dt>
                                     <dd class="text-lg font-semibold text-green-900">
-                                        {{ $patients->sum(function($p) { return isset($p->medicalRecords) ? $p->medicalRecords->count() : 0; }) }}
+                                        {{ $patients->sum(function($p) { return $p->medicalRecords->count(); }) }}
                                     </dd>
                                 </dl>
                             </div>

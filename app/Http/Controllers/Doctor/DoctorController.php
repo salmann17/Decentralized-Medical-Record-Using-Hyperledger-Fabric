@@ -225,6 +225,12 @@ class DoctorController extends Controller
         })->with(['user', 'accessRequests' => function($query) use ($doctor) {
             $query->where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'approved');
+        }, 'medicalRecords' => function($query) {
+            $query->whereNotExists(function($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('medical_records as mr2')
+                    ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+            });
         }])->paginate(12);
 
         return view('doctor.patients.index', compact('patients', 'doctor'));
@@ -466,9 +472,9 @@ class DoctorController extends Controller
     }
 
     /**
-     * Tampilkan form edit rekam medis
+     * Tampilkan form edit rekam medis (tanpa versioning)
      */
-    public function editRecord($recordId)
+    public function showEditForm($recordId)
     {
         $doctor = Auth::user()->doctor;
         
@@ -479,50 +485,18 @@ class DoctorController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
         }
 
-        if ($record->status === 'draft') {
-            $hospitals = $doctor->admins;
-            return view('doctor.records.edit', compact('record', 'doctor', 'hospitals'));
-        }
-
+        $hospitals = $doctor->admins;
+        
         if ($record->status === 'final') {
-            DB::beginTransaction();
-            
-            $newRecord = $record->replicate();
-            $newRecord->version = $record->version + 1;
-            $newRecord->previous_id = $record->idmedicalrecord;
-            $newRecord->status = 'draft';
-            $newRecord->created_at = now();
-            $newRecord->updated_at = now();
-            $newRecord->save();
-
-            foreach ($record->prescriptions as $prescription) {
-                $newPrescription = $prescription->replicate();
-                $newPrescription->medicalrecord_id = $newRecord->idmedicalrecord;
-                $newPrescription->save();
-
-                foreach ($prescription->prescriptionItems as $item) {
-                    $newItem = $item->replicate();
-                    $newItem->prescription_id = $newPrescription->idprescription;
-                    $newItem->save();
-                }
-            }
-
-            DB::commit();
-
-            $newRecord->load(['patient.user', 'admin', 'prescriptions.prescriptionItems']);
-            
-            $hospitals = $doctor->admins;
-            $record = $newRecord;
-            
             return view('doctor.records.edit', compact('record', 'doctor', 'hospitals'))
-                ->with('info', 'Anda sedang mengedit versi baru (v' . $record->version . ') dari rekam medis ini. Versi lama tetap tersimpan.');
+                ->with('info', 'Anda akan membuat versi baru (v' . ($record->version + 1) . ') saat menyimpan. Versi lama tetap tersimpan.');
         }
 
-        return redirect()->back()->with('error', 'Rekam medis dengan status immutable tidak dapat diedit');
+        return view('doctor.records.edit', compact('record', 'doctor', 'hospitals'));
     }
 
     /**
-     * Update rekam medis
+     * Update rekam medis (handle versioning untuk record FINAL)
      */
     public function updateRecord(Request $request, $recordId)
     {
@@ -557,39 +531,59 @@ class DoctorController extends Controller
         }
 
         $doctor = Auth::user()->doctor;
-        $record = MedicalRecord::find($recordId);
+        $originalRecord = MedicalRecord::find($recordId);
 
-        if ($record->doctor_id !== $doctor->iddoctor) {
+        if ($originalRecord->doctor_id !== $doctor->iddoctor) {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
-        }
-
-        if ($record->status !== 'draft') {
-            return redirect()->back()->with('error', 'Hanya rekam medis dengan status draft yang dapat diedit langsung');
         }
 
         DB::beginTransaction();
 
-        $record->update([
-            'admin_id' => $request->admin_id,
-            'visit_date' => $request->visit_date,
-            'blood_pressure' => $request->blood_pressure ?? '',
-            'heart_rate' => $request->heart_rate ?? 0,
-            'temperature' => $request->temperature ?? 0,
-            'respiratory_rate' => $request->respiratory_rate ?? 0,
-            'chief_complaint' => $request->chief_complaint,
-            'history_present_illness' => $request->history_present_illness,
-            'physical_examination' => $request->physical_examination,
-            'diagnosis_code' => $request->diagnosis_code,
-            'diagnosis_desc' => $request->diagnosis_desc,
-            'treatment' => $request->treatment,
-            'notes' => $request->notes ?? '',
-            'status' => $request->save_action,
-            'updated_at' => now()
-        ]);
-
-        foreach ($record->prescriptions as $oldPrescription) {
-            $oldPrescription->prescriptionItems()->delete();
-            $oldPrescription->delete();
+        if ($originalRecord->status === 'final') {
+            $record = new MedicalRecord();
+            $record->patient_id = $originalRecord->patient_id;
+            $record->doctor_id = $originalRecord->doctor_id;
+            $record->admin_id = $request->admin_id;
+            $record->visit_date = $request->visit_date;
+            $record->blood_pressure = $request->blood_pressure ?? '';
+            $record->heart_rate = $request->heart_rate ?? 0;
+            $record->temperature = $request->temperature ?? 0;
+            $record->respiratory_rate = $request->respiratory_rate ?? 0;
+            $record->chief_complaint = $request->chief_complaint;
+            $record->history_present_illness = $request->history_present_illness;
+            $record->physical_examination = $request->physical_examination;
+            $record->diagnosis_code = $request->diagnosis_code;
+            $record->diagnosis_desc = $request->diagnosis_desc;
+            $record->treatment = $request->treatment;
+            $record->notes = $request->notes ?? '';
+            $record->status = $request->save_action;
+            $record->version = $originalRecord->version + 1;
+            $record->previous_id = $originalRecord->idmedicalrecord;
+            $record->save();
+        } else {
+            $record = $originalRecord;
+            $record->update([
+                'admin_id' => $request->admin_id,
+                'visit_date' => $request->visit_date,
+                'blood_pressure' => $request->blood_pressure ?? '',
+                'heart_rate' => $request->heart_rate ?? 0,
+                'temperature' => $request->temperature ?? 0,
+                'respiratory_rate' => $request->respiratory_rate ?? 0,
+                'chief_complaint' => $request->chief_complaint,
+                'history_present_illness' => $request->history_present_illness,
+                'physical_examination' => $request->physical_examination,
+                'diagnosis_code' => $request->diagnosis_code,
+                'diagnosis_desc' => $request->diagnosis_desc,
+                'treatment' => $request->treatment,
+                'notes' => $request->notes ?? '',
+                'status' => $request->save_action,
+                'updated_at' => now()
+            ]);
+            
+            foreach ($record->prescriptions as $oldPrescription) {
+                $oldPrescription->prescriptionItems()->delete();
+                $oldPrescription->delete();
+            }
         }
 
         foreach ($request->prescriptions as $prescriptionData) {
