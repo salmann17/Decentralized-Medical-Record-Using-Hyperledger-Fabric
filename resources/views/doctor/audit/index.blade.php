@@ -55,7 +55,6 @@
                             <option value="view" {{ request('action') === 'view' ? 'selected' : '' }}>Melihat Data</option>
                             <option value="create" {{ request('action') === 'create' ? 'selected' : '' }}>Membuat Data</option>
                             <option value="update" {{ request('action') === 'update' ? 'selected' : '' }}>Mengubah Data</option>
-                            <option value="delete" {{ request('action') === 'delete' ? 'selected' : '' }}>Menghapus Data</option>
                         </select>
                     </div>
 

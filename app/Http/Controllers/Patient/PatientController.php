@@ -12,6 +12,7 @@ use App\Models\Doctor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PatientController extends Controller
@@ -24,9 +25,17 @@ class PatientController extends Controller
         $user = Auth::user();
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
-        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
+        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->whereNotExists(function($query) {
+                $query->select(DB::raw(1))
+                    ->from('medical_records as mr2')
+                    ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+            })
+            ->count();
+            
         $pendingRequests = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'pending')->count();
+            
         $activeDoctors = AccessRequest::where('patient_id', $patient->idpatient)
             ->where('status', 'approved')->distinct('doctor_id')->count();
         
@@ -38,6 +47,11 @@ class PatientController extends Controller
             ->get();
         
         $recentRecords = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->whereNotExists(function($query) {
+                $query->select(DB::raw(1))
+                    ->from('medical_records as mr2')
+                    ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+            })
             ->with(['doctor.user', 'admin', 'prescription'])
             ->orderBy('visit_date', 'desc')
             ->take(5)
@@ -62,6 +76,11 @@ class PatientController extends Controller
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
         $query = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->whereNotExists(function($q) {
+                $q->select(DB::raw(1))
+                    ->from('medical_records as mr2')
+                    ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+            })
             ->with(['doctor.user', 'admin', 'prescription']);
 
         if ($request->filled('search')) {
@@ -233,7 +252,13 @@ class PatientController extends Controller
             ['path' => $request->url(), 'pageName' => 'page']
         );
 
-        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)->count();
+        $totalRecords = MedicalRecord::where('patient_id', $patient->idpatient)
+            ->whereNotExists(function($query) {
+                $query->select(DB::raw(1))
+                    ->from('medical_records as mr2')
+                    ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
+            })
+            ->count();
 
         return view('patient.active-doctors.index', compact('patient', 'doctors', 'totalRecords'));
     }
@@ -268,22 +293,7 @@ class PatientController extends Controller
         $patient = Patient::where('idpatient', $user->idusers)->first();
         
         $query = AuditTrail::where('patient_id', $patient->idpatient)
-            ->with(['medicalRecord.doctor.user', 'medicalRecord.admin']);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('action', 'like', '%' . $search . '%')
-                  ->orWhere('blockchain_hash', 'like', '%' . $search . '%')
-                  ->orWhereHas('medicalRecord', function($recordQuery) use ($search) {
-                      $recordQuery->where('diagnosis_desc', 'like', '%' . $search . '%');
-                  });
-            });
-        }
-
-        if ($request->filled('action')) {
-            $query->where('action', $request->action);
-        }
+            ->with(['doctor.user', 'medicalRecord']);
 
         if ($request->filled('date_from')) {
             $query->whereDate('timestamp', '>=', $request->date_from);
@@ -293,9 +303,37 @@ class PatientController extends Controller
             $query->whereDate('timestamp', '<=', $request->date_to);
         }
 
-        $auditTrails = $query->orderBy('timestamp', 'desc')->paginate(20);
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
 
-        return view('patient.audit-trail.index', compact('patient', 'auditTrails'));
+        $query->orderBy('timestamp', 'desc');
+
+        $perPage = $request->input('per_page', 10);
+        $auditTrails = $query->paginate($perPage)->appends($request->except('page'));
+
+        $totalAudits = AuditTrail::where('patient_id', $patient->idpatient)->count();
+        $uniqueDoctors = AuditTrail::where('patient_id', $patient->idpatient)
+            ->whereNotNull('doctor_id')
+            ->distinct('doctor_id')
+            ->count('doctor_id');
+        $recordsAccessed = AuditTrail::where('patient_id', $patient->idpatient)
+            ->where('action', 'view')
+            ->count();
+        $blockchainVerified = AuditTrail::where('patient_id', $patient->idpatient)
+            ->whereNotNull('blockchain_hash')
+            ->where('blockchain_hash', '!=', '')
+            ->where('blockchain_hash', 'not like', 'dummy_%')
+            ->count();
+
+        return view('patient.audit-trail.index', compact(
+            'patient', 
+            'auditTrails', 
+            'totalAudits', 
+            'uniqueDoctors', 
+            'recordsAccessed', 
+            'blockchainVerified'
+        ));
     }
 
     /**
