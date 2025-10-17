@@ -13,14 +13,7 @@
                     Catatan lengkap semua aktivitas dan perubahan yang Anda lakukan dalam sistem.
                 </p>
             </div>
-            <div class="flex space-x-3">
-                <button type="button" id="exportBtn" 
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export PDF
-                </button>
+            <div>
                 <button type="button" onclick="location.reload()" 
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,49 +29,52 @@
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Filter Aktivitas</h3>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <!-- Date Range Filter -->
-                <div>
-                    <label for="dateFrom" class="block text-sm font-medium text-gray-700">Dari Tanggal</label>
-                    <input type="date" id="dateFrom" name="date_from" 
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                           value="{{ request('date_from', now()->subDays(30)->format('Y-m-d')) }}">
-                </div>
+            <form method="GET" action="{{ route('doctor.audit-trail') }}" id="filterForm">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                    <!-- Date Range Filter -->
+                    <div>
+                        <label for="dateFrom" class="block text-sm font-medium text-gray-700">Dari Tanggal</label>
+                        <input type="date" id="dateFrom" name="date_from" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               value="{{ request('date_from') }}">
+                    </div>
 
-                <div>
-                    <label for="dateTo" class="block text-sm font-medium text-gray-700">Sampai Tanggal</label>
-                    <input type="date" id="dateTo" name="date_to" 
-                           class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                           value="{{ request('date_to', now()->format('Y-m-d')) }}">
-                </div>
+                    <div>
+                        <label for="dateTo" class="block text-sm font-medium text-gray-700">Sampai Tanggal</label>
+                        <input type="date" id="dateTo" name="date_to" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               value="{{ request('date_to') }}">
+                    </div>
 
-                <!-- Action Filter -->
-                <div>
-                    <label for="actionFilter" class="block text-sm font-medium text-gray-700">Tipe Aktivitas</label>
-                    <select id="actionFilter" name="action" 
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="">Semua Aktivitas</option>
-                        <option value="view" {{ request('action') === 'view' ? 'selected' : '' }}>Melihat Data</option>
-                        <option value="create" {{ request('action') === 'create' ? 'selected' : '' }}>Membuat Data</option>
-                        <option value="update" {{ request('action') === 'update' ? 'selected' : '' }}>Mengubah Data</option>
-                        <option value="delete" {{ request('action') === 'delete' ? 'selected' : '' }}>Menghapus Data</option>
-                        <option value="access_request" {{ request('action') === 'access_request' ? 'selected' : '' }}>Permintaan Akses</option>
-                        <option value="login" {{ request('action') === 'login' ? 'selected' : '' }}>Login</option>
-                        <option value="logout" {{ request('action') === 'logout' ? 'selected' : '' }}>Logout</option>
-                    </select>
-                </div>
+                    <!-- Action Filter -->
+                    <div>
+                        <label for="actionFilter" class="block text-sm font-medium text-gray-700">Tipe Aktivitas</label>
+                        <select id="actionFilter" name="action" 
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Semua Aktivitas</option>
+                            <option value="view" {{ request('action') === 'view' ? 'selected' : '' }}>Melihat Data</option>
+                            <option value="create" {{ request('action') === 'create' ? 'selected' : '' }}>Membuat Data</option>
+                            <option value="update" {{ request('action') === 'update' ? 'selected' : '' }}>Mengubah Data</option>
+                            <option value="delete" {{ request('action') === 'delete' ? 'selected' : '' }}>Menghapus Data</option>
+                        </select>
+                    </div>
 
-                <!-- Apply Filter Button -->
-                <div class="flex items-end">
-                    <button type="button" onclick="applyFilters()" 
-                            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                        <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.586V4z" />
-                        </svg>
-                        Filter
-                    </button>
+                    <!-- Apply Filter Button -->
+                    <div class="flex items-end space-x-2">
+                        <button type="submit" 
+                                class="flex-1 inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                            <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Filter
+                        </button>
+                        <a href="{{ route('doctor.audit-trail') }}" 
+                           class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Reset
+                        </a>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -96,7 +92,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Total Aktivitas</dt>
-                            <dd class="text-lg font-semibold text-gray-900">{{ $auditTrails->count() }}</dd>
+                            <dd class="text-lg font-semibold text-gray-900">{{ $totalAudits }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -118,7 +114,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Akses Pasien</dt>
-                            <dd class="text-lg font-semibold text-blue-900">{{ $auditTrails->whereNotNull('patient_id')->groupBy('patient_id')->count() }}</dd>
+                            <dd class="text-lg font-semibold text-blue-900">{{ $uniquePatients }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -140,7 +136,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Rekam Medis</dt>
-                            <dd class="text-lg font-semibold text-green-900">{{ $auditTrails->where('action', 'create')->count() }}</dd>
+                            <dd class="text-lg font-semibold text-green-900">{{ $recordsCreated }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -162,7 +158,7 @@
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Blockchain</dt>
-                            <dd class="text-lg font-semibold text-purple-900">{{ $auditTrails->whereNotNull('blockchain_hash')->where('blockchain_hash', '!=', '')->where('blockchain_hash', 'not like', 'dummy_%')->count() }}</dd>
+                            <dd class="text-lg font-semibold text-purple-900">{{ $blockchainVerified }}</dd>
                         </dl>
                     </div>
                 </div>
@@ -176,7 +172,23 @@
     <!-- Audit Trail Table -->
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Riwayat Aktivitas</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">Riwayat Aktivitas</h3>
+                
+                <!-- Per Page Selector -->
+                <div class="flex items-center space-x-2">
+                    <label for="perPage" class="text-sm text-gray-700">Tampilkan:</label>
+                    <select id="perPage" name="per_page" onchange="changePerPage(this.value)"
+                            class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5</option>
+                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="30" {{ request('per_page') == 30 ? 'selected' : '' }}>30</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                    <span class="text-sm text-gray-700">per halaman</span>
+                </div>
+            </div>
             
             <!-- Activity Timeline -->
             <div class="flow-root">
@@ -204,6 +216,18 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                             </svg>
                                         </span>
+                                    @elseif($audit->action === 'update')
+                                        <span class="h-8 w-8 rounded-full bg-yellow-500 flex items-center justify-center ring-8 ring-white">
+                                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </span>
+                                    @elseif($audit->action === 'delete')
+                                        <span class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center ring-8 ring-white">
+                                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </span>
                                     @else
                                         <span class="h-8 w-8 rounded-full bg-gray-500 flex items-center justify-center ring-8 ring-white">
                                             <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,6 +247,10 @@
                                                         Melihat Rekam Medis
                                                     @elseif($audit->action === 'create')
                                                         Membuat Rekam Medis
+                                                    @elseif($audit->action === 'update')
+                                                        Mengubah Rekam Medis
+                                                    @elseif($audit->action === 'delete')
+                                                        Menghapus Data
                                                     @else
                                                         {{ ucfirst($audit->action) }}
                                                     @endif
@@ -302,15 +330,21 @@
                 </ul>
             </div>
 
-            <!-- Load More Button -->
-            <div class="mt-8 text-center">
-                <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                    Muat Lebih Banyak
-                </button>
+            <!-- Pagination -->
+            @if($auditTrails->hasPages())
+            <div class="mt-6">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Menampilkan <span class="font-medium">{{ $auditTrails->firstItem() }}</span> 
+                        sampai <span class="font-medium">{{ $auditTrails->lastItem() }}</span> 
+                        dari <span class="font-medium">{{ $auditTrails->total() }}</span> aktivitas
+                    </div>
+                    <div>
+                        {{ $auditTrails->links() }}
+                    </div>
+                </div>
             </div>
+            @endif
         </div>
     </div>
 
@@ -336,33 +370,11 @@
 </div>
 
 <script>
-function applyFilters() {
-    const dateFrom = document.getElementById('dateFrom').value;
-    const dateTo = document.getElementById('dateTo').value;
-    const action = document.getElementById('actionFilter').value;
-    
-    // Build query string
-    const params = new URLSearchParams();
-    if (dateFrom) params.append('date_from', dateFrom);
-    if (dateTo) params.append('date_to', dateTo);
-    if (action) params.append('action', action);
-    
-    // Redirect with filters
-    window.location.href = window.location.pathname + '?' + params.toString();
+function changePerPage(perPage) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1'); // Reset to first page
+    window.location.href = url.toString();
 }
-
-// Export functionality
-document.getElementById('exportBtn').addEventListener('click', function() {
-    // In real implementation, this would call backend export endpoint
-    alert('Export PDF akan tersedia setelah backend dikonfigurasi');
-    
-    // Placeholder for future export functionality
-});
-
-// Auto-refresh every 30 seconds
-setInterval(function() {
-    // Optional: Auto-refresh for real-time updates
-    // location.reload();
-}, 30000);
 </script>
 @endsection

@@ -822,16 +822,52 @@ class DoctorController extends Controller
     /**
      * Tampilkan audit trail untuk dokter
      */
-    public function auditTrail()
+    public function auditTrail(Request $request)
     {
         $doctor = Auth::user()->doctor;
         
-        $auditTrails = AuditTrail::where('doctor_id', $doctor->iddoctor)
-            ->with(['patient.user', 'medicalRecord'])
-            ->orderBy('timestamp', 'desc')
-            ->get();
+        $query = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->with(['patient.user', 'medicalRecord']);
 
-        return view('doctor.audit.index', compact('auditTrails', 'doctor'));
+        if ($request->filled('date_from')) {
+            $query->whereDate('timestamp', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('timestamp', '<=', $request->date_to);
+        }
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+
+        $query->orderBy('timestamp', 'desc');
+
+        $perPage = $request->input('per_page', 10);
+        $auditTrails = $query->paginate($perPage)->appends($request->except('page'));
+
+        $totalAudits = AuditTrail::where('doctor_id', $doctor->iddoctor)->count();
+        $uniquePatients = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->whereNotNull('patient_id')
+            ->distinct('patient_id')
+            ->count('patient_id');
+        $recordsCreated = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->where('action', 'create')
+            ->count();
+        $blockchainVerified = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->whereNotNull('blockchain_hash')
+            ->where('blockchain_hash', '!=', '')
+            ->where('blockchain_hash', 'not like', 'dummy_%')
+            ->count();
+
+        return view('doctor.audit.index', compact(
+            'auditTrails', 
+            'doctor', 
+            'totalAudits', 
+            'uniquePatients', 
+            'recordsCreated', 
+            'blockchainVerified'
+        ));
     }
 
     /**
