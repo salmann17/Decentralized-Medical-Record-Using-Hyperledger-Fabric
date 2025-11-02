@@ -644,30 +644,37 @@ class DoctorController extends Controller
 
         $blockchainResult = null;
         if ($request->save_action === 'final') {
-            $blockchainResult = $this->sendToBlockchain($record);
+            if ($originalRecord->status === 'final' && $record->previous_id) {
+                $blockchainResult = $this->sendVersionToBlockchain($record);
+            } else {
+                $blockchainResult = $this->sendToBlockchain($record);
+            }
         }
 
-        // Simpan audit trail dengan blockchain hash
-        $auditData = [
+        AuditTrail::create([
             'doctor_id' => $doctor->iddoctor,
             'patient_id' => $record->patient_id,
             'medicalrecord_id' => $record->idmedicalrecord,
             'action' => 'update',
             'timestamp' => now(),
             'blockchain_hash' => $blockchainResult['hash'] ?? null
-        ];
-        
-        AuditTrail::create($auditData);
+        ]);
 
         DB::commit();
 
         if ($request->save_action === 'final') {
             if ($blockchainResult && $blockchainResult['success']) {
+                $message = ($originalRecord->status === 'final') 
+                    ? 'Rekam medis berhasil diperbarui dan versi baru tercatat di blockchain.'
+                    : 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.';
                 return redirect()->route('doctor.show-record', $record->idmedicalrecord)
-                    ->with('success', 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.');
+                    ->with('success', $message);
             } else {
+                $message = ($originalRecord->status === 'final')
+                    ? 'Rekam medis berhasil disimpan, namun gagal mencatat versi baru di blockchain.'
+                    : 'Rekam medis berhasil difinalisasi, namun gagal mengirim ke blockchain.';
                 return redirect()->route('doctor.show-record', $record->idmedicalrecord)
-                    ->with('warning', 'Rekam medis berhasil difinalisasi, namun gagal mengirim ke blockchain. Silakan coba finalisasi ulang.');
+                    ->with('warning', $message);
             }
         }
 
@@ -1072,6 +1079,55 @@ class DoctorController extends Controller
                 'exception' => $e->getTraceAsString()
             ]);
 
+            return [
+                'success' => false,
+                'hash' => null,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Kirim versi baru rekam medis ke blockchain via REST API Node.js
+     * 
+     * @param MedicalRecord $record
+     * @return array ['success' => bool, 'hash' => string|null]
+     */
+    private function sendVersionToBlockchain($record)
+    {
+        try {
+            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+                ->find($record->idmedicalrecord);
+
+            $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $hash = hash('sha256', $json);
+
+            $payload = [
+                'new_id' => $record->idmedicalrecord,
+                'previous_id' => $record->previous_id,
+                'patient_id' => $record->patient_id,
+                'doctor_id' => $record->doctor_id,
+                'status' => $record->status,
+                'hash' => $hash,
+                'version' => $record->version
+            ];
+
+            $response = Http::timeout(10)->post('http://localhost:3000/api/medical-records/version', $payload);
+
+            if ($response->successful() && $response->json('success') === true) {
+                return [
+                    'success' => true,
+                    'hash' => $hash,
+                    'response' => $response->json()
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'hash' => null,
+                    'error' => $response->body()
+                ];
+            }
+        } catch (\Exception $e) {
             return [
                 'success' => false,
                 'hash' => null,
