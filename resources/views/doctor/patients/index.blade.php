@@ -229,7 +229,7 @@
                             <div class="ml-5 w-0 flex-1">
                                 <dl>
                                     <dt class="text-sm font-medium text-purple-900 truncate">Blockchain Verified</dt>
-                                    <dd class="text-lg font-semibold text-purple-900">0</dd>
+                                    <dd class="text-lg font-semibold text-purple-900">{{ $blockchainVerified ?? 0 }}</dd>
                                 </dl>
                             </div>
                         </div>

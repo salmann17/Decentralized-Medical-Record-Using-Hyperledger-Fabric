@@ -43,6 +43,12 @@ class DoctorController extends Controller
             })
             ->count();
         
+        $blockchainRecords = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->whereNotNull('blockchain_hash')
+            ->where('blockchain_hash', '!=', '')
+            ->distinct('medicalrecord_id')
+            ->count('medicalrecord_id');
+        
         $recentRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
             ->whereNotExists(function($query) {
                 $query->select(DB::raw(1))
@@ -60,7 +66,7 @@ class DoctorController extends Controller
                 'total_patients' => $totalPatients,
                 'pending_requests' => $pendingRequests,
                 'total_records' => $totalRecords,
-                'blockchain_records' => 0
+                'blockchain_records' => $blockchainRecords
             ],
             'recent_records' => $recentRecords
         ];
@@ -234,7 +240,14 @@ class DoctorController extends Controller
             });
         }])->paginate(12);
 
-        return view('doctor.patients.index', compact('patients', 'doctor'));
+        // Hitung total rekam medis yang tercatat di blockchain
+        $blockchainVerified = AuditTrail::where('doctor_id', $doctor->iddoctor)
+            ->whereNotNull('blockchain_hash')
+            ->where('blockchain_hash', '!=', '')
+            ->distinct('medicalrecord_id')
+            ->count('medicalrecord_id');
+
+        return view('doctor.patients.index', compact('patients', 'doctor', 'blockchainVerified'));
     }
 
     /**
@@ -262,7 +275,12 @@ class DoctorController extends Controller
         $totalFinal = (clone $baseQuery)->where('status', 'final')->count();
 
         $query = (clone $baseQuery)
-            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions'])
+            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions', 'auditTrails' => function($q) {
+                $q->whereNotNull('blockchain_hash')
+                  ->where('blockchain_hash', '!=', '')
+                  ->orderBy('timestamp', 'desc')
+                  ->limit(1);
+            }])
             ->orderBy('visit_date', 'desc');
 
         if (request('status') && request('status') !== 'all') {
@@ -414,16 +432,35 @@ class DoctorController extends Controller
             }
         }
 
-        AuditTrail::create([
+        $blockchainResult = null;
+        if ($request->status === 'final') {
+            
+            $blockchainResult = $this->sendToBlockchain($medicalRecord);
+        }
+
+        // Simpan audit trail dengan blockchain hash
+        $auditData = [
             'doctor_id' => $doctor->iddoctor,
             'patient_id' => $patientId,
             'medicalrecord_id' => $medicalRecord->idmedicalrecord,
             'action' => 'create',
             'timestamp' => now(),
-            'blockchain_hash' => null
-        ]);
+            'blockchain_hash' => $blockchainResult['hash'] ?? null
+        ];
+        
+        AuditTrail::create($auditData);
 
         DB::commit();
+
+        if ($request->status === 'final') {
+            if ($blockchainResult && $blockchainResult['success']) {
+                return redirect()->route('doctor.patient-records', $patientId)
+                    ->with('success', 'Rekam medis berhasil disimpan dengan status Final dan tercatat di blockchain.');
+            } else {
+                return redirect()->route('doctor.patient-records', $patientId)
+                    ->with('warning', 'Rekam medis berhasil disimpan dengan status Final, namun gagal mengirim ke blockchain. Silakan coba finalisasi ulang.');
+            }
+        }
 
         return redirect()->route('doctor.patient-records', $patientId)
             ->with('success', 'Rekam medis dan resep berhasil disimpan dengan status: ' . ucfirst($request->status));
@@ -605,22 +642,37 @@ class DoctorController extends Controller
             }
         }
 
-        AuditTrail::create([
+        $blockchainResult = null;
+        if ($request->save_action === 'final') {
+            $blockchainResult = $this->sendToBlockchain($record);
+        }
+
+        // Simpan audit trail dengan blockchain hash
+        $auditData = [
             'doctor_id' => $doctor->iddoctor,
             'patient_id' => $record->patient_id,
             'medicalrecord_id' => $record->idmedicalrecord,
             'action' => 'update',
             'timestamp' => now(),
-            'blockchain_hash' => null
-        ]);
+            'blockchain_hash' => $blockchainResult['hash'] ?? null
+        ];
+        
+        AuditTrail::create($auditData);
 
         DB::commit();
 
-        $message = $request->save_action === 'draft' 
-            ? 'Perubahan berhasil disimpan sebagai draft' 
-            : 'Rekam medis berhasil difinalisasi';
+        if ($request->save_action === 'final') {
+            if ($blockchainResult && $blockchainResult['success']) {
+                return redirect()->route('doctor.show-record', $record->idmedicalrecord)
+                    ->with('success', 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.');
+            } else {
+                return redirect()->route('doctor.show-record', $record->idmedicalrecord)
+                    ->with('warning', 'Rekam medis berhasil difinalisasi, namun gagal mengirim ke blockchain. Silakan coba finalisasi ulang.');
+            }
+        }
 
-        return redirect()->route('doctor.show-record', $record->idmedicalrecord)->with('success', $message);
+        return redirect()->route('doctor.show-record', $record->idmedicalrecord)
+            ->with('success', 'Perubahan berhasil disimpan sebagai draft');
     }
 
     /**
@@ -639,7 +691,6 @@ class DoctorController extends Controller
             return redirect()->back()->with('error', 'Hanya rekam medis dengan status draft yang dapat difinalisasi');
         }
 
-        // Update status menjadi final
         $record->update([
             'status' => 'final',
             'updated_at' => now()
@@ -658,7 +709,6 @@ class DoctorController extends Controller
             'blockchain_hash' => $blockchainResult['hash'] ?? null
         ]);
 
-        // Tampilkan pesan sesuai hasil blockchain
         if ($blockchainResult['success']) {
             return redirect()->back()->with('success', 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.');
         } else {
@@ -976,7 +1026,6 @@ class DoctorController extends Controller
             $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
                 ->find($record->idmedicalrecord);
 
-            // Convert record ke array dan encode ke JSON
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             
             // Hitung hash SHA-256 dari data JSON
@@ -999,9 +1048,6 @@ class DoctorController extends Controller
                     'patient_id' => $record->patient_id,
                     'doctor_id' => $record->doctor_id
                 ]);
-
-                // Update blockchain_hash di tabel medical_records
-                $record->update(['blockchain_hash' => $hash]);
 
                 return [
                     'success' => true,

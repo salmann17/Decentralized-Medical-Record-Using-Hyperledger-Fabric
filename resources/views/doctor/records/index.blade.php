@@ -180,12 +180,22 @@
                     <!-- Blockchain Status -->
                     <div class="mt-4">
                         <div class="flex items-center space-x-2">
-                            <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            @php
+                                $hasBlockchainHash = $record->auditTrails && $record->auditTrails->count() > 0 && $record->auditTrails->first()->blockchain_hash;
+                            @endphp
+                            <svg class="h-4 w-4 {{ $hasBlockchainHash ? 'text-green-500' : 'text-gray-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                             </svg>
-                            <span class="text-xs text-gray-500">
+                            <span class="text-xs {{ $hasBlockchainHash ? 'text-green-700' : 'text-gray-500' }}">
                                 Blockchain: 
-                                <span class="text-blue-600">{{ isset($record->blockchain_hash) && $record->blockchain_hash ? 'Verified' : 'Pending Integration' }}</span>
+                                @if($hasBlockchainHash)
+                                    <span class="font-semibold text-green-600">✓ Verified</span>
+                                    <span class="text-gray-400 ml-1" title="{{ Str::limit($record->auditTrails->first()->blockchain_hash, 16) }}">
+                                        ({{ Str::limit($record->auditTrails->first()->blockchain_hash, 8, '...') }})
+                                    </span>
+                                @else
+                                    <span class="text-gray-500">Not Verified</span>
+                                @endif
                             </span>
                         </div>
                     </div>
