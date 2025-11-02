@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use App\Models\Doctor;
 use App\Models\Patient;
 use App\Models\MedicalRecord;
@@ -638,21 +639,31 @@ class DoctorController extends Controller
             return redirect()->back()->with('error', 'Hanya rekam medis dengan status draft yang dapat difinalisasi');
         }
 
+        // Update status menjadi final
         $record->update([
             'status' => 'final',
             'updated_at' => now()
         ]);
 
+        // Kirim ke blockchain
+        $blockchainResult = $this->sendToBlockchain($record);
+        
+        // Simpan audit trail dengan blockchain hash
         AuditTrail::create([
             'doctor_id' => $doctor->iddoctor,
             'patient_id' => $record->patient_id,
             'medicalrecord_id' => $record->idmedicalrecord,
             'action' => 'update',
             'timestamp' => now(),
-            'blockchain_hash' => null
+            'blockchain_hash' => $blockchainResult['hash'] ?? null
         ]);
 
-        return redirect()->back()->with('success', 'Rekam medis berhasil difinalisasi');
+        // Tampilkan pesan sesuai hasil blockchain
+        if ($blockchainResult['success']) {
+            return redirect()->back()->with('success', 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.');
+        } else {
+            return redirect()->back()->with('error', 'Rekam medis berhasil difinalisasi, namun gagal mengirim ke blockchain. Silakan coba lagi.');
+        }
     }
 
     /**
@@ -951,6 +962,76 @@ class DoctorController extends Controller
             'timestamp' => now(),
             'blockchain_hash' => null
         ]);
+    }
+
+    /**
+     * Kirim hash rekam medis ke blockchain via REST API Node.js
+     * 
+     * @param MedicalRecord $record
+     * @return array ['success' => bool, 'hash' => string|null]
+     */
+    private function sendToBlockchain($record)
+    {
+        try {
+            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+                ->find($record->idmedicalrecord);
+
+            // Convert record ke array dan encode ke JSON
+            $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            
+            // Hitung hash SHA-256 dari data JSON
+            $hash = hash('sha256', $json);
+
+            $payload = [
+                'idmedicalrecord' => $record->idmedicalrecord,
+                'patient_id' => $record->patient_id,
+                'doctor_id' => $record->doctor_id,
+                'status' => $record->status,
+                'hash' => $hash
+            ];
+
+            // Kirim POST request ke Node.js blockchain API
+            $response = Http::timeout(10)->post('http://172.25.117.62:3000/api/medical-records', $payload);
+
+            if ($response->successful()) {
+                Log::info('✅ Rekam medis dikirim ke blockchain: ' . $record->idmedicalrecord, [
+                    'hash' => $hash,
+                    'patient_id' => $record->patient_id,
+                    'doctor_id' => $record->doctor_id
+                ]);
+
+                // Update blockchain_hash di tabel medical_records
+                $record->update(['blockchain_hash' => $hash]);
+
+                return [
+                    'success' => true,
+                    'hash' => $hash,
+                    'response' => $response->json()
+                ];
+            } else {
+                Log::error('❌ Gagal kirim ke blockchain: ' . $response->body(), [
+                    'status' => $response->status(),
+                    'record_id' => $record->idmedicalrecord
+                ]);
+
+                return [
+                    'success' => false,
+                    'hash' => null,
+                    'error' => $response->body()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('🚨 Error blockchain: ' . $e->getMessage(), [
+                'record_id' => $record->idmedicalrecord,
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'hash' => null,
+                'error' => $e->getMessage()
+            ];
+        }
     }
 }
 
