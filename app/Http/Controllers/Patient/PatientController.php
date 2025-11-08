@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class PatientController extends Controller
@@ -427,5 +428,58 @@ class PatientController extends Controller
     private function updatePrivacy(Request $request, $patient)
     {
         return redirect()->back()->with('success', 'Pengaturan privasi berhasil diperbarui.');
+    }
+    
+    /**
+     * Verifikasi rekam medis di blockchain
+     */
+    public function verifyBlockchain($id)
+    {
+        try {
+            $user = Auth::user();
+            $patient = Patient::where('idpatient', $user->idusers)->first();
+            
+            $record = MedicalRecord::where('idmedicalrecord', $id)
+                ->where('patient_id', $patient->idpatient)
+                ->first();
+
+            if (!$record) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Rekam medis tidak ditemukan.'
+                ], 404);
+            }
+
+            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+                ->find($id);
+
+            $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $hash = hash('sha256', $json);
+
+            $payload = [
+                'idmedicalrecord' => $id,
+                'hash' => $hash
+            ];
+
+            $response = Http::timeout(10)->post('http://172.25.117.62:3000/api/medical-records/verify', $payload);
+
+            $body = $response->json();
+
+            if ($response->successful()) {
+                return response()->json($body, 200);
+            }
+            if ($body) {
+                return response()->json($body, 200);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke server blockchain.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 200); 
+        }
     }
 }

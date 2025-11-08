@@ -21,14 +21,14 @@
                 <div class="flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
                     <div class="flex-1">
                         <label for="search" class="sr-only">Cari rekam medis</label>
-                        <input type="text" name="search" id="search" 
-                               value="{{ request('search') }}"
-                               class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
-                               placeholder="Cari berdasarkan rumah sakit, dokter, atau diagnosis...">
+                        <input type="text" name="search" id="search"
+                            value="{{ request('search') }}"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            placeholder="Cari berdasarkan rumah sakit, dokter, atau diagnosis...">
                     </div>
                     <div>
-                        <select name="status" 
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <select name="status"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             <option value="">Semua Status</option>
                             <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Draft</option>
                             <option value="final" {{ request('status') === 'final' ? 'selected' : '' }}>Final</option>
@@ -36,8 +36,8 @@
                         </select>
                     </div>
                     <div>
-                        <select name="period" 
-                                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <select name="period"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             <option value="">Semua Periode</option>
                             <option value="7days" {{ request('period') === '7days' ? 'selected' : '' }}>7 Hari Terakhir</option>
                             <option value="30days" {{ request('period') === '30days' ? 'selected' : '' }}>30 Hari Terakhir</option>
@@ -46,16 +46,16 @@
                         </select>
                     </div>
                     <div class="flex space-x-2">
-                        <button type="submit" 
-                                class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                        <button type="submit"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
                             <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                             Cari
                         </button>
                         @if(request()->hasAny(['search', 'status', 'period']))
-                        <a href="{{ route('patient.records') }}" 
-                           class="inline-flex items-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500">
+                        <a href="{{ route('patient.records') }}"
+                            class="inline-flex items-center rounded-md bg-gray-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500">
                             Reset
                         </a>
                         @endif
@@ -137,8 +137,13 @@
                             </span>
                             @endif
                         </div>
-                        <a href="{{ route('patient.records.detail', $record->idmedicalrecord) }}" 
-                           class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+                        <button type="button"
+                            onclick="verifyBlockchain({{ $record->idmedicalrecord }})"
+                            class="inline-flex items-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 transition-colors">
+                            Verifikasi
+                        </button>
+                        <a href="{{ route('patient.records.detail', $record->idmedicalrecord) }}"
+                            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
                             Lihat Detail
                         </a>
                     </div>
@@ -162,15 +167,15 @@
             <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada rekam medis</h3>
             <p class="mt-1 text-sm text-gray-500">
                 @if(request()->hasAny(['search', 'status', 'period']))
-                    Tidak ada rekam medis yang sesuai dengan kriteria pencarian Anda.
+                Tidak ada rekam medis yang sesuai dengan kriteria pencarian Anda.
                 @else
-                    Rekam medis akan muncul setelah Anda berkunjung ke rumah sakit yang terdaftar dalam sistem.
+                Rekam medis akan muncul setelah Anda berkunjung ke rumah sakit yang terdaftar dalam sistem.
                 @endif
             </p>
             @if(request()->hasAny(['search', 'status', 'period']))
             <div class="mt-6">
-                <a href="{{ route('patient.records') }}" 
-                   class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                <a href="{{ route('patient.records') }}"
+                    class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
                     Lihat Semua Rekam Medis
                 </a>
             </div>
@@ -200,4 +205,80 @@
         </div>
     </div>
 </div>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function verifyBlockchain(recordId) {
+        Swal.fire({
+            title: 'Verifikasi Blockchain',
+            text: 'Sedang memverifikasi data dengan blockchain...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(`/patient/records/` + recordId + `/verify-blockchain`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.message.includes('✅')) {
+                        Swal.fire({
+                            title: 'Terverifikasi!',
+                            html: `<div class="text-left"><p class="mb-2"><strong>Rekam medis terverifikasi dan hash sesuai.</strong></p><hr class="my-3"><p class="text-sm text-gray-600"><strong>ID Rekam Medis:</strong> ` + data.data.idmedicalrecord + `</p><p class="text-sm text-gray-600"><strong>Version:</strong> ` + data.data.version + `</p><p class="text-sm text-gray-600"><strong>Hash:</strong> <span class="font-mono text-xs">` + data.data.storedHash.substring(0, 32) + `...</span></p><p class="text-sm text-gray-600"><strong>Timestamp:</strong> ` + new Date(data.data.timestamp).toLocaleString('id-ID') + `</p></div>`,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981'
+                        });
+                    } else if (data.message.includes('⚠️')) {
+                        Swal.fire({
+                            title: 'Peringatan!',
+                            text: 'Rekam medis tidak terverifikasi karena telah dimodifikasi oleh pihak yang tidak bertanggung jawab.',
+                            icon: 'warning',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Tidak Ditemukan',
+                            text: 'Rekam medis tidak ditemukan di jaringan blockchain.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    }
+                } else if (data.message.includes('tidak ada di jaringan')) {
+                    const missingId = (data.data && data.data.idmedicalrecord) ? data.data.idmedicalrecord : recordId;
+                Swal.fire({
+                    title: 'Tidak Ditemukan',
+                    text: `Rekam medis dengan ID ${missingId} tidak ditemukan di jaringan blockchain.`,
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Terjadi kesalahan saat verifikasi.',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal menghubungi server. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+    }
+</script>
+
 @endsection

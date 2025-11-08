@@ -64,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/records/{recordId}/draft', [DoctorController::class, 'updateDraft'])->name('update-draft');
             Route::patch('/records/{recordId}/status', [DoctorController::class, 'updateRecordStatus'])->name('update-record-status');
             Route::post('/records/{recordId}/finalize', [DoctorController::class, 'finalizeRecord'])->name('finalize-record');
+            Route::post('/records/{recordId}/verify-blockchain', [DoctorController::class, 'verifyBlockchain'])->name('verify-blockchain');
             
             // Audit Trail
             Route::get('/audit-trail', [DoctorController::class, 'auditTrail'])->name('audit-trail');
@@ -80,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/dashboard', [PatientController::class, 'dashboard'])->name('dashboard');
             Route::get('/records', [PatientController::class, 'records'])->name('records');
             Route::get('/records/{id}', [PatientController::class, 'recordDetail'])->name('records.detail');
+            Route::post('/records/{id}/verify-blockchain', [PatientController::class, 'verifyBlockchain'])->name('records.verify-blockchain');
             Route::get('/access-requests', [PatientController::class, 'accessRequests'])->name('access-requests');
             Route::post('/access-requests/{id}/approve', [PatientController::class, 'approveAccess'])->name('access-requests.approve');
             Route::post('/access-requests/{id}/reject', [PatientController::class, 'rejectAccess'])->name('access-requests.reject');

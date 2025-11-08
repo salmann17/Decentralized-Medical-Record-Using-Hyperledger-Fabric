@@ -67,8 +67,8 @@
                 </p>
             </div>
             <div>
-                <a href="{{ route('doctor.my-patients') }}" 
-                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                <a href="{{ route('doctor.my-patients') }}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
                     <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -83,31 +83,31 @@
         <div class="px-4 py-5 sm:p-6">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                    <a href="{{ route('doctor.records') }}" 
-                       class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <a href="{{ route('doctor.records') }}"
+                        class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Semua
                         <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalAll ?? 0 }}
                         </span>
                     </a>
-                    
-                    <a href="{{ route('doctor.records', ['status' => 'draft']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'draft' ? 'border-yellow-500 text-yellow-600' : '' }}">
+
+                    <a href="{{ route('doctor.records', ['status' => 'draft']) }}"
+                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'draft' ? 'border-yellow-500 text-yellow-600' : '' }}">
                         Draft
                         <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalDraft ?? 0 }}
                         </span>
                     </a>
-                    
-                    <a href="{{ route('doctor.records', ['status' => 'final']) }}" 
-                       class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'final' ? 'border-green-500 text-green-600' : '' }}">
+
+                    <a href="{{ route('doctor.records', ['status' => 'final']) }}"
+                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'final' ? 'border-green-500 text-green-600' : '' }}">
                         Final
                         <span class="ml-2 bg-green-100 text-green-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalFinal ?? 0 }}
                         </span>
                     </a>
-                    
-                    
+
+
                 </nav>
             </div>
         </div>
@@ -115,148 +115,153 @@
 
     <!-- Records Grid -->
     @if(isset($records) && $records->count() > 0)
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            @foreach($records as $record)
-            <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200">
-                <div class="p-6">
-                    <!-- Record Header -->
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <span class="text-sm font-medium text-blue-700">
-                                        {{ substr($record->patient->user->name ?? 'P', 0, 1) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="ml-3">
-                                <h3 class="text-lg font-medium text-gray-900">
-                                    {{ $record->patient->user->name ?? 'Pasien' }}
-                                </h3>
-                                <p class="text-sm text-gray-500">
-                                    {{ $record->visit_date ? date('d/m/Y', strtotime($record->visit_date)) : date('d/m/Y') }}
-                                </p>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        @foreach($records as $record)
+        <div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200">
+            <div class="p-6">
+                <!-- Record Header -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-sm font-medium text-blue-700">
+                                    {{ substr($record->patient->user->name ?? 'P', 0, 1) }}
+                                </span>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            @if($record->status === 'draft')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
-                                        <circle cx="4" cy="4" r="3" />
-                                    </svg>
-                                    Draft
-                                </span>
-                            @elseif($record->status === 'final')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
-                                        <circle cx="4" cy="4" r="3" />
-                                    </svg>
-                                    Final
-                                </span>
-                            @endif
-                            @if($record->version > 1)
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                    v{{ $record->version }}
-                                </span>
-                            @endif
+                        <div class="ml-3">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                {{ $record->patient->user->name ?? 'Pasien' }}
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                {{ $record->visit_date ? date('d/m/Y', strtotime($record->visit_date)) : date('d/m/Y') }}
+                            </p>
                         </div>
                     </div>
-
-                    <!-- Record Content -->
-                    <div class="mt-4">
-                        <h4 class="text-sm font-medium text-gray-900">Diagnosis</h4>
-                        <p class="mt-1 text-sm text-gray-600">
-                            {{ Str::limit($record->diagnosis_desc ?? 'Diagnosis tidak tersedia', 100) }}
-                        </p>
-                    </div>
-
-                    <div class="mt-4">
-                        <h4 class="text-sm font-medium text-gray-900">Treatment</h4>
-                        <p class="mt-1 text-sm text-gray-600">
-                            {{ Str::limit($record->treatment ?? 'Treatment tidak tersedia', 100) }}
-                        </p>
-                    </div>
-
-                    <!-- Blockchain Status -->
-                    <div class="mt-4">
-                        <div class="flex items-center space-x-2">
-                            @php
-                                $hasBlockchainHash = $record->auditTrails && $record->auditTrails->count() > 0 && $record->auditTrails->first()->blockchain_hash;
-                            @endphp
-                            <svg class="h-4 w-4 {{ $hasBlockchainHash ? 'text-green-500' : 'text-gray-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                            </svg>
-                            <span class="text-xs {{ $hasBlockchainHash ? 'text-green-700' : 'text-gray-500' }}">
-                                Blockchain: 
-                                @if($hasBlockchainHash)
-                                    <span class="font-semibold text-green-600">✓ Verified</span>
-                                    <span class="text-gray-400 ml-1" title="{{ Str::limit($record->auditTrails->first()->blockchain_hash, 16) }}">
-                                        ({{ Str::limit($record->auditTrails->first()->blockchain_hash, 8, '...') }})
-                                    </span>
-                                @else
-                                    <span class="text-gray-500">Not Verified</span>
-                                @endif
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="mt-6 flex space-x-2">
-                        <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}" 
-                           class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 text-xs font-medium rounded-md">
-                            Lihat Detail
-                        </a>
+                    <div class="flex items-center space-x-2">
                         @if($record->status === 'draft')
-                            <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="flex-1">
-                                @csrf
-                                <button type="submit" 
-                                        class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium rounded-md"
-                                        onclick="return confirm('Finalisasi rekam medis ini?')">
-                                    Finalisasi
-                                </button>
-                            </form>
-                            <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}" 
-                               class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-center px-3 py-2 text-xs font-medium rounded-md">
-                                Edit Draft
-                            </a>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-yellow-400" fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            Draft
+                        </span>
                         @elseif($record->status === 'final')
-                            <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
-                               class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
-                                Edit
-                            </a>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                                <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            Final
+                        </span>
+                        @endif
+                        @if($record->version > 1)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            v{{ $record->version }}
+                        </span>
                         @endif
                     </div>
                 </div>
-            </div>
-            @endforeach
-        </div>
 
-        <!-- Pagination -->
-        @if(isset($records) && method_exists($records, 'links'))
-        <div class="mt-8">
-            {{ $records->links() }}
-        </div>
-        @endif
-    @else
-        <!-- Empty State -->
-        <div class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada rekam medis</h3>
-            <p class="mt-1 text-sm text-gray-500">
-                Anda belum membuat rekam medis. Mulai dengan memilih pasien dan membuat rekam medis baru.
-            </p>
-            <div class="mt-6">
-                <a href="{{ route('doctor.my-patients') }}" 
-                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Pilih Pasien
-                </a>
+                <!-- Record Content -->
+                <div class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-900">Diagnosis</h4>
+                    <p class="mt-1 text-sm text-gray-600">
+                        {{ Str::limit($record->diagnosis_desc ?? 'Diagnosis tidak tersedia', 100) }}
+                    </p>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-900">Treatment</h4>
+                    <p class="mt-1 text-sm text-gray-600">
+                        {{ Str::limit($record->treatment ?? 'Treatment tidak tersedia', 100) }}
+                    </p>
+                </div>
+
+                <!-- Blockchain Status -->
+                <div class="mt-4">
+                    <div class="flex items-center space-x-2">
+                        @php
+                        $hasBlockchainHash = $record->auditTrails && $record->auditTrails->count() > 0 && $record->auditTrails->first()->blockchain_hash;
+                        @endphp
+                        <svg class="h-4 w-4 {{ $hasBlockchainHash ? 'text-green-500' : 'text-gray-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <span class="text-xs {{ $hasBlockchainHash ? 'text-green-700' : 'text-gray-500' }}">
+                            Blockchain:
+                            @if($hasBlockchainHash)
+                            <span class="font-semibold text-green-600">✓ Verified</span>
+                            <span class="text-gray-400 ml-1" title="{{ Str::limit($record->auditTrails->first()->blockchain_hash, 16) }}">
+                                ({{ Str::limit($record->auditTrails->first()->blockchain_hash, 8, '...') }})
+                            </span>
+                            @else
+                            <span class="text-gray-500">Not Verified</span>
+                            @endif
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="mt-6 flex space-x-2">
+                    <a href="{{ route('doctor.show-record', $record->idmedicalrecord) }}"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 text-xs font-medium rounded-md">
+                        Lihat Detail
+                    </a>
+                    <button type="button"
+                        onclick="verifyBlockchain({{ $record->idmedicalrecord }})"
+                        class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-center px-3 py-2 text-xs font-medium rounded-md">
+                        Verifikasi Blockchain
+                    </button>
+                    @if($record->status === 'draft')
+                    <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="flex-1">
+                        @csrf
+                        <button type="submit"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium rounded-md"
+                            onclick="return confirm('Finalisasi rekam medis ini?')">
+                            Finalisasi
+                        </button>
+                    </form>
+                    <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}"
+                        class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-center px-3 py-2 text-xs font-medium rounded-md">
+                        Edit Draft
+                    </a>
+                    @elseif($record->status === 'final')
+                    <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}"
+                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
+                        Edit
+                    </a>
+                    @endif
+                </div>
             </div>
         </div>
+        @endforeach
+    </div>
+
+    <!-- Pagination -->
+    @if(isset($records) && method_exists($records, 'links'))
+    <div class="mt-8">
+        {{ $records->links() }}
+    </div>
+    @endif
+    @else
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">Belum ada rekam medis</h3>
+        <p class="mt-1 text-sm text-gray-500">
+            Anda belum membuat rekam medis. Mulai dengan memilih pasien dan membuat rekam medis baru.
+        </p>
+        <div class="mt-6">
+            <a href="{{ route('doctor.my-patients') }}"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Pilih Pasien
+            </a>
+        </div>
+    </div>
     @endif
 
     <!-- Info Box -->
@@ -279,4 +284,90 @@
         </div>
     </div>
 </div>
+
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function verifyBlockchain(recordId) {
+        Swal.fire({
+            title: 'Verifikasi Blockchain',
+            text: 'Sedang memverifikasi data dengan blockchain...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(`/doctor/records/${recordId}/verify-blockchain`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.message.includes('✅')) {
+                        Swal.fire({
+                            title: 'Terverifikasi!',
+                            html: `
+                        <div class="text-left">
+                            <p class="mb-2"><strong>Rekam medis terverifikasi dan hash sesuai.</strong></p>
+                            <hr class="my-3">
+                            <p class="text-sm text-gray-600"><strong>ID Rekam Medis:</strong> ${data.data.idmedicalrecord}</p>
+                            <p class="text-sm text-gray-600"><strong>Version:</strong> ${data.data.version}</p>
+                            <p class="text-sm text-gray-600"><strong>Hash:</strong> <span class="font-mono text-xs">${data.data.storedHash.substring(0, 32)}...</span></p>
+                            <p class="text-sm text-gray-600"><strong>Timestamp:</strong> ${new Date(data.data.timestamp).toLocaleString('id-ID')}</p>
+                        </div>
+                    `,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981'
+                        });
+                    } else if (data.message.includes('⚠️')) {
+                        Swal.fire({
+                            title: 'Peringatan!',
+                            text: 'Rekam medis tidak terverifikasi karena telah dimodifikasi oleh pihak yang tidak bertanggung jawab.',
+                            icon: 'warning',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Tidak Ditemukan',
+                            text: 'Rekam medis tidak ditemukan di jaringan blockchain.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    }
+                } else if (data.message.includes('tidak ada di jaringan')) {
+                    const missingId = (data.data && data.data.idmedicalrecord) ? data.data.idmedicalrecord : recordId;
+                    Swal.fire({
+                        title: 'Tidak Ditemukan',
+                        text: `Rekam medis dengan ID ${missingId} tidak ditemukan di jaringan blockchain.`,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Terjadi kesalahan saat verifikasi.',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal menghubungi server. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+    }
+</script>
+
 @endsection

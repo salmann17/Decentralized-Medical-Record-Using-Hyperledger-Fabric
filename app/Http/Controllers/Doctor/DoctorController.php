@@ -17,6 +17,7 @@ use App\Models\AccessRequest;
 use App\Models\AuditTrail;
 use App\Models\Prescription;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\Json;
 
 class DoctorController extends Controller
 {
@@ -26,31 +27,31 @@ class DoctorController extends Controller
     public function dashboard()
     {
         $doctor = Auth::user()->doctor;
-        
+
         $totalPatients = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->where('status', 'approved')
             ->count();
-            
+
         $pendingRequests = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->where('status', 'pending')
             ->count();
-            
+
         $totalRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
-            ->whereNotExists(function($query) {
+            ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('medical_records as mr2')
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
             })
             ->count();
-        
+
         $blockchainRecords = AuditTrail::where('doctor_id', $doctor->iddoctor)
             ->whereNotNull('blockchain_hash')
             ->where('blockchain_hash', '!=', '')
             ->distinct('medicalrecord_id')
             ->count('medicalrecord_id');
-        
+
         $recentRecords = MedicalRecord::where('doctor_id', $doctor->iddoctor)
-            ->whereNotExists(function($query) {
+            ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('medical_records as mr2')
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
@@ -91,7 +92,7 @@ class DoctorController extends Controller
     public function accessRequests(Request $request)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $query = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->with(['patient.user']);
 
@@ -110,7 +111,7 @@ class DoctorController extends Controller
     public function createAccessRequest()
     {
         $doctor = Auth::user()->doctor;
-        
+
         $existingRequests = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->pluck('patient_id')
             ->toArray();
@@ -129,7 +130,7 @@ class DoctorController extends Controller
     {
         $doctor = Auth::user()->doctor;
         $query = $request->get('q', '');
-        
+
         if (strlen($query) < 2) {
             return response()->json([]);
         }
@@ -140,12 +141,12 @@ class DoctorController extends Controller
 
         $patients = Patient::with('user')
             ->whereNotIn('idpatient', $existingRequests)
-            ->whereHas('user', function($userQuery) use ($query) {
+            ->whereHas('user', function ($userQuery) use ($query) {
                 $userQuery->where('name', 'like', '%' . $query . '%')
-                         ->orWhere('email', 'like', '%' . $query . '%');
+                    ->orWhere('email', 'like', '%' . $query . '%');
             })
             ->get()
-            ->map(function($patient) {
+            ->map(function ($patient) {
                 return [
                     'patient_id' => $patient->idpatient,
                     'name' => $patient->user->name,
@@ -225,15 +226,15 @@ class DoctorController extends Controller
     public function myPatients()
     {
         $doctor = Auth::user()->doctor;
-        
-        $patients = Patient::whereHas('accessRequests', function($query) use ($doctor) {
+
+        $patients = Patient::whereHas('accessRequests', function ($query) use ($doctor) {
             $query->where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'approved');
-        })->with(['user', 'accessRequests' => function($query) use ($doctor) {
+        })->with(['user', 'accessRequests' => function ($query) use ($doctor) {
             $query->where('doctor_id', $doctor->iddoctor)
                 ->where('status', 'approved');
-        }, 'medicalRecords' => function($query) {
-            $query->whereNotExists(function($subQuery) {
+        }, 'medicalRecords' => function ($query) {
+            $query->whereNotExists(function ($subQuery) {
                 $subQuery->select(DB::raw(1))
                     ->from('medical_records as mr2')
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
@@ -256,7 +257,7 @@ class DoctorController extends Controller
     public function records()
     {
         $doctor = Auth::user()->doctor;
-        
+
         $approvedPatientIds = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->where('status', 'approved')
             ->pluck('patient_id')
@@ -264,7 +265,7 @@ class DoctorController extends Controller
 
         $baseQuery = MedicalRecord::where('doctor_id', $doctor->iddoctor)
             ->whereIn('patient_id', $approvedPatientIds)
-            ->whereNotExists(function($query) {
+            ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('medical_records as mr2')
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
@@ -275,11 +276,11 @@ class DoctorController extends Controller
         $totalFinal = (clone $baseQuery)->where('status', 'final')->count();
 
         $query = (clone $baseQuery)
-            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions', 'auditTrails' => function($q) {
+            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions', 'auditTrails' => function ($q) {
                 $q->whereNotNull('blockchain_hash')
-                  ->where('blockchain_hash', '!=', '')
-                  ->orderBy('timestamp', 'desc')
-                  ->limit(1);
+                    ->where('blockchain_hash', '!=', '')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
             }])
             ->orderBy('visit_date', 'desc');
 
@@ -298,7 +299,7 @@ class DoctorController extends Controller
     public function patientRecords($patientId)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->where('patient_id', $patientId)
             ->where('status', 'approved')
@@ -309,7 +310,7 @@ class DoctorController extends Controller
         }
 
         $patient = Patient::with('user')->find($patientId);
-        
+
         $records = MedicalRecord::where('patient_id', $patientId)
             ->whereNotExists(function ($query) use ($patientId) {
                 $query->select(DB::raw(1))
@@ -330,7 +331,7 @@ class DoctorController extends Controller
     public function createRecord($patientId)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
             ->where('patient_id', $patientId)
             ->where('status', 'approved')
@@ -434,7 +435,7 @@ class DoctorController extends Controller
 
         $blockchainResult = null;
         if ($request->status === 'final') {
-            
+
             $blockchainResult = $this->sendToBlockchain($medicalRecord);
         }
 
@@ -447,7 +448,7 @@ class DoctorController extends Controller
             'timestamp' => now(),
             'blockchain_hash' => $blockchainResult['hash'] ?? null
         ];
-        
+
         AuditTrail::create($auditData);
 
         DB::commit();
@@ -472,10 +473,10 @@ class DoctorController extends Controller
     public function showRecord($recordId)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $record = MedicalRecord::with([
-            'patient.user', 
-            'doctor.user', 
+            'patient.user',
+            'doctor.user',
             'admin',
             'prescriptions.prescriptionItems'
         ])->find($recordId);
@@ -515,7 +516,7 @@ class DoctorController extends Controller
     public function showEditForm($recordId)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions.prescriptionItems'])
             ->find($recordId);
 
@@ -524,7 +525,7 @@ class DoctorController extends Controller
         }
 
         $hospitals = $doctor->admins;
-        
+
         if ($record->status === 'final') {
             return view('doctor.records.edit', compact('record', 'doctor', 'hospitals'))
                 ->with('info', 'Anda akan membuat versi baru (v' . ($record->version + 1) . ') saat menyimpan. Versi lama tetap tersimpan.');
@@ -617,7 +618,7 @@ class DoctorController extends Controller
                 'status' => $request->save_action,
                 'updated_at' => now()
             ]);
-            
+
             foreach ($record->prescriptions as $oldPrescription) {
                 $oldPrescription->prescriptionItems()->delete();
                 $oldPrescription->delete();
@@ -664,7 +665,7 @@ class DoctorController extends Controller
 
         if ($request->save_action === 'final') {
             if ($blockchainResult && $blockchainResult['success']) {
-                $message = ($originalRecord->status === 'final') 
+                $message = ($originalRecord->status === 'final')
                     ? 'Rekam medis berhasil diperbarui dan versi baru tercatat di blockchain.'
                     : 'Rekam medis berhasil difinalisasi dan tercatat di blockchain.';
                 return redirect()->route('doctor.show-record', $record->idmedicalrecord)
@@ -705,7 +706,7 @@ class DoctorController extends Controller
 
         // Kirim ke blockchain
         $blockchainResult = $this->sendToBlockchain($record);
-        
+
         // Simpan audit trail dengan blockchain hash
         AuditTrail::create([
             'doctor_id' => $doctor->iddoctor,
@@ -878,7 +879,7 @@ class DoctorController extends Controller
 
         $record->update(['status' => $newStatus]);
 
-        $message = match($newStatus) {
+        $message = match ($newStatus) {
             'final' => 'Rekam medis berhasil difinalisasi',
             'immutable' => 'Rekam medis berhasil dibuat immutable (tidak dapat diubah)',
             default => 'Status rekam medis berhasil diupdate'
@@ -893,7 +894,7 @@ class DoctorController extends Controller
     public function auditTrail(Request $request)
     {
         $doctor = Auth::user()->doctor;
-        
+
         $query = AuditTrail::where('doctor_id', $doctor->iddoctor)
             ->with(['patient.user', 'medicalRecord']);
 
@@ -929,11 +930,11 @@ class DoctorController extends Controller
             ->count();
 
         return view('doctor.audit.index', compact(
-            'auditTrails', 
-            'doctor', 
-            'totalAudits', 
-            'uniquePatients', 
-            'recordsCreated', 
+            'auditTrails',
+            'doctor',
+            'totalAudits',
+            'uniquePatients',
+            'recordsCreated',
             'blockchainVerified'
         ));
     }
@@ -1034,7 +1035,7 @@ class DoctorController extends Controller
                 ->find($record->idmedicalrecord);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            
+
             // Hitung hash SHA-256 dari data JSON
             $hash = hash('sha256', $json);
 
@@ -1135,11 +1136,60 @@ class DoctorController extends Controller
             ];
         }
     }
+
+    /**
+     * Verifikasi rekam medis di blockchain
+     */
+    public function verifyBlockchain($recordId)
+    {
+        try {
+            $doctor = Auth::user()->doctor;
+            $record = MedicalRecord::find($recordId);
+
+            if (!$record) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Rekam medis tidak ditemukan.'
+                ], 404);
+            }
+
+            if ($record->doctor_id !== $doctor->iddoctor) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk verifikasi rekam medis ini.'
+                ], 403);
+            }
+
+            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+                ->find($recordId);
+
+            $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $hash = hash('sha256', $json);
+
+            $payload = [
+                'idmedicalrecord' => $recordId,
+                'hash' => $hash
+            ];
+
+            $response = Http::timeout(10)->post('http://172.25.117.62:3000/api/medical-records/verify', $payload);
+
+            $body = $response->json();
+
+            if ($response->successful()) {
+                return response()->json($body, 200);
+            }
+            if ($body) {
+                return response()->json($body, 200);
+            }
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak dapat terhubung ke server blockchain.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 200); 
+        }
+    }
 }
-
-
-
-
-
-
-
