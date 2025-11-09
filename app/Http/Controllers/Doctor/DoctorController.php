@@ -1175,6 +1175,32 @@ class DoctorController extends Controller
 
             $body = $response->json();
 
+            if ($response->successful() && $body) {
+                $auditTrail = AuditTrail::where('medicalrecord_id', $recordId)
+                    ->where('doctor_id', $doctor->iddoctor)
+                    ->orderBy('timestamp', 'desc')
+                    ->first();
+
+                if ($auditTrail) {
+                    if (isset($body['message']) && strpos($body['message'], '✅') !== false) {
+                        $auditTrail->update([
+                            'blockchain_hash' => $body['data']['storedHash'] ?? $hash,
+                            'timestamp' => now()
+                        ]);
+                    } elseif (isset($body['message']) && strpos($body['message'], '⚠️') !== false) {
+                        $auditTrail->update([
+                            'blockchain_hash' => 'INVALID_DATA_MODIFIED_' . date('YmdHis'),
+                            'timestamp' => now()
+                        ]);
+                    } elseif (isset($body['message']) && strpos($body['message'], '❌') !== false) {
+                        $auditTrail->update([
+                            'blockchain_hash' => 'NOT_FOUND_IN_BLOCKCHAIN_' . date('YmdHis'),
+                            'timestamp' => now()
+                        ]);
+                    }
+                }
+            }
+
             if ($response->successful()) {
                 return response()->json($body, 200);
             }
