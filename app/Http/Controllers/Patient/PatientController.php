@@ -140,7 +140,17 @@ class PatientController extends Controller
         
         $record = MedicalRecord::where('idmedicalrecord', $id)
             ->where('patient_id', $patient->idpatient)
-            ->with(['doctor.user', 'admin', 'prescription'])
+            ->with([
+                'doctor.user', 
+                'admin', 
+                'prescriptions.prescriptionItems',
+                'auditTrails' => function ($q) {
+                    $q->whereNotNull('blockchain_hash')
+                        ->where('blockchain_hash', '!=', '')
+                        ->orderBy('timestamp', 'desc')
+                        ->limit(1);
+                }
+            ])
             ->firstOrFail();
 
         return view('patient.records.detail', compact('patient', 'record'));

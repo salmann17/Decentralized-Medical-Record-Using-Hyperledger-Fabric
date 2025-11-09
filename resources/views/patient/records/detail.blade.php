@@ -21,12 +21,42 @@
                 {{ $record->status === 'immutable' ? 'bg-green-100 text-green-800' : '' }}">
                 {{ ucfirst($record->status) }}
             </span>
-            @if($record->blockchain_hash)
+            
+            @php
+            $latestAudit = $record->auditTrails->first();
+            $blockchainHash = $latestAudit ? $latestAudit->blockchain_hash : null;
+            $isValid = $blockchainHash && !str_starts_with($blockchainHash, 'INVALID_') && !str_starts_with($blockchainHash, 'NOT_FOUND_');
+            $isInvalid = $blockchainHash && str_starts_with($blockchainHash, 'INVALID_');
+            $isNotFound = $blockchainHash && str_starts_with($blockchainHash, 'NOT_FOUND_');
+            @endphp
+            
+            @if($isValid)
             <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-sm font-medium">
                 <svg class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                 </svg>
-                Blockchain Verified
+                ✓ Terverifikasi Blockchain
+            </span>
+            @elseif($isInvalid)
+            <span class="inline-flex items-center rounded-full bg-red-100 text-red-800 px-3 py-1 text-sm font-medium">
+                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                ⚠ Data Dimodifikasi
+            </span>
+            @elseif($isNotFound)
+            <span class="inline-flex items-center rounded-full bg-orange-100 text-orange-800 px-3 py-1 text-sm font-medium">
+                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                ❌ Tidak Ditemukan
+            </span>
+            @elseif($blockchainHash)
+            <span class="inline-flex items-center rounded-full bg-gray-100 text-gray-800 px-3 py-1 text-sm font-medium">
+                <svg class="-ml-1 mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                </svg>
+                Blockchain Hash Tersedia
             </span>
             @endif
         </div>
@@ -45,7 +75,7 @@
                     <dl class="sm:divide-y sm:divide-gray-200">
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Rumah Sakit</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->admin->hospital_name ?? 'N/A' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->admin->name ?? 'N/A' }}</dd>
                         </div>
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Dokter</dt>
@@ -292,18 +322,71 @@
         <!-- Sidebar -->
         <div class="space-y-6">
             <!-- Blockchain Information -->
-            @if($record->blockchain_hash)
+            @php
+            $latestAudit = $record->auditTrails->first();
+            $blockchainHash = $latestAudit ? $latestAudit->blockchain_hash : null;
+            $isValid = $blockchainHash && !str_starts_with($blockchainHash, 'INVALID_') && !str_starts_with($blockchainHash, 'NOT_FOUND_');
+            $isInvalid = $blockchainHash && str_starts_with($blockchainHash, 'INVALID_');
+            $isNotFound = $blockchainHash && str_starts_with($blockchainHash, 'NOT_FOUND_');
+            @endphp
+            
+            @if($isValid)
             <div class="bg-green-50 border border-green-200 rounded-lg p-4">
                 <div class="flex items-center">
                     <svg class="h-5 w-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                     </svg>
-                    <h3 class="text-sm font-medium text-green-800">Blockchain Verified</h3>
+                    <h3 class="text-sm font-medium text-green-800">✓ Terverifikasi Blockchain</h3>
                 </div>
                 <div class="mt-2 text-sm text-green-700">
-                    <p>Rekam medis ini telah disimpan ke blockchain dan tidak dapat diubah.</p>
-                    <div class="mt-2 font-mono text-xs bg-white p-2 rounded border">
-                        Hash: {{ $record->blockchain_hash }}
+                    <p>Rekam medis ini telah terverifikasi dan hash sesuai dengan yang tersimpan di blockchain.</p>
+                    <div class="mt-2 font-mono text-xs bg-white p-2 rounded border break-all">
+                        <strong>Hash:</strong><br>{{ Str::limit($blockchainHash, 64, '...') }}
+                    </div>
+                </div>
+            </div>
+            @elseif($isInvalid)
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-red-800">⚠ Data Dimodifikasi</h3>
+                </div>
+                <div class="mt-2 text-sm text-red-700">
+                    <p><strong>Peringatan:</strong> Rekam medis ini telah dimodifikasi dan tidak sesuai dengan hash yang tersimpan di blockchain.</p>
+                    <div class="mt-2 p-2 bg-red-100 rounded border border-red-300">
+                        <p class="text-xs font-semibold">⚠ Hash tidak valid - data mungkin telah diubah oleh pihak yang tidak berwenang.</p>
+                    </div>
+                </div>
+            </div>
+            @elseif($isNotFound)
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-orange-800">❌ Tidak Ditemukan di Blockchain</h3>
+                </div>
+                <div class="mt-2 text-sm text-orange-700">
+                    <p>Rekam medis ini tidak ditemukan di jaringan blockchain. Mungkin belum pernah disimpan atau telah dihapus.</p>
+                    <div class="mt-2 p-2 bg-orange-100 rounded border border-orange-300">
+                        <p class="text-xs">❌ Data tidak ada di blockchain - verifikasi gagal.</p>
+                    </div>
+                </div>
+            </div>
+            @elseif($blockchainHash)
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <svg class="h-5 w-5 text-gray-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-gray-800">Blockchain Hash Tersedia</h3>
+                </div>
+                <div class="mt-2 text-sm text-gray-600">
+                    <p>Hash blockchain tersedia, klik tombol verifikasi untuk memvalidasi data.</p>
+                    <div class="mt-2 font-mono text-xs bg-white p-2 rounded border break-all">
+                        <strong>Hash:</strong><br>{{ Str::limit($blockchainHash, 64, '...') }}
                     </div>
                 </div>
             </div>
@@ -373,12 +456,9 @@
                     <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rumah Sakit</h3>
                 </div>
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->hospital_name ?? 'N/A' }}</div>
-                    @if(isset($record->admin->hospital_address))
-                    <div class="text-sm text-gray-500 mt-1">{{ $record->admin->hospital_address }}</div>
-                    @endif
-                    @if(isset($record->admin->phone_number))
-                    <div class="text-xs text-gray-400 mt-1">Tel: {{ $record->admin->phone_number }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->name ?? 'N/A' }}</div>
+                    @if(isset($record->admin->address))
+                    <div class="text-sm text-gray-500 mt-1">{{ $record->admin->address }}</div>
                     @endif
                 </div>
             </div>
@@ -387,6 +467,14 @@
 
     <!-- Action Buttons -->
     <div class="flex justify-end space-x-3">
+        <button type="button" 
+                onclick="verifyBlockchain({{ $record->idmedicalrecord }})"
+                class="inline-flex items-center rounded-md bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-500">
+            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            Verifikasi Blockchain
+        </button>
         <button type="button" onclick="window.print()" 
                 class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
             <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -400,4 +488,102 @@
         </a>
     </div>
 </div>
+
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function verifyBlockchain(recordId) {
+        Swal.fire({
+            title: 'Verifikasi Blockchain',
+            text: 'Sedang memverifikasi data dengan blockchain...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(`/patient/records/${recordId}/verify-blockchain`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.message.includes('✅')) {
+                        Swal.fire({
+                            title: 'Terverifikasi!',
+                            html: `
+                        <div class="text-left">
+                            <p class="mb-2"><strong>Rekam medis terverifikasi dan hash sesuai.</strong></p>
+                            <hr class="my-3">
+                            <p class="text-sm text-gray-600"><strong>ID Rekam Medis:</strong> ${data.data.idmedicalrecord}</p>
+                            <p class="text-sm text-gray-600"><strong>Version:</strong> ${data.data.version}</p>
+                            <p class="text-sm text-gray-600"><strong>Hash:</strong> <span class="font-mono text-xs">${data.data.storedHash.substring(0, 32)}...</span></p>
+                            <p class="text-sm text-gray-600"><strong>Timestamp:</strong> ${new Date(data.data.timestamp).toLocaleString('id-ID')}</p>
+                        </div>
+                    `,
+                            icon: 'success',
+                            confirmButtonColor: '#10b981'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else if (data.message.includes('⚠️')) {
+                        Swal.fire({
+                            title: 'Peringatan!',
+                            text: 'Rekam medis tidak terverifikasi karena telah dimodifikasi oleh pihak yang tidak bertanggung jawab.',
+                            icon: 'warning',
+                            confirmButtonColor: '#f59e0b'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Tidak Ditemukan',
+                            text: 'Rekam medis tidak ditemukan di jaringan blockchain.',
+                            icon: 'error',
+                            confirmButtonColor: '#ef4444'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    }
+                } else if (data.message.includes('tidak ada di jaringan')) {
+                    const missingId = (data.data && data.data.idmedicalrecord) ? data.data.idmedicalrecord : recordId;
+                    Swal.fire({
+                        title: 'Tidak Ditemukan',
+                        text: `Rekam medis dengan ID ${missingId} tidak ditemukan di jaringan blockchain.`,
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Terjadi kesalahan saat verifikasi.',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Gagal menghubungi server. Silakan coba lagi.',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444'
+                }).then(() => {
+                    location.reload();
+                });
+            });
+    }
+</script>
+
 @endsection
