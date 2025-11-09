@@ -53,21 +53,17 @@ class AdminController extends Controller
             return redirect()->route('home')->with('error', 'Admin profile not found.');
         }
         
-        // Dokter aktif (deleted_at = null di pivot)
         $adminDoctors = $admin->doctors()->with('user')->get();
         
-        // Dokter yang di-soft delete (deleted_at != null di pivot)
         $deletedDoctors = $admin->doctorsOnlyTrashed()->with('user')->get();
         
-        // Dokter yang tersedia untuk dropdown (belum terdaftar ATAU sudah di-soft delete)
-        // Gabungkan dokter baru + dokter yang sudah di-remove
         $availableDoctors = Doctor::with('user')
             ->whereDoesntHave('adminsWithTrashed', function($query) use ($admin) {
                 $query->where('admins.idadmin', $admin->idadmin);
             })
             ->get()
-            ->merge($deletedDoctors) // Tambahkan dokter yang di-soft delete
-            ->sortBy('user.name'); // Sort berdasarkan nama
+            ->merge($deletedDoctors) 
+            ->sortBy('user.name'); 
 
         return view('admin.doctors.index', compact('admin', 'adminDoctors', 'deletedDoctors', 'availableDoctors'));
     }
@@ -85,14 +81,12 @@ class AdminController extends Controller
         $admin = $user->admin;
         $doctor = Doctor::find($request->doctor_id);
 
-        // Cek apakah dokter pernah terdaftar (termasuk yang soft deleted)
         $existingPivot = DB::table('doctors_admins')
             ->where('admin_id', $admin->idadmin)
             ->where('doctor_id', $doctor->iddoctor)
             ->first();
 
         if ($existingPivot) {
-            // Jika sudah ada tapi deleted, restore
             if ($existingPivot->deleted_at) {
                 DB::table('doctors_admins')
                     ->where('admin_id', $admin->idadmin)
@@ -101,11 +95,9 @@ class AdminController extends Controller
                 
                 return redirect()->back()->with('success', 'Dokter berhasil dikembalikan ke admin.');
             } else {
-                // Sudah aktif
                 return redirect()->back()->with('error', 'Dokter sudah terdaftar di admin ini.');
             }
         } else {
-            // Belum pernah terdaftar, attach baru
             $admin->doctors()->attach($doctor->iddoctor);
             return redirect()->back()->with('success', 'Dokter berhasil ditambahkan ke admin.');
         }
@@ -119,7 +111,6 @@ class AdminController extends Controller
         $user = Auth::user();
         $admin = $user->admin;
         
-        // Update pivot table dengan deleted_at
         $admin->doctors()->updateExistingPivot($doctorId, [
             'deleted_at' => now()
         ]);
@@ -135,7 +126,6 @@ class AdminController extends Controller
         $user = Auth::user();
         $admin = $user->admin;
         
-        // Set deleted_at ke null untuk restore
         DB::table('doctors_admins')
             ->where('admin_id', $admin->idadmin)
             ->where('doctor_id', $doctorId)
@@ -156,19 +146,16 @@ class AdminController extends Controller
             return redirect()->route('home')->with('error', 'Admin profile not found.');
         }
 
-        // Get patients who have medical records in this admin
         $patients = Patient::with('user')
             ->whereHas('medicalRecords', function($query) use ($admin) {
                 $query->where('admin_id', $admin->idadmin);
             })
             ->paginate(10);
 
-        // Calculate total patients count
         $totalPatients = Patient::whereHas('medicalRecords', function($query) use ($admin) {
                 $query->where('admin_id', $admin->idadmin);
             })->count();
 
-        // Calculate active patients this month (patients with visits this month)
         $currentMonth = now()->month;
         $currentYear = now()->year;
         
@@ -178,7 +165,6 @@ class AdminController extends Controller
                       ->whereYear('visit_date', $currentYear);
             })->distinct()->count();
 
-        // Get last visit date from medical records
         $lastVisitRecord = MedicalRecord::where('admin_id', $admin->idadmin)
             ->orderBy('visit_date', 'desc')
             ->first();
@@ -202,7 +188,6 @@ class AdminController extends Controller
         $user = Auth::user();
         $admin = $user->admin;
         
-        // Get medical records created in this admin (metadata only)
         $records = MedicalRecord::with(['patient.user', 'doctor.user'])
             ->where('admin_id', $admin->idadmin)
             ->orderBy('visit_date', 'desc')
@@ -224,13 +209,11 @@ class AdminController extends Controller
                 ->with('error', 'Admin not found.');
         }
         
-        // Base query for audit logs
         $query = \App\Models\AuditTrail::with(['patient', 'doctor.user', 'medicalRecord.patient.user'])
             ->whereHas('medicalRecord', function($subQuery) use ($admin) {
                 $subQuery->where('admin_id', $admin->idadmin);
             });
 
-        // Apply filters if provided
         if (request('action')) {
             $query->where('action', request('action'));
         }
@@ -243,10 +226,8 @@ class AdminController extends Controller
             $query->whereDate('timestamp', '<=', request('date_to'));
         }
 
-        // Get paginated results
         $auditLogs = $query->orderBy('timestamp', 'desc')->paginate(20);
 
-        // Calculate statistics
         $totalAccess = \App\Models\AuditTrail::whereHas('medicalRecord', function($subQuery) use ($admin) {
                 $subQuery->where('admin_id', $admin->idadmin);
             })->count();

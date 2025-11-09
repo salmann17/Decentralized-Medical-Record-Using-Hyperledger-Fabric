@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female']);
             $table->enum('blood', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
             $table->string('address', 135);
-
+            
             $table->foreign('idpatient')->references('idusers')->on('users');
 
             $table->timestamps();

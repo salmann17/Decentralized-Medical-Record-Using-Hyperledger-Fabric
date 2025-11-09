@@ -4,24 +4,24 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\Patient;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class RegisterController extends Controller
+class RegisterAdminController extends Controller
 {
     /**
-     * Show the registration form.
+     * Show the admin registration form.
      */
     public function showRegistrationForm()
     {
-        return view('auth.register');
+        return view('auth.register-admin');
     }
 
     /**
-     * Handle registration request.
+     * Handle admin registration request.
      */
     public function register(Request $request)
     {
@@ -29,13 +29,11 @@ class RegisterController extends Controller
             'name' => 'required|string|max:135',
             'email' => 'required|string|email|max:135|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'nik' => 'required|numeric|digits:16|unique:patients,nik',
-            'birthdate' => 'required|date',
-            'gender' => 'required|in:male,female',
-            'blood' => 'required|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+            'admin_name' => 'required|string|max:135|unique:admins,name',
             'address' => 'required|string|max:135',
+            'type' => 'required|string|in:Rumah Sakit,Klinik,Puskesmas',
         ], [
-            'nik.unique' => 'NIK ini sudah terdaftar dalam sistem. Satu NIK hanya dapat mendaftar satu akun.',
+            'admin_name.unique' => 'Nama rumah sakit/klinik ini sudah terdaftar dalam sistem. Silakan gunakan nama lain.',
             'email.unique' => 'Email ini sudah terdaftar. Silakan gunakan email lain atau login jika Anda sudah memiliki akun.',
         ]);
 
@@ -44,27 +42,22 @@ class RegisterController extends Controller
         }
 
         try {
-            // Create user without role
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]);
 
-            // Create patient profile
-            Patient::create([
-                'idpatient' => $user->idusers,
-                'nik' => $request->nik,
-                'birthdate' => $request->birthdate,
-                'gender' => $request->gender,
-                'blood' => $request->blood,
+            Admin::create([
+                'idadmin' => $user->idusers,
+                'name' => $request->admin_name,
                 'address' => $request->address,
+                'type' => $request->type,
             ]);
 
-            // Auto-login the user
             Auth::login($user);
 
-            return redirect()->route('patient.dashboard')->with('success', 'Registrasi berhasil! Selamat datang.');
+            return redirect()->route('admin.dashboard')->with('success', 'Registrasi admin berhasil! Selamat datang.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Terjadi kesalahan saat registrasi. Silakan coba lagi.'])->withInput();

@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\RegisterDoctorController;
+use App\Http\Controllers\Auth\RegisterAdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Doctor\DoctorController;
@@ -16,8 +18,18 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Patient Registration
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register'])->name('register.submit');
+
+// Doctor Registration
+Route::get('/register-doctor', [RegisterDoctorController::class, 'showRegistrationForm'])->name('register.doctor');
+Route::post('/register-doctor', [RegisterDoctorController::class, 'register'])->name('register.doctor.submit');
+
+// Admin Registration
+Route::get('/register-admin', [RegisterAdminController::class, 'showRegistrationForm'])->name('register.admin');
+Route::post('/register-admin', [RegisterAdminController::class, 'register'])->name('register.admin.submit');
 
 // Protected routes
 Route::middleware(['auth'])->group(function () {

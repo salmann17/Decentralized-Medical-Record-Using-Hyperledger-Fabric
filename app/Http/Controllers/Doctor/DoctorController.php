@@ -1161,7 +1161,7 @@ class DoctorController extends Controller
     private function sendToBlockchain($record)
     {
         try {
-            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
                 ->find($record->idmedicalrecord);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -1227,7 +1227,7 @@ class DoctorController extends Controller
     private function sendVersionToBlockchain($record)
     {
         try {
-            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
                 ->find($record->idmedicalrecord);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -1290,7 +1290,7 @@ class DoctorController extends Controller
                 ], 403);
             }
 
-            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
                 ->find($recordId);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

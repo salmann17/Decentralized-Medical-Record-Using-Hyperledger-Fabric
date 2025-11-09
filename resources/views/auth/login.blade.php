@@ -9,9 +9,19 @@
             Masuk ke akun Anda
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-            Atau
+            Belum punya akun? Daftar sebagai:
+        </p>
+        <p class="mt-1 text-center text-sm text-gray-600">
             <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                daftar akun baru
+                Pasien
+            </a>
+            •
+            <a href="{{ route('register.doctor') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                Dokter
+            </a>
+            •
+            <a href="{{ route('register.admin') }}" class="font-medium text-blue-600 hover:text-blue-500">
+                Admin
             </a>
         </p>
     </div>
