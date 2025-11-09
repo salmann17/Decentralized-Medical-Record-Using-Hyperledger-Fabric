@@ -82,7 +82,12 @@ class PatientController extends Controller
                     ->from('medical_records as mr2')
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
             })
-            ->with(['doctor.user', 'admin', 'prescription']);
+            ->with(['doctor.user', 'admin', 'prescription', 'auditTrails' => function ($q) {
+                $q->whereNotNull('blockchain_hash')
+                    ->where('blockchain_hash', '!=', '')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }]);
 
         if ($request->filled('search')) {
             $search = $request->search;

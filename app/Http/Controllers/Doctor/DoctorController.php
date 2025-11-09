@@ -478,7 +478,13 @@ class DoctorController extends Controller
             'patient.user',
             'doctor.user',
             'admin',
-            'prescriptions.prescriptionItems'
+            'prescriptions.prescriptionItems',
+            'auditTrails' => function ($q) {
+                $q->whereNotNull('blockchain_hash')
+                    ->where('blockchain_hash', '!=', '')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }
         ])->find($recordId);
 
         $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
