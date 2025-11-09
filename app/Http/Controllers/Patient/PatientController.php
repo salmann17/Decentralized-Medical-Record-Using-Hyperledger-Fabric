@@ -329,8 +329,10 @@ class PatientController extends Controller
         $blockchainVerified = AuditTrail::where('patient_id', $patient->idpatient)
             ->whereNotNull('blockchain_hash')
             ->where('blockchain_hash', '!=', '')
-            ->where('blockchain_hash', 'not like', 'dummy_%')
-            ->count();
+            ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+            ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
+            ->distinct('medicalrecord_id')
+            ->count('medicalrecord_id');
 
         return view('patient.audit-trail.index', compact(
             'patient', 

@@ -47,6 +47,8 @@ class DoctorController extends Controller
         $blockchainRecords = AuditTrail::where('doctor_id', $doctor->iddoctor)
             ->whereNotNull('blockchain_hash')
             ->where('blockchain_hash', '!=', '')
+            ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+            ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
             ->distinct('medicalrecord_id')
             ->count('medicalrecord_id');
 
@@ -245,6 +247,8 @@ class DoctorController extends Controller
         $blockchainVerified = AuditTrail::where('doctor_id', $doctor->iddoctor)
             ->whereNotNull('blockchain_hash')
             ->where('blockchain_hash', '!=', '')
+            ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+            ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
             ->distinct('medicalrecord_id')
             ->count('medicalrecord_id');
 
@@ -263,6 +267,11 @@ class DoctorController extends Controller
             ->pluck('patient_id')
             ->toArray();
 
+        $patients = Patient::whereIn('idpatient', $approvedPatientIds)
+            ->with('user')
+            ->orderBy('idpatient')
+            ->get();
+
         $baseQuery = MedicalRecord::where('doctor_id', $doctor->iddoctor)
             ->whereIn('patient_id', $approvedPatientIds)
             ->whereNotExists(function ($query) {
@@ -271,26 +280,139 @@ class DoctorController extends Controller
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord');
             });
 
+        if (request('patient_id') && request('patient_id') !== 'all') {
+            $baseQuery->where('patient_id', request('patient_id'));
+        }
+
         $totalAll = (clone $baseQuery)->count();
         $totalDraft = (clone $baseQuery)->where('status', 'draft')->count();
         $totalFinal = (clone $baseQuery)->where('status', 'final')->count();
+        
+        $totalVerified = (clone $baseQuery)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->whereNotNull('at1.blockchain_hash')
+                    ->where('at1.blockchain_hash', '!=', '')
+                    ->where('at1.blockchain_hash', 'NOT LIKE', 'INVALID_%')
+                    ->where('at1.blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })
+            ->count();
+            
+        $totalInvalid = (clone $baseQuery)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->where('at1.blockchain_hash', 'LIKE', 'INVALID_%')
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })
+            ->count();
+            
+        $totalNotFound = (clone $baseQuery)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->where('at1.blockchain_hash', 'LIKE', 'NOT_FOUND_%')
+                    ->whereNotExists(function ($subQuery) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })
+            ->count();
 
         $query = (clone $baseQuery)
-            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions', 'auditTrails' => function ($q) {
+            ->with(['patient.user', 'doctor.user', 'admin', 'prescriptions'])
+            ->orderBy('visit_date', 'desc');
+
+        if (request('status') && request('status') !== 'all' && !in_array(request('status'), ['verified', 'invalid', 'not_found'])) {
+            $query->where('medical_records.status', request('status'));
+        }
+        
+        if (request('status') === 'verified') {
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->whereNotNull('at1.blockchain_hash')
+                    ->where('at1.blockchain_hash', '!=', '')
+                    ->where('at1.blockchain_hash', 'NOT LIKE', 'INVALID_%')
+                    ->where('at1.blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
+                    ->whereNotExists(function ($nestedQuery) {
+                        $nestedQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })->with(['auditTrails' => function ($q) {
+                $q->whereNotNull('blockchain_hash')
+                    ->where('blockchain_hash', '!=', '')
+                    ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+                    ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }]);
+        } elseif (request('status') === 'invalid') {
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->where('at1.blockchain_hash', 'LIKE', 'INVALID_%')
+                    ->whereNotExists(function ($nestedQuery) {
+                        $nestedQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })->with(['auditTrails' => function ($q) {
+                $q->where('blockchain_hash', 'LIKE', 'INVALID_%')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }]);
+        } elseif (request('status') === 'not_found') {
+            $query->whereExists(function ($subQuery) {
+                $subQuery->select(DB::raw(1))
+                    ->from('audit_trails as at1')
+                    ->whereColumn('at1.medicalrecord_id', 'medical_records.idmedicalrecord')
+                    ->where('at1.blockchain_hash', 'LIKE', 'NOT_FOUND_%')
+                    ->whereNotExists(function ($nestedQuery) {
+                        $nestedQuery->select(DB::raw(1))
+                            ->from('audit_trails as at2')
+                            ->whereColumn('at2.medicalrecord_id', 'at1.medicalrecord_id')
+                            ->whereColumn('at2.timestamp', '>', 'at1.timestamp');
+                    });
+            })->with(['auditTrails' => function ($q) {
+                $q->where('blockchain_hash', 'LIKE', 'NOT_FOUND_%')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }]);
+        } else {
+            $query->with(['auditTrails' => function ($q) {
                 $q->whereNotNull('blockchain_hash')
                     ->where('blockchain_hash', '!=', '')
                     ->orderBy('timestamp', 'desc')
                     ->limit(1);
-            }])
-            ->orderBy('visit_date', 'desc');
-
-        if (request('status') && request('status') !== 'all') {
-            $query->where('medical_records.status', request('status'));
+            }]);
         }
 
         $records = $query->paginate(10);
 
-        return view('doctor.records.index', compact('records', 'doctor', 'totalAll', 'totalDraft', 'totalFinal'));
+        return view('doctor.records.index', compact('records', 'doctor', 'patients', 'totalAll', 'totalDraft', 'totalFinal', 'totalVerified', 'totalInvalid', 'totalNotFound'));
     }
 
     /**
@@ -932,8 +1054,10 @@ class DoctorController extends Controller
         $blockchainVerified = AuditTrail::where('doctor_id', $doctor->iddoctor)
             ->whereNotNull('blockchain_hash')
             ->where('blockchain_hash', '!=', '')
-            ->where('blockchain_hash', 'not like', 'dummy_%')
-            ->count();
+            ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+            ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%')
+            ->distinct('medicalrecord_id')
+            ->count('medicalrecord_id');
 
         return view('doctor.audit.index', compact(
             'auditTrails',

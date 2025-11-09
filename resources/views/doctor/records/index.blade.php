@@ -78,36 +78,83 @@
         </div>
     </div>
 
+    <!-- Patient Filter -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center space-x-4">
+                <label for="patient-filter" class="text-sm font-medium text-gray-700">Filter Pasien:</label>
+                <select id="patient-filter" 
+                        onchange="filterByPatient(this.value)"
+                        class="block w-full max-w-xs rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <option value="all" {{ request('patient_id', 'all') === 'all' ? 'selected' : '' }}>Semua Pasien</option>
+                    @foreach($patients as $patient)
+                    <option value="{{ $patient->idpatient }}" {{ request('patient_id') == $patient->idpatient ? 'selected' : '' }}>
+                        {{ $patient->user->name }}
+                    </option>
+                    @endforeach
+                </select>
+                @if(request('patient_id') && request('patient_id') !== 'all')
+                <a href="{{ route('doctor.records') }}" 
+                   class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Reset Filter
+                </a>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Filter Tabs -->
     <div class="bg-white shadow sm:rounded-lg">
         <div class="px-4 py-5 sm:p-6">
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                    <a href="{{ route('doctor.records') }}"
-                        class="border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                    <a href="{{ route('doctor.records', array_filter(['patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status', 'all') === 'all' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Semua
-                        <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                        <span class="ml-2 {{ request('status', 'all') === 'all' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalAll ?? 0 }}
                         </span>
                     </a>
 
-                    <a href="{{ route('doctor.records', ['status' => 'draft']) }}"
-                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'draft' ? 'border-yellow-500 text-yellow-600' : '' }}">
+                    <a href="{{ route('doctor.records', array_filter(['status' => 'draft', 'patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'draft' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Draft
-                        <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                        <span class="ml-2 {{ request('status') === 'draft' ? 'bg-yellow-100 text-yellow-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalDraft ?? 0 }}
                         </span>
                     </a>
 
-                    <a href="{{ route('doctor.records', ['status' => 'final']) }}"
-                        class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'final' ? 'border-green-500 text-green-600' : '' }}">
+                    <a href="{{ route('doctor.records', array_filter(['status' => 'final', 'patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'final' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
                         Final
-                        <span class="ml-2 bg-green-100 text-green-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                        <span class="ml-2 {{ request('status') === 'final' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalFinal ?? 0 }}
                         </span>
                     </a>
 
+                    <a href="{{ route('doctor.records', array_filter(['status' => 'verified', 'patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'verified' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        ✓ Terverifikasi
+                        <span class="ml-2 {{ request('status') === 'verified' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $totalVerified ?? 0 }}
+                        </span>
+                    </a>
 
+                    <a href="{{ route('doctor.records', array_filter(['status' => 'invalid', 'patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'invalid' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        ⚠ Invalid
+                        <span class="ml-2 {{ request('status') === 'invalid' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $totalInvalid ?? 0 }}
+                        </span>
+                    </a>
+
+                    <a href="{{ route('doctor.records', array_filter(['status' => 'not_found', 'patient_id' => request('patient_id')])) }}"
+                        class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'not_found' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
+                        ❌ Not Found
+                        <span class="ml-2 {{ request('status') === 'not_found' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
+                            {{ $totalNotFound ?? 0 }}
+                        </span>
+                    </a>
                 </nav>
             </div>
         </div>
@@ -261,7 +308,7 @@
     <!-- Pagination -->
     @if(isset($records) && method_exists($records, 'links'))
     <div class="mt-8">
-        {{ $records->links() }}
+        {{ $records->appends(request()->query())->links() }}
     </div>
     @endif
     @else
@@ -311,6 +358,27 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // Filter by patient function
+    function filterByPatient(patientId) {
+        const currentStatus = '{{ request("status", "all") }}';
+        const url = new URL(window.location.href);
+        
+        // Remove old parameters
+        url.search = '';
+        
+        // Add patient filter
+        if (patientId !== 'all') {
+            url.searchParams.set('patient_id', patientId);
+        }
+        
+        // Add status filter if not 'all'
+        if (currentStatus !== 'all') {
+            url.searchParams.set('status', currentStatus);
+        }
+        
+        window.location.href = url.toString();
+    }
+
     function verifyBlockchain(recordId) {
         Swal.fire({
             title: 'Verifikasi Blockchain',
