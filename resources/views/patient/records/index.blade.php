@@ -259,6 +259,8 @@
                             html: `<div class="text-left"><p class="mb-2"><strong>Rekam medis terverifikasi dan hash sesuai.</strong></p><hr class="my-3"><p class="text-sm text-gray-600"><strong>ID Rekam Medis:</strong> ` + data.data.idmedicalrecord + `</p><p class="text-sm text-gray-600"><strong>Version:</strong> ` + data.data.version + `</p><p class="text-sm text-gray-600"><strong>Hash:</strong> <span class="font-mono text-xs">` + data.data.storedHash.substring(0, 32) + `...</span></p><p class="text-sm text-gray-600"><strong>Timestamp:</strong> ` + new Date(data.data.timestamp).toLocaleString('id-ID') + `</p></div>`,
                             icon: 'success',
                             confirmButtonColor: '#10b981'
+                        }).then(() => {
+                            location.reload();
                         });
                     } else if (data.message.includes('⚠️')) {
                         Swal.fire({
@@ -266,6 +268,8 @@
                             text: 'Rekam medis tidak terverifikasi karena telah dimodifikasi oleh pihak yang tidak bertanggung jawab.',
                             icon: 'warning',
                             confirmButtonColor: '#f59e0b'
+                        }).then(() => {
+                            location.reload();
                         });
                     } else {
                         Swal.fire({
@@ -273,6 +277,8 @@
                             text: 'Rekam medis tidak ditemukan di jaringan blockchain.',
                             icon: 'error',
                             confirmButtonColor: '#ef4444'
+                        }).then(() => {
+                            location.reload();
                         });
                     }
                 } else if (data.message.includes('tidak ada di jaringan')) {
@@ -282,6 +288,8 @@
                     text: `Rekam medis dengan ID ${missingId} tidak ditemukan di jaringan blockchain.`,
                     icon: 'error',
                     confirmButtonColor: '#ef4444'
+                }).then(() => {
+                    location.reload();
                 });
                 } else {
                     Swal.fire({
@@ -289,6 +297,8 @@
                         text: data.message || 'Terjadi kesalahan saat verifikasi.',
                         icon: 'error',
                         confirmButtonColor: '#ef4444'
+                    }).then(() => {
+                        location.reload();
                     });
                 }
             })
@@ -298,6 +308,8 @@
                     text: 'Gagal menghubungi server. Silakan coba lagi.',
                     icon: 'error',
                     confirmButtonColor: '#ef4444'
+                }).then(() => {
+                    location.reload();
                 });
             });
     }

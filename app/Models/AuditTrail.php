@@ -14,7 +14,11 @@ class AuditTrail extends Model
 
     protected $fillable = ['patient_id','doctor_id','medicalrecord_id','action','timestamp','blockchain_hash'];
 
-    protected $dates = ['deleted_at'];
+    protected $dates = ['deleted_at', 'timestamp'];
+    
+    protected $casts = [
+        'timestamp' => 'datetime',
+    ];
 
     public function patient()
     {

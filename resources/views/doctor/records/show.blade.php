@@ -110,7 +110,7 @@
                         </div>
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Rumah Sakit</dt>
-                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->admin->hospital_name ?? 'N/A' }}</dd>
+                            <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">{{ $record->admin->name }}</dd>
                         </div>
                         <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:py-5 sm:px-6">
                             <dt class="text-sm font-medium text-gray-500">Tanggal Kunjungan</dt>
@@ -405,7 +405,9 @@
                 </div>
                 <div class="mt-2 text-sm text-red-700">
                     <p>Peringatan! Rekam medis ini terdeteksi telah dimodifikasi dan tidak sesuai dengan hash di blockchain.</p>
+                    @if($record->auditTrails && $record->auditTrails->first())
                     <p class="mt-1 text-xs">Terakhir diverifikasi: {{ $record->auditTrails->first()->timestamp->diffForHumans() }}</p>
+                    @endif
                 </div>
             </div>
             @elseif($isNotFound)
@@ -418,7 +420,9 @@
                 </div>
                 <div class="mt-2 text-sm text-yellow-700">
                     <p>Rekam medis ini tidak ditemukan di jaringan blockchain. Silakan verifikasi ulang atau hubungi administrator.</p>
+                    @if($record->auditTrails && $record->auditTrails->first())
                     <p class="mt-1 text-xs">Terakhir dicek: {{ $record->auditTrails->first()->timestamp->diffForHumans() }}</p>
+                    @endif
                 </div>
             </div>
             @else
@@ -502,8 +506,8 @@
                     <h3 class="text-base font-medium leading-6 text-gray-900">Informasi Rumah Sakit</h3>
                 </div>
                 <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->name ?? 'N/A' }}</div>
-                    @if(isset($record->admin->address))
+                    <div class="text-sm font-medium text-gray-900">{{ $record->admin->name }}</div>
+                    @if($record->admin->address)
                     <div class="text-sm text-gray-500 mt-1">{{ $record->admin->address }}</div>
                     @endif
                 </div>
