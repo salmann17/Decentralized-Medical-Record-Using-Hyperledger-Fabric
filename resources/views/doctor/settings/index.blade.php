@@ -69,7 +69,7 @@
         <label for="tabs" class="sr-only">Select a tab</label>
         <select id="tabs" name="tabs" class="block w-full focus:ring-blue-500 focus:border-blue-500 border-gray-300 rounded-md">
             <option selected>Profil Dokter</option>
-            <option>Keamanan</option>
+            <option>Ubah Password</option>
         </select>
     </div>
     
@@ -79,7 +79,7 @@
                 Profil Dokter
             </a>
             <a href="#security" class="tab-link border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                Keamanan
+                Ubah Password
             </a>
         </nav>
     </div>

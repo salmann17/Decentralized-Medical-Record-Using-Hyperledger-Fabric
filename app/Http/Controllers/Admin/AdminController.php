@@ -180,36 +180,47 @@ class AdminController extends Controller
         ));
     }
 
-    /**
-     * Show medical records management page
-     */
     public function records()
     {
         $user = Auth::user();
         $admin = $user->admin;
         
-        $records = MedicalRecord::with(['patient.user', 'doctor.user'])
+        $records = MedicalRecord::with(['patient.user', 'doctor.user', 'auditTrails' => function($q) {
+                $q->whereNotNull('blockchain_hash')
+                  ->where('blockchain_hash', '!=', '')
+                  ->orderBy('timestamp', 'desc')
+                  ->limit(1);
+            }])
             ->where('admin_id', $admin->idadmin)
             ->orderBy('visit_date', 'desc')
             ->paginate(15);
 
-        return view('admin.records.index', compact('records', 'admin'));
+        $totalRecords = MedicalRecord::where('admin_id', $admin->idadmin)->count();
+        $draftRecords = MedicalRecord::where('admin_id', $admin->idadmin)->where('status', 'draft')->count();
+        $finalRecords = MedicalRecord::where('admin_id', $admin->idadmin)->where('status', 'final')->count();
+        
+        $immutableRecords = MedicalRecord::where('admin_id', $admin->idadmin)
+            ->whereHas('auditTrails', function($q) {
+                $q->whereNotNull('blockchain_hash')
+                  ->where('blockchain_hash', '!=', '')
+                  ->where('blockchain_hash', 'NOT LIKE', 'INVALID_%')
+                  ->where('blockchain_hash', 'NOT LIKE', 'NOT_FOUND_%');
+            })
+            ->count();
+
+        return view('admin.records.index', compact('records', 'admin', 'totalRecords', 'draftRecords', 'finalRecords', 'immutableRecords'));
     }
 
-    /**
-     * Show audit trail page
-     */
     public function audit()
     {
         $user = Auth::user();
         $admin = $user->admin;
         
         if (!$admin) {
-            return view('admin.audit.index', compact('admin'))
-                ->with('error', 'Admin not found.');
+            return redirect()->route('admin.dashboard')->with('error', 'Admin profile not found.');
         }
         
-        $query = \App\Models\AuditTrail::with(['patient', 'doctor.user', 'medicalRecord.patient.user'])
+        $query = \App\Models\AuditTrail::with(['patient.user', 'doctor.user', 'medicalRecord.patient.user'])
             ->whereHas('medicalRecord', function($subQuery) use ($admin) {
                 $subQuery->where('admin_id', $admin->idadmin);
             });

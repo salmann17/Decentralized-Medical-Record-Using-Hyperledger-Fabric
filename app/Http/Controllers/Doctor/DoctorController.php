@@ -1166,7 +1166,6 @@ class DoctorController extends Controller
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-            // Hitung hash SHA-256 dari data JSON
             $hash = hash('sha256', $json);
 
             $payload = [
@@ -1177,7 +1176,6 @@ class DoctorController extends Controller
                 'hash' => $hash
             ];
 
-            // Kirim POST request ke Node.js blockchain API
             $response = Http::timeout(10)->post('http://172.25.117.62:3000/api/medical-records', $payload);
 
             if ($response->successful()) {

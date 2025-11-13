@@ -110,19 +110,23 @@
                                 {{ \Carbon\Carbon::parse($log->timestamp)->format('d/m/Y H:i:s') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
+                                @if($log->doctor && $log->doctor->user)
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-8 w-8">
                                         <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
                                             <span class="text-xs font-medium text-white">
-                                                {{ substr($log->user->name, 0, 2) }}
+                                                {{ substr($log->doctor->user->name, 0, 2) }}
                                             </span>
                                         </div>
                                     </div>
                                     <div class="ml-3">
                                         <div class="text-sm font-medium text-gray-900">{{ $log->doctor->user->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ ucfirst($log->doctor->user->getRole()) }}</div>
+                                        <div class="text-sm text-gray-500">Dokter</div>
                                     </div>
                                 </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($log->action === 'view')
@@ -145,13 +149,13 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                 @if($log->medicalRecord)
-                                    #{{ $log->medicalRecord->medicalrecord_id }}
+                                    #{{ $log->medicalRecord->idmedicalrecord }}
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($log->medicalRecord && $log->medicalRecord->patient)
+                                @if($log->medicalRecord && $log->medicalRecord->patient && $log->medicalRecord->patient->user)
                                     <div class="text-sm font-medium text-gray-900">{{ $log->medicalRecord->patient->user->name }}</div>
                                     <div class="text-sm text-gray-500">{{ $log->medicalRecord->patient->nik }}</div>
                                 @else
@@ -159,9 +163,13 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                                <span class="truncate block max-w-xs" title="{{ $log->blockchain_hash }}">
-                                    {{ Str::limit($log->blockchain_hash, 20) }}
-                                </span>
+                                @if($log->blockchain_hash)
+                                    <span class="truncate block max-w-xs" title="{{ $log->blockchain_hash }}">
+                                        {{ Str::limit($log->blockchain_hash, 20) }}
+                                    </span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                         </tr>
                         @endforeach

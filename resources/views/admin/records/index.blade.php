@@ -13,29 +13,22 @@
         </p>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Total Rekam Medis</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $records->total() }}</dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-gray-900">{{ $totalRecords }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Status Draft</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-orange-600">
-                {{ $records->where('status', 'draft')->count() }}
-            </dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-orange-600">{{ $draftRecords }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
             <dt class="truncate text-sm font-medium text-gray-500">Status Final</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">
-                {{ $records->where('status', 'final')->count() }}
-            </dd>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-blue-600">{{ $finalRecords }}</dd>
         </div>
         <div class="overflow-hidden rounded-lg bg-white px-4 py-5 shadow sm:p-6">
-            <dt class="truncate text-sm font-medium text-gray-500">Immutable</dt>
-            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">
-                {{ $records->where('status', 'immutable')->count() }}
-            </dd>
+            <dt class="truncate text-sm font-medium text-gray-500">Terverifikasi Blockchain</dt>
+            <dd class="mt-1 text-3xl font-semibold tracking-tight text-green-600">{{ $immutableRecords }}</dd>
         </div>
     </div>
 
@@ -78,7 +71,7 @@
                         @foreach($records as $record)
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                #{{ $record->medicalrecord_id }}
+                                #{{ $record->idmedicalrecord }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
@@ -118,9 +111,13 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                                @if($record->blockchain_hash)
-                                    <span class="truncate block w-32" title="{{ $record->blockchain_hash }}">
-                                        {{ Str::limit($record->blockchain_hash, 20) }}
+                                @php
+                                    $latestAudit = $record->auditTrails->first();
+                                    $blockchainHash = $latestAudit ? $latestAudit->blockchain_hash : null;
+                                @endphp
+                                @if($blockchainHash)
+                                    <span class="truncate block w-32" title="{{ $blockchainHash }}">
+                                        {{ Str::limit($blockchainHash, 20) }}
                                     </span>
                                 @else
                                     <span class="text-gray-400">-</span>

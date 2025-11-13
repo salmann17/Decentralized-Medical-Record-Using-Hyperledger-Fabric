@@ -134,7 +134,7 @@
 
                     <a href="{{ route('doctor.records', array_filter(['status' => 'verified', 'patient_id' => request('patient_id')])) }}"
                         class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'verified' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                        ✓ Terverifikasi
+                         Terverifikasi
                         <span class="ml-2 {{ request('status') === 'verified' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalVerified ?? 0 }}
                         </span>
@@ -142,7 +142,7 @@
 
                     <a href="{{ route('doctor.records', array_filter(['status' => 'invalid', 'patient_id' => request('patient_id')])) }}"
                         class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'invalid' ? 'border-red-500 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                        ⚠ Invalid
+                        Invalid
                         <span class="ml-2 {{ request('status') === 'invalid' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalInvalid ?? 0 }}
                         </span>
@@ -150,7 +150,7 @@
 
                     <a href="{{ route('doctor.records', array_filter(['status' => 'not_found', 'patient_id' => request('patient_id')])) }}"
                         class="whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {{ request('status') === 'not_found' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }}">
-                        ❌ Not Found
+                         Not Found
                         <span class="ml-2 {{ request('status') === 'not_found' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600' }} py-0.5 px-2.5 rounded-full text-xs font-medium">
                             {{ $totalNotFound ?? 0 }}
                         </span>
