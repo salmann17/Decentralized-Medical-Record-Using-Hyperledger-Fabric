@@ -198,11 +198,26 @@
                                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
                                                         Lihat Detail
                                                     </a>
-                                                    @if($record->status !== 'immutable')
-                                                        <a href="#" 
+                                                    @if($record->doctor_id === $doctor->iddoctor)
+                                                        @if($record->status === 'draft')
+                                                        <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}" 
+                                                           class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200">
+                                                            Edit Draft
+                                                        </a>
+                                                        @elseif($record->status === 'final')
+                                                        <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}" 
                                                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-gray-700 bg-gray-100 hover:bg-gray-200">
                                                             Edit
                                                         </a>
+                                                        @endif
+                                                    @else
+                                                        <button type="button" onclick="showUnauthorizedAlert()"
+                                                           class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-gray-500 bg-gray-50 cursor-not-allowed">
+                                                            <svg class="mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                            </svg>
+                                                            Hanya Lihat
+                                                        </button>
                                                     @endif
                                                 </div>
                                             </div>
@@ -331,4 +346,19 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function showUnauthorizedAlert() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Akses Ditolak',
+            text: 'Anda tidak memiliki hak untuk mengedit rekam medis ini karena Anda tidak membuat rekam medis ini. Anda hanya berhak melihat untuk melakukan analisa medis.',
+            confirmButtonColor: '#3B82F6',
+            confirmButtonText: 'Mengerti'
+        });
+    }
+</script>
+
 @endsection

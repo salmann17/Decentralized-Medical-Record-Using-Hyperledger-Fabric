@@ -280,24 +280,34 @@
                         class="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-center px-3 py-2 text-xs font-medium rounded-md">
                         Verifikasi Blockchain
                     </button>
-                    @if($record->status === 'draft')
-                    <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="flex-1">
-                        @csrf
-                        <button type="submit"
-                            class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium rounded-md"
-                            onclick="return confirm('Finalisasi rekam medis ini?')">
-                            Finalisasi
+                    @if($record->doctor_id === $doctor->iddoctor)
+                        @if($record->status === 'draft')
+                        <form method="POST" action="{{ route('doctor.finalize-record', $record->idmedicalrecord) }}" class="flex-1">
+                            @csrf
+                            <button type="submit"
+                                class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 text-xs font-medium rounded-md"
+                                onclick="return confirm('Finalisasi rekam medis ini?')">
+                                Finalisasi
+                            </button>
+                        </form>
+                        <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}"
+                            class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-center px-3 py-2 text-xs font-medium rounded-md">
+                            Edit Draft
+                        </a>
+                        @elseif($record->status === 'final')
+                        <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}"
+                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
+                            Edit
+                        </a>
+                        @endif
+                    @else
+                        <button type="button" onclick="showUnauthorizedAlert()"
+                            class="flex-1 bg-gray-100 text-gray-500 text-center px-3 py-2 text-xs font-medium rounded-md cursor-not-allowed">
+                            <svg class="inline h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            Hanya Lihat
                         </button>
-                    </form>
-                    <a href="{{ route('doctor.edit-draft', $record->idmedicalrecord) }}"
-                        class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 text-center px-3 py-2 text-xs font-medium rounded-md">
-                        Edit Draft
-                    </a>
-                    @elseif($record->status === 'final')
-                    <a href="{{ route('doctor.edit-record', $record->idmedicalrecord) }}"
-                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-center px-3 py-2 text-xs font-medium rounded-md">
-                        Edit
-                    </a>
                     @endif
                 </div>
             </div>
@@ -358,20 +368,26 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    // Filter by patient function
+    function showUnauthorizedAlert() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Akses Ditolak',
+            text: 'Anda tidak memiliki hak untuk mengedit rekam medis ini karena Anda tidak membuat rekam medis ini. Anda hanya berhak melihat untuk melakukan analisa medis.',
+            confirmButtonColor: '#3B82F6',
+            confirmButtonText: 'Mengerti'
+        });
+    }
+
     function filterByPatient(patientId) {
         const currentStatus = '{{ request("status", "all") }}';
         const url = new URL(window.location.href);
         
-        // Remove old parameters
         url.search = '';
         
-        // Add patient filter
         if (patientId !== 'all') {
             url.searchParams.set('patient_id', patientId);
         }
         
-        // Add status filter if not 'all'
         if (currentStatus !== 'all') {
             url.searchParams.set('status', currentStatus);
         }

@@ -272,8 +272,13 @@ class DoctorController extends Controller
             ->orderBy('idpatient')
             ->get();
 
-        $baseQuery = MedicalRecord::where('doctor_id', $doctor->iddoctor)
-            ->whereIn('patient_id', $approvedPatientIds)
+        $baseQuery = MedicalRecord::whereIn('patient_id', $approvedPatientIds)
+            ->with([
+                'patient.user',
+                'doctor.user',
+                'admin',
+                'prescriptions'
+            ])
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('medical_records as mr2')
@@ -645,7 +650,7 @@ class DoctorController extends Controller
             ->find($recordId);
 
         if ($record->doctor_id !== $doctor->iddoctor) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak untuk mengedit rekam medis ini karena Anda tidak membuat rekam medis ini. Anda hanya berhak melihat untuk melakukan analisa medis.');
         }
 
         $hospitals = $doctor->admins;
@@ -850,7 +855,7 @@ class DoctorController extends Controller
             ->find($recordId);
 
         if ($record->doctor_id !== $doctor->iddoctor) {
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk mengubah rekam medis ini');
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak untuk mengedit rekam medis ini karena Anda tidak membuat rekam medis ini. Anda hanya berhak melihat untuk melakukan analisa medis.');
         }
 
         if ($record->status !== 'draft') {
@@ -1259,7 +1264,12 @@ class DoctorController extends Controller
                 ], 404);
             }
 
-            if ($record->doctor_id !== $doctor->iddoctor) {
+            $hasAccess = AccessRequest::where('doctor_id', $doctor->iddoctor)
+                ->where('patient_id', $record->patient_id)
+                ->where('status', 'approved')
+                ->exists();
+
+            if (!$hasAccess) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Anda tidak memiliki akses untuk verifikasi rekam medis ini.'
@@ -1282,7 +1292,7 @@ class DoctorController extends Controller
             $body = $response->json();
 
             $auditTrail = AuditTrail::where('medicalrecord_id', $recordId)
-                ->where('doctor_id', $doctor->iddoctor)
+                ->where('doctor_id', $record->doctor_id)
                 ->orderBy('timestamp', 'desc')
                 ->first();
 
