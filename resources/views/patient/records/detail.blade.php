@@ -248,55 +248,45 @@
                     <p class="mt-1 text-sm text-gray-500">Daftar resep obat untuk Anda</p>
                 </div>
                 <div class="border-t border-gray-200">
-                    @foreach($record->prescriptions as $prescription)
+                    @foreach($record->prescriptions as $index => $prescription)
                     <div class="px-4 py-4 sm:px-6 {{ !$loop->last ? 'border-b border-gray-200' : '' }}">
-                        <div class="mb-3">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {{ $prescription->type === 'single' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
-                                {{ $prescription->type === 'single' ? 'Resep Tunggal' : 'Resep Racikan' }}
-                            </span>
-                        </div>
-                        
-                        @if($prescription->instructions)
-                        <div class="mb-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <p class="text-sm text-yellow-800"><strong>Instruksi:</strong> {{ $prescription->instructions }}</p>
-                        </div>
-                        @endif
-
-                        <div class="space-y-3">
-                            @foreach($prescription->prescriptionItems as $item)
-                            <div class="flex items-start">
-                                <div class="flex-shrink-0">
-                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                        <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-4 flex-1">
-                                    <div class="text-base font-semibold text-gray-900 mb-2">{{ $item->name }}</div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dosis</div>
-                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->dosage }}</div>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Frekuensi</div>
-                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->frequency }}</div>
-                                        </div>
-                                        <div class="bg-gray-50 rounded-lg p-3">
-                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</div>
-                                            <div class="text-sm font-semibold text-gray-900 mt-1">{{ $item->duration }}</div>
-                                        </div>
-                                    </div>
-                                    @if($item->notes)
-                                    <div class="mt-2 text-sm text-gray-600 italic">
-                                        Catatan: {{ $item->notes }}
-                                    </div>
-                                    @endif
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <svg class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z" />
+                                    </svg>
                                 </div>
                             </div>
-                            @endforeach
+                            <div class="ml-4 flex-1">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <h4 class="text-base font-semibold text-gray-900">Resep #{{ $index + 1 }}</h4>
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $prescription->type === 'compound' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
+                                        {{ $prescription->type === 'compound' ? 'Racikan' : 'Obat Tunggal' }}
+                                    </span>
+                                </div>
+                                <div class="text-base font-semibold text-gray-900 mb-3">{{ $prescription->name }}</div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Dosis</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $prescription->dosage }}</div>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Frekuensi</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $prescription->frequency }}</div>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg p-3">
+                                        <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</div>
+                                        <div class="text-sm font-semibold text-gray-900 mt-1">{{ $prescription->duration }}</div>
+                                    </div>
+                                </div>
+                                @if($prescription->type === 'compound' && $prescription->description)
+                                <div class="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                    <div class="text-xs font-medium text-purple-700 uppercase tracking-wide mb-1">Komposisi Racikan</div>
+                                    <div class="text-sm text-purple-900 whitespace-pre-line">{{ $prescription->description }}</div>
+                                </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     @endforeach
@@ -474,13 +464,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             Verifikasi Blockchain
-        </button>
-        <button type="button" onclick="window.print()" 
-                class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Cetak
         </button>
         <a href="{{ route('patient.records') }}" 
            class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">

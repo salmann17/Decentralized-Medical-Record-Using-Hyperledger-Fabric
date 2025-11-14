@@ -243,7 +243,6 @@
 <script>
 let prescriptionIndex = 0;
 
-// Initialize with one prescription on page load
 document.addEventListener('DOMContentLoaded', function() {
     addPrescription();
 });
@@ -255,7 +254,7 @@ function addPrescription() {
             <div class="flex items-center justify-between">
                 <h4 class="text-base font-medium text-gray-900">Resep #${prescriptionIndex + 1}</h4>
                 <button type="button" onclick="removePrescription(this)" 
-                        class="remove-prescription-btn ${prescriptionIndex === 0 ? 'hidden' : ''} inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200">
+                        class="remove-prescription-btn inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200">
                     <svg class="-ml-0.5 mr-1 h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -266,111 +265,64 @@ function addPrescription() {
             <div>
                 <label class="block text-sm font-medium text-gray-700">Tipe Resep <span class="text-red-500">*</span></label>
                 <select name="prescriptions[${prescriptionIndex}][type]" onchange="togglePrescriptionType(this)" required
-                        class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                        class="prescription-type mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
                     <option value="single">Single (Obat Tunggal)</option>
-                    <option value="compound">Compound (Racikan/Puyer)</option>
+                    <option value="compound">Compound (Racikan)</option>
                 </select>
-                <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan/puyer dengan beberapa obat</p>
+                <p class="mt-1 text-xs text-gray-500">Single untuk obat tunggal, Compound untuk obat racikan</p>
             </div>
 
-            <div class="instructions-field">
-                <label class="block text-sm font-medium text-gray-700">Instruksi Khusus</label>
-                <textarea name="prescriptions[${prescriptionIndex}][instructions]" rows="2" placeholder="Contoh: Diminum setelah makan, Hindari makanan pedas"
-                          class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
+                <input type="text" name="prescriptions[${prescriptionIndex}][name]" required placeholder="Contoh: Paracetamol atau Racikan Batuk"
+                       class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
             </div>
 
-            <div class="items-container space-y-4">
-                <!-- Items will be added here -->
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][dosage]" required placeholder="500mg"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][frequency]" required placeholder="3x sehari"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][duration]" required placeholder="3 hari"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
             </div>
 
-            <button type="button" onclick="addPrescriptionItem(${prescriptionIndex})" 
-                    class="add-item-btn inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Tambah Item Obat
-            </button>
+            <div class="description-field hidden">
+                <label class="block text-sm font-medium text-gray-700">Komposisi Racikan <span class="text-red-500">*</span></label>
+                <textarea name="prescriptions[${prescriptionIndex}][description]" rows="3" placeholder="Contoh:\n- Paracetamol 250mg\n- Amoxicillin 125mg\n- CTM 2mg"
+                          class="description-textarea mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Wajib diisi untuk obat racikan. Sebutkan detail komposisi dan dosisnya.</p>
+            </div>
         </div>
     `;
     
     container.insertAdjacentHTML('beforeend', prescriptionHtml);
-    
-    // Add first item automatically
-    addPrescriptionItem(prescriptionIndex);
-    
     prescriptionIndex++;
     updateRemoveButtons();
-}
-
-function addPrescriptionItem(prescriptionIdx) {
-    const prescription = document.querySelector(`[data-prescription-index="${prescriptionIdx}"]`);
-    const itemsContainer = prescription.querySelector('.items-container');
-    const itemIndex = itemsContainer.children.length;
-    
-    const itemHtml = `
-        <div class="item-card bg-gray-50 border border-gray-200 rounded-md p-4 space-y-3" data-item-index="${itemIndex}">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Item Obat #${itemIndex + 1}</span>
-                <button type="button" onclick="removePrescriptionItem(this)" 
-                        class="remove-item-btn ${itemIndex === 0 ? 'hidden' : ''} text-xs text-red-600 hover:text-red-800">
-                    Hapus Item
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][name]" required
-                           placeholder="Contoh: Paracetamol 500mg"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][dosage]" required
-                           placeholder="Contoh: 500mg"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][frequency]" required
-                           placeholder="Contoh: 3x sehari"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][duration]" required
-                           placeholder="Contoh: 5 hari"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Catatan</label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][notes]"
-                           placeholder="Catatan tambahan (optional)"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-            </div>
-        </div>
-    `;
-    
-    itemsContainer.insertAdjacentHTML('beforeend', itemHtml);
-    updateItemRemoveButtons(prescription);
 }
 
 function togglePrescriptionType(select) {
     const prescription = select.closest('.prescription-card');
     const type = select.value;
-    const addItemBtn = prescription.querySelector('.add-item-btn');
-    const itemsContainer = prescription.querySelector('.items-container');
+    const descriptionField = prescription.querySelector('.description-field');
+    const descriptionTextarea = prescription.querySelector('.description-textarea');
     
-    if (type === 'single') {
-        addItemBtn.classList.add('hidden');
-        // Keep only first item for single prescriptions
-        const items = itemsContainer.querySelectorAll('.item-card');
-        items.forEach((item, index) => {
-            if (index > 0) item.remove();
-        });
+    if (type === 'compound') {
+        descriptionField.classList.remove('hidden');
+        descriptionTextarea.required = true;
     } else {
-        addItemBtn.classList.remove('hidden');
+        descriptionField.classList.add('hidden');
+        descriptionTextarea.required = false;
+        descriptionTextarea.value = '';
     }
 }
 
@@ -378,13 +330,6 @@ function removePrescription(button) {
     button.closest('.prescription-card').remove();
     updateRemoveButtons();
     renumberPrescriptions();
-}
-
-function removePrescriptionItem(button) {
-    const prescription = button.closest('.prescription-card');
-    button.closest('.item-card').remove();
-    updateItemRemoveButtons(prescription);
-    renumberItems(prescription);
 }
 
 function updateRemoveButtons() {
@@ -399,31 +344,12 @@ function updateRemoveButtons() {
     });
 }
 
-function updateItemRemoveButtons(prescription) {
-    const items = prescription.querySelectorAll('.item-card');
-    items.forEach((item, index) => {
-        const removeBtn = item.querySelector('.remove-item-btn');
-        if (items.length <= 1) {
-            removeBtn.classList.add('hidden');
-        } else {
-            removeBtn.classList.remove('hidden');
-        }
-    });
-}
-
 function renumberPrescriptions() {
     document.querySelectorAll('.prescription-card').forEach((prescription, index) => {
         prescription.querySelector('h4').textContent = `Resep #${index + 1}`;
     });
 }
 
-function renumberItems(prescription) {
-    prescription.querySelectorAll('.item-card').forEach((item, index) => {
-        item.querySelector('span').textContent = `Item Obat #${index + 1}`;
-    });
-}
-
-// Form validation
 document.getElementById('medical-record-form').addEventListener('submit', function(e) {
     const prescriptions = document.querySelectorAll('.prescription-card');
     if (prescriptions.length === 0) {
@@ -433,16 +359,21 @@ document.getElementById('medical-record-form').addEventListener('submit', functi
     }
     
     let hasError = false;
-    prescriptions.forEach(prescription => {
-        const items = prescription.querySelectorAll('.item-card');
-        if (items.length === 0) {
+    let errorMessage = '';
+    
+    prescriptions.forEach((prescription, index) => {
+        const type = prescription.querySelector('.prescription-type').value;
+        const description = prescription.querySelector('.description-textarea').value.trim();
+        
+        if (type === 'compound' && description === '') {
             hasError = true;
+            errorMessage = `Resep #${index + 1}: Komposisi racikan wajib diisi untuk obat racikan!`;
         }
     });
     
     if (hasError) {
         e.preventDefault();
-        alert('Setiap resep harus memiliki minimal satu item obat!');
+        alert(errorMessage);
         return false;
     }
 });

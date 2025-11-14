@@ -143,7 +143,7 @@ class PatientController extends Controller
             ->with([
                 'doctor.user', 
                 'admin', 
-                'prescriptions.prescriptionItems',
+                'prescriptions',
                 'auditTrails' => function ($q) {
                     $q->whereNotNull('blockchain_hash')
                         ->where('blockchain_hash', '!=', '')
@@ -467,7 +467,7 @@ class PatientController extends Controller
                 ], 404);
             }
 
-            $recordData = MedicalRecord::with(['patient.user', 'doctor.user', 'admin', 'prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions'])
                 ->find($id);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

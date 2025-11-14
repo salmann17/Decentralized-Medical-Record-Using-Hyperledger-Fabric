@@ -15,8 +15,7 @@ class UserSeeder extends Seeder
     {
         $hospitals = [
             ['name' => 'RS Jakarta Medical Center', 'address' => 'Jl. Sudirman No. 1, Jakarta', 'type' => 'Rumah Sakit'],
-            ['name' => 'RS Siloam Hospitals', 'address' => 'Jl. Gatot Subroto No. 2, Jakarta', 'type' => 'Rumah Sakit'],
-            ['name' => 'RSUP Dr. Sardjito', 'address' => 'Jl. Kesehatan No. 1, Yogyakarta', 'type' => 'Rumah Sakit'],
+            ['name' => 'Klinik Sehat Sejahtera', 'address' => 'Jl. Gatot Subroto No. 2, Jakarta', 'type' => 'Klinik'],
         ];
 
         $hospitalModels = [];
@@ -58,12 +57,11 @@ class UserSeeder extends Seeder
             if ($i == 0) {
                 $doctor->admins()->attach([$hospitalModels[0]->idadmin, $hospitalModels[1]->idadmin]);
             } elseif ($i == 1) {
-                $doctor->admins()->attach([$hospitalModels[0]->idadmin, $hospitalModels[2]->idadmin]);
+                $doctor->admins()->attach([$hospitalModels[0]->idadmin]);
             } elseif ($i == 2) {
                 $doctor->admins()->attach([
                     $hospitalModels[0]->idadmin, 
-                    $hospitalModels[1]->idadmin, 
-                    $hospitalModels[2]->idadmin
+                    $hospitalModels[1]->idadmin
                 ]);
             } else {
                 $doctor->admins()->attach([$hospitalModels[1]->idadmin]);

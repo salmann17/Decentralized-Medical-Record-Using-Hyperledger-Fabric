@@ -440,7 +440,12 @@ class DoctorController extends Controller
                     ->whereColumn('mr2.previous_id', 'medical_records.idmedicalrecord')
                     ->where('mr2.patient_id', $patientId);
             })
-            ->with(['doctor.user', 'admin', 'prescriptions'])
+            ->with(['doctor.user', 'admin', 'prescriptions', 'auditTrails' => function ($q) {
+                $q->whereNotNull('blockchain_hash')
+                    ->where('blockchain_hash', '!=', '')
+                    ->orderBy('timestamp', 'desc')
+                    ->limit(1);
+            }])
             ->orderBy('visit_date', 'desc')
             ->get();
 
@@ -491,13 +496,11 @@ class DoctorController extends Controller
             'status' => 'required|in:draft,final,immutable',
             'prescriptions' => 'required|array|min:1',
             'prescriptions.*.type' => 'required|in:single,compound',
-            'prescriptions.*.instructions' => 'nullable|string',
-            'prescriptions.*.items' => 'required|array|min:1',
-            'prescriptions.*.items.*.name' => 'required|string|max:135',
-            'prescriptions.*.items.*.dosage' => 'required|string|max:45',
-            'prescriptions.*.items.*.frequency' => 'required|string|max:45',
-            'prescriptions.*.items.*.duration' => 'required|string|max:45',
-            'prescriptions.*.items.*.notes' => 'nullable|string'
+            'prescriptions.*.name' => 'required|string|max:135',
+            'prescriptions.*.dosage' => 'required|string|max:45',
+            'prescriptions.*.frequency' => 'required|string|max:45',
+            'prescriptions.*.duration' => 'required|string|max:45',
+            'prescriptions.*.description' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -538,21 +541,15 @@ class DoctorController extends Controller
         ]);
 
         foreach ($request->prescriptions as $prescriptionData) {
-            $prescription = Prescription::create([
+            Prescription::create([
                 'medicalrecord_id' => $medicalRecord->idmedicalrecord,
                 'type' => $prescriptionData['type'],
-                'instructions' => $prescriptionData['instructions'] ?? null
+                'name' => $prescriptionData['name'],
+                'dosage' => $prescriptionData['dosage'],
+                'frequency' => $prescriptionData['frequency'],
+                'duration' => $prescriptionData['duration'],
+                'description' => $prescriptionData['description'] ?? ''
             ]);
-
-            foreach ($prescriptionData['items'] as $itemData) {
-                $prescription->prescriptionItems()->create([
-                    'name' => $itemData['name'],
-                    'dosage' => $itemData['dosage'],
-                    'frequency' => $itemData['frequency'],
-                    'duration' => $itemData['duration'],
-                    'notes' => $itemData['notes'] ?? null
-                ]);
-            }
         }
 
         $blockchainResult = null;
@@ -561,7 +558,6 @@ class DoctorController extends Controller
             $blockchainResult = $this->sendToBlockchain($medicalRecord);
         }
 
-        // Simpan audit trail dengan blockchain hash
         $auditData = [
             'doctor_id' => $doctor->iddoctor,
             'patient_id' => $patientId,
@@ -600,7 +596,7 @@ class DoctorController extends Controller
             'patient.user',
             'doctor.user',
             'admin',
-            'prescriptions.prescriptionItems',
+            'prescriptions',
             'auditTrails' => function ($q) {
                 $q->whereNotNull('blockchain_hash')
                     ->where('blockchain_hash', '!=', '')
@@ -645,7 +641,7 @@ class DoctorController extends Controller
     {
         $doctor = Auth::user()->doctor;
 
-        $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions.prescriptionItems'])
+        $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions'])
             ->find($recordId);
 
         if ($record->doctor_id !== $doctor->iddoctor) {
@@ -684,13 +680,11 @@ class DoctorController extends Controller
             'save_action' => 'required|in:draft,final',
             'prescriptions' => 'required|array|min:1',
             'prescriptions.*.type' => 'required|in:single,compound',
-            'prescriptions.*.instructions' => 'nullable|string',
-            'prescriptions.*.items' => 'required|array|min:1',
-            'prescriptions.*.items.*.name' => 'required|string|max:135',
-            'prescriptions.*.items.*.dosage' => 'required|string|max:45',
-            'prescriptions.*.items.*.frequency' => 'required|string|max:45',
-            'prescriptions.*.items.*.duration' => 'required|string|max:45',
-            'prescriptions.*.items.*.notes' => 'nullable|string'
+            'prescriptions.*.name' => 'required|string|max:135',
+            'prescriptions.*.dosage' => 'required|string|max:45',
+            'prescriptions.*.frequency' => 'required|string|max:45',
+            'prescriptions.*.duration' => 'required|string|max:45',
+            'prescriptions.*.description' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -748,27 +742,20 @@ class DoctorController extends Controller
             ]);
 
             foreach ($record->prescriptions as $oldPrescription) {
-                $oldPrescription->prescriptionItems()->delete();
                 $oldPrescription->delete();
             }
         }
 
         foreach ($request->prescriptions as $prescriptionData) {
-            $prescription = Prescription::create([
+            Prescription::create([
                 'medicalrecord_id' => $record->idmedicalrecord,
                 'type' => $prescriptionData['type'],
-                'instructions' => $prescriptionData['instructions'] ?? null
+                'name' => $prescriptionData['name'],
+                'dosage' => $prescriptionData['dosage'],
+                'frequency' => $prescriptionData['frequency'],
+                'duration' => $prescriptionData['duration'],
+                'description' => $prescriptionData['description'] ?? ''
             ]);
-
-            foreach ($prescriptionData['items'] as $itemData) {
-                $prescription->prescriptionItems()->create([
-                    'name' => $itemData['name'],
-                    'dosage' => $itemData['dosage'],
-                    'frequency' => $itemData['frequency'],
-                    'duration' => $itemData['duration'],
-                    'notes' => $itemData['notes'] ?? null
-                ]);
-            }
         }
 
         $blockchainResult = null;
@@ -859,7 +846,7 @@ class DoctorController extends Controller
     {
         $doctor = Auth::user()->doctor;
 
-        $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions.prescriptionItems'])
+        $record = MedicalRecord::with(['patient.user', 'admin', 'prescriptions'])
             ->find($recordId);
 
         if ($record->doctor_id !== $doctor->iddoctor) {
@@ -897,13 +884,11 @@ class DoctorController extends Controller
             'respiratory_rate' => 'nullable|numeric',
             'prescriptions' => 'required|array|min:1',
             'prescriptions.*.type' => 'required|in:single,compound',
-            'prescriptions.*.instructions' => 'nullable|string',
-            'prescriptions.*.items' => 'required|array|min:1',
-            'prescriptions.*.items.*.name' => 'required|string|max:135',
-            'prescriptions.*.items.*.dosage' => 'required|string|max:45',
-            'prescriptions.*.items.*.frequency' => 'required|string|max:45',
-            'prescriptions.*.items.*.duration' => 'required|string|max:45',
-            'prescriptions.*.items.*.notes' => 'nullable|string'
+            'prescriptions.*.name' => 'required|string|max:135',
+            'prescriptions.*.dosage' => 'required|string|max:45',
+            'prescriptions.*.frequency' => 'required|string|max:45',
+            'prescriptions.*.duration' => 'required|string|max:45',
+            'prescriptions.*.description' => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -941,26 +926,19 @@ class DoctorController extends Controller
         ]);
 
         foreach ($record->prescriptions as $oldPrescription) {
-            $oldPrescription->prescriptionItems()->delete();
             $oldPrescription->delete();
         }
 
         foreach ($request->prescriptions as $prescriptionData) {
-            $prescription = Prescription::create([
+            Prescription::create([
                 'medicalrecord_id' => $record->idmedicalrecord,
                 'type' => $prescriptionData['type'],
-                'instructions' => $prescriptionData['instructions'] ?? null
+                'name' => $prescriptionData['name'],
+                'dosage' => $prescriptionData['dosage'],
+                'frequency' => $prescriptionData['frequency'],
+                'duration' => $prescriptionData['duration'],
+                'description' => $prescriptionData['description'] ?? ''
             ]);
-
-            foreach ($prescriptionData['items'] as $itemData) {
-                $prescription->prescriptionItems()->create([
-                    'name' => $itemData['name'],
-                    'dosage' => $itemData['dosage'],
-                    'frequency' => $itemData['frequency'],
-                    'duration' => $itemData['duration'],
-                    'notes' => $itemData['notes'] ?? null
-                ]);
-            }
         }
 
         DB::commit();
@@ -1161,7 +1139,7 @@ class DoctorController extends Controller
     private function sendToBlockchain($record)
     {
         try {
-            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions'])
                 ->find($record->idmedicalrecord);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -1225,7 +1203,7 @@ class DoctorController extends Controller
     private function sendVersionToBlockchain($record)
     {
         try {
-            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions'])
                 ->find($record->idmedicalrecord);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -1288,7 +1266,7 @@ class DoctorController extends Controller
                 ], 403);
             }
 
-            $recordData = MedicalRecord::with(['prescriptions.prescriptionItems'])
+            $recordData = MedicalRecord::with(['prescriptions'])
                 ->find($recordId);
 
             $json = json_encode($recordData->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

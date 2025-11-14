@@ -239,74 +239,51 @@
 
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Tipe Resep <span class="text-red-500">*</span></label>
-                                        <select name="prescriptions[{{ $index }}][type]" onchange="togglePrescriptionType(this)" required
+                                        <select name="prescriptions[{{ $index }}][type]" class="prescription-type" onchange="togglePrescriptionType(this)" required
                                                 class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
-                                            <option value="single" {{ $prescription->type === 'single' ? 'selected' : '' }}>Single (Obat Tunggal)</option>
-                                            <option value="compound" {{ $prescription->type === 'compound' ? 'selected' : '' }}>Compound (Racikan/Puyer)</option>
+                                            <option value="single" {{ old('prescriptions.'.$index.'.type', $prescription->type) === 'single' ? 'selected' : '' }}>Single (Obat Tunggal)</option>
+                                            <option value="compound" {{ old('prescriptions.'.$index.'.type', $prescription->type) === 'compound' ? 'selected' : '' }}>Compound (Racikan)</option>
                                         </select>
-                                        <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan/puyer dengan beberapa obat</p>
+                                        <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan dengan beberapa obat</p>
                                     </div>
 
-                                    <div class="instructions-field">
-                                        <label class="block text-sm font-medium text-gray-700">Instruksi Khusus</label>
-                                        <textarea name="prescriptions[{{ $index }}][instructions]" rows="2" placeholder="Contoh: Diminum setelah makan, Hindari makanan pedas"
-                                                  class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $prescription->instructions }}</textarea>
+                                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-sm font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
+                                            <input type="text" name="prescriptions[{{ $index }}][name]" value="{{ old('prescriptions.'.$index.'.name', $prescription->name) }}" required
+                                                   placeholder="Contoh: Paracetamol atau Racikan Batuk"
+                                                   class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
+                                            <input type="text" name="prescriptions[{{ $index }}][dosage]" value="{{ old('prescriptions.'.$index.'.dosage', $prescription->dosage) }}" required
+                                                   placeholder="Contoh: 500mg"
+                                                   class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
+                                            <input type="text" name="prescriptions[{{ $index }}][frequency]" value="{{ old('prescriptions.'.$index.'.frequency', $prescription->frequency) }}" required
+                                                   placeholder="Contoh: 3x sehari"
+                                                   class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
+                                            <input type="text" name="prescriptions[{{ $index }}][duration]" value="{{ old('prescriptions.'.$index.'.duration', $prescription->duration) }}" required
+                                                   placeholder="Contoh: 5 hari"
+                                                   class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                                        </div>
                                     </div>
 
-                                    <div class="items-container space-y-4">
-                                        @foreach($prescription->prescriptionItems as $itemIndex => $item)
-                                            <div class="item-card bg-gray-50 border border-gray-200 rounded-md p-4 space-y-3" data-item-index="{{ $itemIndex }}">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-sm font-medium text-gray-700">Item Obat #{{ $itemIndex + 1 }}</span>
-                                                    <button type="button" onclick="removePrescriptionItem(this)" 
-                                                            class="remove-item-btn text-xs text-red-600 hover:text-red-800 {{ count($prescription->prescriptionItems) <= 1 ? 'hidden' : '' }}">
-                                                        Hapus Item
-                                                    </button>
-                                                </div>
-
-                                                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                                    <div class="sm:col-span-2">
-                                                        <label class="block text-xs font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
-                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][name]" value="{{ $item->name }}" required
-                                                               placeholder="Contoh: Paracetamol 500mg"
-                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
-                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][dosage]" value="{{ $item->dosage }}" required
-                                                               placeholder="Contoh: 500mg"
-                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
-                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][frequency]" value="{{ $item->frequency }}" required
-                                                               placeholder="Contoh: 3x sehari"
-                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
-                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][duration]" value="{{ $item->duration }}" required
-                                                               placeholder="Contoh: 5 hari"
-                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs font-medium text-gray-700">Catatan</label>
-                                                        <input type="text" name="prescriptions[{{ $index }}][items][{{ $itemIndex }}][notes]" value="{{ $item->notes }}"
-                                                               placeholder="Catatan tambahan (optional)"
-                                                               class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
+                                    <div class="description-field {{ $prescription->type === 'compound' ? '' : 'hidden' }}">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            Komposisi Racikan <span class="text-red-500 description-required">*</span>
+                                        </label>
+                                        <textarea name="prescriptions[{{ $index }}][description]" rows="3" class="description-textarea"
+                                                  placeholder="Jelaskan komposisi racikan ini (wajib untuk tipe compound)"
+                                                  {{ $prescription->type === 'compound' ? 'required' : '' }}
+                                                  class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ old('prescriptions.'.$index.'.description', $prescription->description) }}</textarea>
+                                        <p class="mt-1 text-xs text-gray-500">Wajib diisi untuk resep racikan/compound</p>
                                     </div>
-
-                                    <button type="button" onclick="addPrescriptionItem({{ $index }})" 
-                                            class="add-item-btn inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 {{ $prescription->type === 'single' ? 'hidden' : '' }}">
-                                        <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                        Tambah Item Obat
-                                    </button>
                                 </div>
                             @endforeach
                         @endif
@@ -338,7 +315,7 @@
 <script>
 let prescriptionIndex = {{ $record->prescriptions ? count($record->prescriptions) : 0 }};
 
-function addPrescription(type = 'single', instructions = '', items = []) {
+function addPrescription() {
     const container = document.getElementById('prescriptions-container');
     const prescriptionHtml = `
         <div class="prescription-card border-2 border-gray-200 rounded-lg p-6 space-y-4 mb-4" data-prescription-index="${prescriptionIndex}">
@@ -355,120 +332,71 @@ function addPrescription(type = 'single', instructions = '', items = []) {
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Tipe Resep <span class="text-red-500">*</span></label>
-                <select name="prescriptions[${prescriptionIndex}][type]" onchange="togglePrescriptionType(this)" required
+                <select name="prescriptions[${prescriptionIndex}][type]" class="prescription-type" onchange="togglePrescriptionType(this)" required
                         class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
-                    <option value="single" ${type === 'single' ? 'selected' : ''}>Single (Obat Tunggal)</option>
-                    <option value="compound" ${type === 'compound' ? 'selected' : ''}>Compound (Racikan/Puyer)</option>
+                    <option value="single">Single (Obat Tunggal)</option>
+                    <option value="compound">Compound (Racikan)</option>
                 </select>
-                <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan/puyer dengan beberapa obat</p>
+                <p class="mt-1 text-xs text-gray-500">Single untuk 1 obat, Compound untuk racikan dengan beberapa obat</p>
             </div>
 
-            <div class="instructions-field">
-                <label class="block text-sm font-medium text-gray-700">Instruksi Khusus</label>
-                <textarea name="prescriptions[${prescriptionIndex}][instructions]" rows="2" placeholder="Contoh: Diminum setelah makan, Hindari makanan pedas"
-                          class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">${instructions}</textarea>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][name]" required
+                           placeholder="Contoh: Paracetamol atau Racikan Batuk"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][dosage]" required
+                           placeholder="Contoh: 500mg"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][frequency]" required
+                           placeholder="Contoh: 3x sehari"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
+                    <input type="text" name="prescriptions[${prescriptionIndex}][duration]" required
+                           placeholder="Contoh: 5 hari"
+                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300 rounded-md">
+                </div>
             </div>
 
-            <div class="items-container space-y-4">
-                <!-- Items will be added here -->
+            <div class="description-field hidden">
+                <label class="block text-sm font-medium text-gray-700">
+                    Komposisi Racikan <span class="text-red-500 description-required">*</span>
+                </label>
+                <textarea name="prescriptions[${prescriptionIndex}][description]" rows="3" class="description-textarea"
+                          placeholder="Jelaskan komposisi racikan ini (wajib untuk tipe compound)"
+                          class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"></textarea>
+                <p class="mt-1 text-xs text-gray-500">Wajib diisi untuk resep racikan/compound</p>
             </div>
-
-            <button type="button" onclick="addPrescriptionItem(${prescriptionIndex})" 
-                    class="add-item-btn inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 ${type === 'single' ? 'hidden' : ''}">
-                <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Tambah Item Obat
-            </button>
         </div>
     `;
     
     container.insertAdjacentHTML('beforeend', prescriptionHtml);
-    
-    // Add items
-    const currentPrescriptionIndex = prescriptionIndex;
-    if (items.length > 0) {
-        items.forEach(item => {
-            addPrescriptionItem(currentPrescriptionIndex, item.name, item.dosage, item.frequency, item.duration, item.notes);
-        });
-    } else {
-        // Add first item automatically if no items provided
-        addPrescriptionItem(currentPrescriptionIndex);
-    }
-    
     prescriptionIndex++;
     updateRemoveButtons();
-}
-
-function addPrescriptionItem(prescriptionIdx, name = '', dosage = '', frequency = '', duration = '', notes = '') {
-    const prescription = document.querySelector(`[data-prescription-index="${prescriptionIdx}"]`);
-    const itemsContainer = prescription.querySelector('.items-container');
-    const itemIndex = itemsContainer.children.length;
-    
-    const itemHtml = `
-        <div class="item-card bg-gray-50 border border-gray-200 rounded-md p-4 space-y-3" data-item-index="${itemIndex}">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Item Obat #${itemIndex + 1}</span>
-                <button type="button" onclick="removePrescriptionItem(this)" 
-                        class="remove-item-btn text-xs text-red-600 hover:text-red-800">
-                    Hapus Item
-                </button>
-            </div>
-
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <label class="block text-xs font-medium text-gray-700">Nama Obat <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][name]" value="${name}" required
-                           placeholder="Contoh: Paracetamol 500mg"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Dosis <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][dosage]" value="${dosage}" required
-                           placeholder="Contoh: 500mg"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Frekuensi <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][frequency]" value="${frequency}" required
-                           placeholder="Contoh: 3x sehari"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Durasi <span class="text-red-500">*</span></label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][duration]" value="${duration}" required
-                           placeholder="Contoh: 5 hari"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-gray-700">Catatan</label>
-                    <input type="text" name="prescriptions[${prescriptionIdx}][items][${itemIndex}][notes]" value="${notes}"
-                           placeholder="Catatan tambahan (optional)"
-                           class="mt-1 block w-full shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm border-gray-300 rounded-md">
-                </div>
-            </div>
-        </div>
-    `;
-    
-    itemsContainer.insertAdjacentHTML('beforeend', itemHtml);
-    updateItemRemoveButtons(prescription);
 }
 
 function togglePrescriptionType(select) {
     const prescription = select.closest('.prescription-card');
     const type = select.value;
-    const addItemBtn = prescription.querySelector('.add-item-btn');
-    const itemsContainer = prescription.querySelector('.items-container');
+    const descriptionField = prescription.querySelector('.description-field');
+    const descriptionTextarea = prescription.querySelector('.description-textarea');
     
-    if (type === 'single') {
-        addItemBtn.classList.add('hidden');
-        // Keep only first item for single prescriptions
-        const items = itemsContainer.querySelectorAll('.item-card');
-        items.forEach((item, index) => {
-            if (index > 0) item.remove();
-        });
+    if (type === 'compound') {
+        descriptionField.classList.remove('hidden');
+        descriptionTextarea.required = true;
     } else {
-        addItemBtn.classList.remove('hidden');
+        descriptionField.classList.add('hidden');
+        descriptionTextarea.required = false;
+        descriptionTextarea.value = '';
     }
 }
 
@@ -483,18 +411,6 @@ function removePrescription(button) {
     renumberPrescriptions();
 }
 
-function removePrescriptionItem(button) {
-    const prescription = button.closest('.prescription-card');
-    const items = prescription.querySelectorAll('.item-card');
-    if (items.length <= 1) {
-        alert('Minimal harus ada satu item obat per resep!');
-        return;
-    }
-    button.closest('.item-card').remove();
-    updateItemRemoveButtons(prescription);
-    renumberItems(prescription);
-}
-
 function updateRemoveButtons() {
     const prescriptions = document.querySelectorAll('.prescription-card');
     prescriptions.forEach((prescription, index) => {
@@ -507,27 +423,9 @@ function updateRemoveButtons() {
     });
 }
 
-function updateItemRemoveButtons(prescription) {
-    const items = prescription.querySelectorAll('.item-card');
-    items.forEach((item, index) => {
-        const removeBtn = item.querySelector('.remove-item-btn');
-        if (items.length <= 1) {
-            removeBtn.classList.add('hidden');
-        } else {
-            removeBtn.classList.remove('hidden');
-        }
-    });
-}
-
 function renumberPrescriptions() {
     document.querySelectorAll('.prescription-card').forEach((prescription, index) => {
         prescription.querySelector('h4').textContent = `Resep #${index + 1}`;
-    });
-}
-
-function renumberItems(prescription) {
-    prescription.querySelectorAll('.item-card').forEach((item, index) => {
-        item.querySelector('span').textContent = `Item Obat #${index + 1}`;
     });
 }
 </script>

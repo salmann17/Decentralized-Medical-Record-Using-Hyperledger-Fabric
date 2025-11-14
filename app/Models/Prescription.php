@@ -29,12 +29,6 @@ class Prescription extends Model
         return $this->belongsTo(MedicalRecord::class, 'medicalrecord_id', 'idmedicalrecord');
     }
 
-    public function prescriptionItems()
-    {
-        return $this->hasMany(PrescriptionItem::class, 'prescription_id', 'idprescription');
-    }
-
-    // Legacy - for backward compatibility
     public function medicalRecords()
     {
         return $this->hasMany(MedicalRecord::class, 'prescription_id', 'prescription_id');
