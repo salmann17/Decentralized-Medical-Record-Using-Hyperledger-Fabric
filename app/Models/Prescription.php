@@ -12,7 +12,15 @@ class Prescription extends Model
     protected $table = 'prescriptions';
     protected $primaryKey = 'idprescription';
 
-    protected $fillable = ['medicalrecord_id','type','instructions'];
+    protected $fillable = [
+        'medicalrecord_id',
+        'type',
+        'name',
+        'dosage',
+        'frequency',
+        'duration',
+        'description'
+    ];
 
     protected $dates = ['deleted_at'];
 
@@ -32,4 +40,3 @@ class Prescription extends Model
         return $this->hasMany(MedicalRecord::class, 'prescription_id', 'prescription_id');
     }
 }
-
