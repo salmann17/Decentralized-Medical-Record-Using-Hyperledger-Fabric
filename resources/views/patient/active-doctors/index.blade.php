@@ -151,6 +151,16 @@
                             Akses Aktif
                         </span>
                         
+                        <!-- Check License Button -->
+                        <button type="button" 
+                                onclick="showLicenseModal('{{ $doctor->user->name }}', '{{ $doctor->license_number }}')"
+                                class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+                            <svg class="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Cek Lisensi Dokter
+                        </button>
+                        
                         <!-- Revoke Access Button -->
                         <form method="POST" action="{{ route('patient.active-doctors.revoke', $doctor->accessRequest->idrequest) }}" class="inline">
                             @csrf
@@ -217,10 +227,99 @@
                         <li>Pencabutan akses akan menghentikan kemampuan dokter mengakses rekam medis Anda</li>
                         <li>Semua aktivitas akses tercatat dalam audit trail untuk transparansi</li>
                         <li>Dokter dapat mengajukan ulang permintaan akses jika diperlukan</li>
+                        <li>Verifikasi lisensi dokter melalui website resmi Konsil Kedokteran Indonesia (KKI) untuk memastikan keaslian dokter</li>
                     </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- License Modal -->
+<div id="licenseModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity hidden z-50">
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left flex-1">
+                    <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title">Informasi Lisensi Dokter</h3>
+                    <div class="mt-4 space-y-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Dokter</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 rounded-md px-3 py-2" id="doctorName"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nomor STR (Surat Tanda Registrasi)</label>
+                            <p class="text-sm text-gray-900 bg-gray-50 rounded-md px-3 py-2 font-mono" id="licenseNumber"></p>
+                        </div>
+                        <div class="rounded-md bg-yellow-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-yellow-800">Verifikasi Lisensi</h3>
+                                    <div class="mt-2 text-sm text-yellow-700">
+                                        <p>Pastikan untuk memverifikasi nomor STR dokter melalui website resmi Konsil Kedokteran Indonesia (KKI) untuk memastikan keaslian dan status aktif lisensi dokter.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="https://kki.go.id/ceknamednakes/form" target="_blank" rel="noopener noreferrer" 
+                               class="inline-flex w-full items-center justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 transition-colors">
+                                <svg class="-ml-0.5 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Verifikasi di Website KKI
+                            </a>
+                            <p class="mt-2 text-xs text-gray-500 text-center">Akan membuka website resmi Konsil Kedokteran Indonesia di tab baru</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="closeLicenseModal()" 
+                        class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showLicenseModal(doctorName, licenseNumber) {
+    document.getElementById('doctorName').textContent = doctorName;
+    document.getElementById('licenseNumber').textContent = licenseNumber || 'Tidak tersedia';
+    document.getElementById('licenseModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLicenseModal() {
+    document.getElementById('licenseModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.getElementById('licenseModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeLicenseModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeLicenseModal();
+    }
+});
+</script>
+
 @endsection
